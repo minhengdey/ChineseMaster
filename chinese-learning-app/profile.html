@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Bucha</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1>🇨🇳 Bucha</h1>
+            <div class="nav-links">
+                <a href="lessons.html">Lessons</a>
+                <a href="flashcards.html">Flashcards</a>
+                <a href="pronunciation.html">Pronunciation</a>
+                <a href="quiz.html">Quiz</a>
+                <a href="profile.html" class="active">Profile</a>
+                <button id="logout-btn" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="page-header">
+            <h2>👤 Your Profile</h2>
+        </header>
+
+        <main>
+            <div class="profile-section">
+                <div class="profile-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-info">
+                            <h3 id="user-xp">0</h3>
+                            <p>Experience Points</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-info">
+                            <h3 id="user-streak">0</h3>
+                            <p>Day Streak</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏆</div>
+                        <div class="stat-info">
+                            <h3 id="badge-count">0</h3>
+                            <p>Badges Earned</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-content">
+                    <div class="profile-info">
+                        <h3>Profile Information</h3>
+                        <form id="profile-form">
+                            <div class="form-group">
+                                <label for="profile-name">Name</label>
+                                <input type="text" id="profile-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-email">Email</label>
+                                <input type="email" id="profile-email" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="dark-mode-toggle">
+                                    <span class="checkmark"></span>
+                                    Dark Mode
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </form>
+                    </div>
+
+                    <div class="badges-section">
+                        <h3>🏆 Your Badges</h3>
+                        <div id="badges-list" class="badges-list">
+                            <!-- Badges will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div id="error-message" class="error-message"></div>
+        <div id="success-message" class="success-message"></div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/profile.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lessons - Bucha</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1>🇨🇳 Bucha</h1>
+            <div class="nav-links">
+                <a href="lessons.html" class="active">Lessons</a>
+                <a href="flashcards.html">Flashcards</a>
+                <a href="pronunciation.html">Pronunciation</a>
+                <a href="quiz.html">Quiz</a>
+                <a href="profile.html">Profile</a>
+                <button id="logout-btn" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="page-header">
+            <h2>Chinese Lessons</h2>
+            <div class="level-filter">
+                <select id="level-select">
+                    <option value="">All Levels</option>
+                    <option value="HSK1">HSK1</option>
+                    <option value="HSK2">HSK2</option>
+                    <option value="HSK3">HSK3</option>
+                    <option value="HSK4">HSK4</option>
+                    <option value="HSK5">HSK5</option>
+                    <option value="HSK6">HSK6</option>
+                </select>
+            </div>
+        </header>
+
+        <main>
+            <div id="lessons-grid" class="lessons-grid">
+                <!-- Lessons will be loaded here -->
+            </div>
+            <div id="loading" class="loading">Loading lessons...</div>
+        </main>
+
+        <div id="error-message" class="error-message"></div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/lessons.js"></script>
+</body>
+</html>

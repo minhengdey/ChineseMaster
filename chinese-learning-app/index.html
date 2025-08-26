@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bucha - Learn Chinese</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+
+<body>
+    <div class="container">
+        <header class="hero">
+            <h1>🇨🇳 Bucha</h1>
+            <p>Master Chinese with interactive lessons, flashcards, and pronunciation practice</p>
+        </header>
+
+        <main class="auth-section">
+            <div class="auth-tabs">
+                <button class="tab-btn active" data-tab="login">Login</button>
+                <button class="tab-btn" data-tab="register">Register</button>
+            </div>
+
+            <form id="login-form" class="auth-form active">
+                <h2>Welcome Back</h2>
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+
+            <form id="register-form" class="auth-form">
+                <h2>Create Account</h2>
+                <div class="form-group">
+                    <label for="register-name">Name</label>
+                    <input type="text" id="register-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" required autocomplete="new-password">
+                </div>
+                <button type="submit" class="btn btn-primary">Register</button>
+            </form>
+        </main>
+
+        <div id="error-message" class="error-message"></div>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+
+</html>

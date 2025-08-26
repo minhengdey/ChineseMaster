@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - Bucha</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1>🇨🇳 Bucha</h1>
+            <div class="nav-links">
+                <a href="lessons.html">Lessons</a>
+                <a href="flashcards.html">Flashcards</a>
+                <a href="pronunciation.html">Pronunciation</a>
+                <a href="quiz.html" class="active">Quiz</a>
+                <a href="profile.html">Profile</a>
+                <button id="logout-btn" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="page-header">
+            <h2>📝 Quiz Practice</h2>
+            <p>Test your knowledge with interactive quizzes</p>
+        </header>
+
+        <main>
+            <div class="quiz-section">
+                <form id="quiz-form" class="quiz-form">
+                    <div class="form-group">
+                        <label for="quiz-lesson-select">Select Lesson</label>
+                        <select id="quiz-lesson-select" required>
+                            <option value="">Choose a lesson to quiz</option>
+                        </select>
+                    </div>
+
+                    <div id="quiz-questions" class="quiz-questions" style="display: none;">
+                        <!-- Sample questions - in real app these would be loaded from API -->
+                        <div class="question">
+                            <h4>Question 1: What does "你好" mean?</h4>
+                            <div class="question-options">
+                                <label><input type="radio" name="q1" value="A"> Hello</label>
+                                <label><input type="radio" name="q1" value="B"> Goodbye</label>
+                                <label><input type="radio" name="q1" value="C"> Thank you</label>
+                                <label><input type="radio" name="q1" value="D"> Sorry</label>
+                            </div>
+                        </div>
+
+                        <div class="question">
+                            <h4>Question 2: How do you say "thank you" in Chinese?</h4>
+                            <div class="question-options">
+                                <label><input type="radio" name="q2" value="A"> 你好</label>
+                                <label><input type="radio" name="q2" value="B"> 再见</label>
+                                <label><input type="radio" name="q2" value="C"> 谢谢</label>
+                                <label><input type="radio" name="q2" value="D"> 对不起</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="start-quiz-btn" class="btn btn-primary">Start Quiz</button>
+                    <button type="submit" id="submit-quiz-btn" class="btn btn-success" style="display: none;">Submit Quiz</button>
+                </form>
+
+                <div id="quiz-result" class="quiz-result" style="display: none;">
+                    <div class="result-header">
+                        <h3>Quiz Results</h3>
+                        <div class="score-display">
+                            <span id="quiz-score">0</span> / <span id="quiz-total">0</span>
+                        </div>
+                    </div>
+
+                    <div id="corrections-list" class="corrections-list">
+                        <!-- Corrections will be populated here -->
+                    </div>
+
+                    <button id="retake-quiz-btn" class="btn btn-primary">Take Another Quiz</button>
+                </div>
+            </div>
+        </main>
+
+        <div id="error-message" class="error-message"></div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/quiz.js"></script>
+</body>
+</html>

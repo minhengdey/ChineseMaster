@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards - Bucha</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1>🇨🇳 Bucha</h1>
+            <div class="nav-links">
+                <a href="lessons.html">Lessons</a>
+                <a href="flashcards.html" class="active">Flashcards</a>
+                <a href="pronunciation.html">Pronunciation</a>
+                <a href="quiz.html">Quiz</a>
+                <a href="profile.html">Profile</a>
+                <button id="logout-btn" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="page-header">
+            <h2>Flashcards Review</h2>
+            <div class="flashcard-stats">
+                <span id="card-counter">0 / 0</span>
+            </div>
+        </header>
+
+        <main>
+            <div id="flashcard-container" class="flashcard-container">
+                <div id="flashcard" class="flashcard">
+                    <div class="flashcard-inner">
+                        <div class="flashcard-front">
+                            <div class="hanzi" id="card-hanzi">你</div>
+                            <button class="btn btn-secondary" id="flip-btn">Show Answer</button>
+                        </div>
+                        <div class="flashcard-back">
+                            <div class="pinyin" id="card-pinyin">nǐ</div>
+                            <div class="meaning" id="card-meaning">you</div>
+                            <div class="review-buttons">
+                                <button class="btn btn-danger" data-result="again">Again</button>
+                                <button class="btn btn-warning" data-result="good">Good</button>
+                                <button class="btn btn-success" data-result="easy">Easy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="no-cards" class="no-cards" style="display: none;">
+                <h3>🎉 All caught up!</h3>
+                <p>No cards to review right now. Come back later!</p>
+                <a href="lessons.html" class="btn btn-primary">Browse Lessons</a>
+            </div>
+        </main>
+
+        <div id="error-message" class="error-message"></div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/flashcards.js"></script>
+</body>
+</html>

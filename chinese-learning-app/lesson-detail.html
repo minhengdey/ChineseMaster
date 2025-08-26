@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson Detail - Bucha</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1>🇨🇳 Bucha</h1>
+            <div class="nav-links">
+                <a href="lessons.html">← Back to Lessons</a>
+                <a href="flashcards.html">Flashcards</a>
+                <a href="pronunciation.html">Pronunciation</a>
+                <a href="quiz.html">Quiz</a>
+                <a href="profile.html">Profile</a>
+                <button id="logout-btn" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <main id="lesson-content">
+            <!-- Lesson content will be loaded here -->
+        </main>
+
+        <div id="error-message" class="error-message"></div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/lesson-detail.js"></script>
+</body>
+</html>
