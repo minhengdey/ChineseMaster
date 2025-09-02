@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng chữ cái tiếng Trung - Context7 Style</title>
+    <link rel="stylesheet" href="style/main.css">
+
+</head>
+
+<body class="bg-base-200 min-h-screen">
+    <nav class="bg-base-100 border-b shadow-sm" aria-label="Main navigation">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index.html" class="font-bold text-xl tracking-tight text-primary">Bucha</a>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="lessons.html" class="btn btn-ghost btn-sm">Lessons</a>
+                    <a href="flashcards.html" class="btn btn-ghost btn-sm">Flashcards</a>
+                    <a href="pronunciation.html" class="btn btn-ghost btn-sm">Pronunciation</a>
+                    <a href="quiz.html" class="btn btn-ghost btn-sm">Quiz</a>
+                    <a href="profile.html" class="btn btn-ghost btn-sm">Profile</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <main class="container mx-auto px-4 py-8">
+        <div class="hero bg-gradient-to-r from-primary to-accent text-primary-content rounded-xl mb-8">
+            <div class="hero-content text-center py-10">
+                <div class="max-w-md mx-auto">
+                    <h1 class="text-4xl font-bold mb-4">Bảng chữ cái tiếng Trung</h1>
+                    <p class="text-lg opacity-90">Bấm vào từng ô để xem biến thể (nếu có)</p>
+                </div>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table id="alphabet-table" class="table table-zebra table-sm rounded-xl bg-base-100 shadow-lg">
+                <thead>
+                    <tr id="table-header" class="sticky top-0 z-10"></tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
+        </div>
+    </main>
+    <!-- Modal -->
+    <dialog id="variant-modal" class="modal">
+        <div class="modal-box max-w-md">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                onclick="document.getElementById('variant-modal').close()">✕</button>
+            <h3 id="modal-title" class="font-bold text-xl mb-4 text-primary"></h3>
+
+            <!-- Variants -->
+            <div class="mb-4">
+                <h5 class="font-semibold text-lg mb-3 text-accent">Các biến thể thanh điệu:</h5>
+                <div id="modal-variants" class="grid grid-cols-2 gap-2"></div>
+            </div>
+
+            <div class="modal-action">
+                <button class="btn btn-primary" onclick="document.getElementById('variant-modal').close()">Đóng</button>
+            </div>
+        </div>
+    </dialog>
+    <script type="module">
+        import alphabetData from './chinese_alphabet.json' assert { type: 'json' };
+        const initials = ["", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "j", "q", "x", "z", "c", "s", "zh", "ch", "sh", "r"];
+        const finals = [
+            "a", "ai", "an", "ang", "ao", "e", "ei", "en", "eng", "er", "i", "ia", "ian", "iang", "iao", "ie", "in", "ing", "iong", "iu", "o", "ong", "ou", "u", "ua", "uai", "uan", "uang", "ui", "un", "uo", "ü", "üe", "üan", "ün"
+        ];
+
+        // Build a lookup for fast access
+        const lookup = {};
+        alphabetData.forEach(item => { lookup[item.pinyin] = item; });
+
+        // Modal elements
+        const modal = document.getElementById('variant-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalVariants = document.getElementById('modal-variants');
+
+        // Audio management
+        let currentAudio = null;
+        const audioCache = new Map();
+
+        // Helper function to play audio with caching and cancellation
+        function playAudio(filename) {
+            try {
+                // Stop current audio if playing
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                }
+
+                // Check cache first
+                if (audioCache.has(filename)) {
+                    currentAudio = audioCache.get(filename);
+                } else {
+                    // Create new audio and cache it
+                    currentAudio = new Audio(`http://localhost:8080/api/audio/pinyin/${filename}`);
+                    audioCache.set(filename, currentAudio);
+                }
+
+                // Reset and play
+                currentAudio.currentTime = 0;
+                currentAudio.play().catch(e => {
+                    console.warn('Audio play failed:', e);
+                    currentAudio = null;
+                });
+
+                // Clear current reference when audio ends
+                currentAudio.addEventListener('ended', () => {
+                    currentAudio = null;
+                }, { once: true });
+
+            } catch (e) {
+                console.warn('Audio creation failed:', e);
+                currentAudio = null;
+            }
+        }
+
+        // Helper to get filename from pinyin
+        function getAudioFilename(pinyin, isVariant = false, variantIndex = 0) {
+            if (isVariant) {
+                return `${pinyin}${variantIndex + 1}.mp3`;
+            }
+            return `${pinyin}.mp3`;
+        }
+
+        // Table header
+        const headerRow = document.getElementById('table-header');
+        initials.forEach((init, index) => {
+            const th = document.createElement('th');
+            if (index === 0) {
+                th.className = 'bg-primary text-primary-content text-center sticky left-0 z-20';
+            } else {
+                th.className = 'bg-primary text-primary-content text-center';
+            }
+            th.textContent = init || ' '; // blank for first column
+            headerRow.appendChild(th);
+        });
+
+        // Table body
+        const body = document.getElementById('table-body');
+        finals.forEach(final => {
+            const tr = document.createElement('tr');
+            initials.forEach((init, idx) => {
+                const td = document.createElement('td');
+                td.className = 'text-center align-middle';
+                if (idx === 0) {
+                    td.className += ' bg-accent text-accent-content font-bold sticky left-0 z-10';
+                    td.textContent = final;
+                } else {
+                    const pinyin = (init + final).replace('ü', 'v');
+                    if (lookup[pinyin]) {
+                        td.innerHTML = `<button class='btn btn-xs btn-ghost font-semibold hover:btn-primary transition-all' title='${pinyin}'>${pinyin}</button>`;
+                        td.querySelector('button').onclick = () => {
+                            const item = lookup[pinyin];
+
+                            // Set modal title and main pronunciation
+                            modalTitle.textContent = `Phát âm "${item.pinyin}"`;
+
+                            // Show variants if available
+                            if (item.variants && item.variants.length > 0) {
+                                modalVariants.innerHTML = item.variants.map((variant, index) => `
+                                    <div class='card bg-base-200 hover:bg-base-300 transition-all cursor-pointer' data-variant-index='${index}'>
+                                        <div class='card-body p-3 text-center'>
+                                            <span class='text-lg font-bold text-accent'>${variant.pinyin}</span>
+                                            <button class='btn btn-xs btn-outline btn-info mt-1 variant-audio-btn' data-audio='${variant.audio}'>
+                                                🔊
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('');
+
+                                // Add event listeners after DOM is updated
+                                setTimeout(() => {
+                                    // Click handlers for variant cards
+                                    modalVariants.querySelectorAll('.card').forEach((card, cardIndex) => {
+                                        card.addEventListener('click', (e) => {
+                                            // Prevent click when clicking the button
+                                            if (e.target.classList.contains('variant-audio-btn')) return;
+
+                                            const variantIndex = parseInt(card.dataset.variantIndex);
+                                            const audioFile = item.variants[variantIndex].audio;
+                                            console.log('Card clicked - Playing audio:', audioFile);
+                                            playAudio(audioFile);
+                                        });
+                                    });
+
+                                    // Click handlers for audio buttons
+                                    modalVariants.querySelectorAll('.variant-audio-btn').forEach(btn => {
+                                        btn.addEventListener('click', (e) => {
+                                            e.stopPropagation();
+                                            const audioFile = btn.dataset.audio;
+                                            console.log('Button clicked - Playing audio:', audioFile);
+                                            playAudio(audioFile);
+                                        });
+                                    });
+                                }, 10);
+                            } else {
+                                modalVariants.innerHTML = '<p class="text-center text-base-content/70">Không có biến thể thanh điệu</p>';
+                            } modal.showModal();
+                        };
+                    } else {
+                        td.innerHTML = '';
+                    }
+                }
+                tr.appendChild(td);
+            });
+            body.appendChild(tr);
+        });
+    </script>
+</body>
+
+</html>
