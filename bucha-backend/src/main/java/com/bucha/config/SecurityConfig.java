@@ -28,7 +28,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-                                           @Value("${app.cors.allowed-origins:http://localhost:5500}") String allowedOrigins) throws Exception {
+            @Value("${app.cors.allowed-origins:http://localhost:5500}") String allowedOrigins) throws Exception {
 
         // CORS config
         http.cors(cors -> cors.configurationSource(request -> {
@@ -50,17 +50,18 @@ public class SecurityConfig {
                         .requestMatchers(
                                 new AntPathRequestMatcher("/api/auth/**"),
                                 new AntPathRequestMatcher("/api/audio/**"),
+                                new AntPathRequestMatcher("/**"),
                                 new AntPathRequestMatcher("/v3/api-docs/**"),
                                 new AntPathRequestMatcher("/swagger-ui/**"),
                                 new AntPathRequestMatcher("/swagger-ui.html"),
-                                new AntPathRequestMatcher("/h2-console/**")
-                        ).permitAll()
+                                new AntPathRequestMatcher("/h2-console/**"))
+                        .permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
-                        .anyRequest().permitAll()
-                )
+                        .anyRequest().permitAll())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // Rate limiting: add a RateLimitFilter before JwtFilter or use a gateway / bucket4j
+        // Rate limiting: add a RateLimitFilter before JwtFilter or use a gateway /
+        // bucket4j
         // TODO: plug in a rate limiter (e.g. bucket4j, redis) here.
 
         return http.build();
