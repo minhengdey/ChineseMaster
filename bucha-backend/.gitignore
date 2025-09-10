@@ -1,0 +1,46 @@
+# Build & dependency files
+/target/
+/build/
+/out/
+/bin/
+
+# IDE & Editor settings
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+*.sw?
+*~
+
+# OS & log/temp files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.bak
+
+
+# Application secrets
+.env
+*.env
+*.key
+*.pem
+*.crt
+
+# Static/uploads
+src/main/resources/uploads/
+
+# Optional: ignore database local config & test files
+*.h2.db
+*.mv.db
+
+# User specific files
+*.local
+
+# Java class/runtime/coverage
+*.class
+*.war
+*.ear
+*.jar
+*.coverage
