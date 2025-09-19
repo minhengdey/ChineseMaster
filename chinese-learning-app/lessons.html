@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lessons - Bucha</title>
+    <link rel="stylesheet" href="style/main.css">
+
+</head>
+
+<body>
+    <nav class="bg-base-100 border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index.html" class="font-bold">Bucha</a>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="lessons.html" class="btn btn-ghost btn-sm">Lessons</a>
+                    <a href="flashcards.html" class="btn btn-ghost btn-sm">Flashcards</a>
+                    <a href="pronunciation.html" class="btn btn-ghost btn-sm">Pronunciation</a>
+                    <a href="quiz.html" class="btn btn-ghost btn-sm">Quiz</a>
+                    <a href="profile.html" class="btn btn-ghost btn-sm">Profile</a>
+                    <button id="logout-btn" class="btn btn-outline btn-sm">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="min-h-screen bg-base-200">
+        <div class="container mx-auto px-4 py-8">
+            <!-- Hero Section -->
+            <div class="hero bg-gradient-to-r from-primary to-secondary text-primary-content rounded-xl mb-8">
+                <div class="hero-content text-center py-12">
+                    <div class="max-w-md">
+                        <h1 class="text-4xl font-bold mb-4">📚 Chinese Lessons</h1>
+                        <p class="text-lg opacity-90">Master Chinese step by step with our interactive lessons</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="card bg-base-100 shadow-xl mb-8">
+                <div class="card-body">
+                    <div class="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                        <h2 class="card-title text-2xl">Choose Your Level</h2>
+                        <div class="form-control w-full max-w-xs">
+                            <label class="label">
+                                <span class="label-text font-medium">Filter by HSK Level</span>
+                            </label>
+                            <select id="level-select" class="select select-bordered select-primary w-full">
+                                <option value="">All Levels</option>
+                                <option value="HSK1">HSK1 - Beginner</option>
+                                <option value="HSK2">HSK2 - Elementary</option>
+                                <option value="HSK3">HSK3 - Intermediate</option>
+                                <option value="HSK4">HSK4 - Upper Intermediate</option>
+                                <option value="HSK5">HSK5 - Advanced</option>
+                                <option value="HSK6">HSK6 - Superior</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lessons Grid -->
+            <div id="lessons-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Lessons will be loaded here -->
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading" class="flex justify-center items-center py-12" style="display: none;">
+                <div class="loading loading-spinner loading-lg text-primary"></div>
+                <span class="ml-4 text-lg">Loading lessons...</span>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="text-center py-12" style="display: none;">
+                <div class="text-6xl mb-4">📖</div>
+                <h3 class="text-2xl font-bold mb-2">No lessons found</h3>
+                <p class="text-base-content/70">Try selecting a different level or check back later</p>
+            </div>
+        </div>
+
+        <!-- Error Toast -->
+        <div id="error-message" class="toast toast-top toast-end" style="display: none;">
+            <div class="alert alert-error">
+                <span id="error-text"></span>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getLessons, showError, initGlobal } from './js/api.js'
+        initGlobal()
+
+        const lessonsGrid = document.getElementById("lessons-grid")
+        const levelSelect = document.getElementById("level-select")
+        const loading = document.getElementById("loading")
+
+        async function loadLessons(level = "") {
+            try {
+                loading.style.display = "block"
+                lessonsGrid.innerHTML = ""
+                document.getElementById("empty-state").style.display = "none"
+
+                const lessons = await getLessons(level || null)
+                if (!lessons || lessons.length === 0) {
+                    document.getElementById("empty-state").style.display = "block"
+                } else {
+                    lessons.forEach((lesson) => {
+                        const lessonCard = createLessonCard(lesson)
+                        lessonsGrid.appendChild(lessonCard)
+                    })
+                }
+            } catch (error) {
+                showError(error.message)
+            } finally {
+                loading.style.display = "none"
+            }
+        }
+
+        function createLessonCard(lesson) {
+            const card = document.createElement("div")
+            card.className = "card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer group"
+
+            const levelColors = {
+                'HSK1': 'badge-success',
+                'HSK2': 'badge-info',
+                'HSK3': 'badge-warning',
+                'HSK4': 'badge-error',
+                'HSK5': 'badge-secondary',
+                'HSK6': 'badge-accent'
+            }
+
+            card.innerHTML = `
+                <div class="card-body">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="card-title text-lg group-hover:text-primary transition-colors">${lesson.title}</h3>
+                        <div class="badge ${levelColors[lesson.level] || 'badge-neutral'} badge-lg">${lesson.level}</div>
+                    </div>
+                    <p class="text-base-content/70 mb-4">${lesson.description || 'Learn essential Chinese vocabulary and grammar'}</p>
+                    <div class="card-actions justify-between items-center">
+                        <div class="flex items-center gap-2 text-sm text-base-content/60">
+                            <span>📚 ${lesson.wordCount || '20+'} words</span>
+                            <span>⏱️ ${lesson.duration || '15'} min</span>
+                        </div>
+                        <div class="btn btn-primary btn-sm group-hover:btn-accent transition-colors">
+                            Start Learning →
+                        </div>
+                    </div>
+                </div>
+            `
+
+            card.addEventListener("click", () => {
+                window.location.href = `lesson-detail.html?id=${lesson.id}`
+            })
+            return card
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById("error-message")
+            const errorText = document.getElementById("error-text")
+            errorText.textContent = message
+            errorElement.style.display = "block"
+            setTimeout(() => {
+                errorElement.style.display = "none"
+            }, 5000)
+        }
+
+        levelSelect.addEventListener("change", function () {
+            loadLessons(this.value)
+        })
+
+        loadLessons()
+    </script>
+</body>
+
+</html>

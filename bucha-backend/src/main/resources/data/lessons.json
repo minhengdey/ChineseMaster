@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "level": "HSK1",
+    "title": "HSK1 - Lesson 1: 你好",
+    "content": "你好 - basic greeting",
+    "audio": ["hsk1-lesson1-hello.mp3"]
+  },
+  {
+    "id": 2,
+    "level": "HSK2",
+    "title": "HSK2 - Lesson 1: 家庭",
+    "content": "Family vocabulary",
+    "audio": []
+  }
+]

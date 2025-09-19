@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+  h2:
+    console:
+      enabled: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-validity-ms: 900000
+  refresh-validity-ms: 1209600000
+
+app:
+  cors:
+    allowed-origins: http://localhost:5500
+
+logging:
+  level:
+    root: INFO
+    org.springframework: DEBUG
+#    com.example.bucha: DEBUG
