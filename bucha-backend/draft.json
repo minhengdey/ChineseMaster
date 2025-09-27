@@ -1,0 +1,169 @@
+{
+   "valid": true,
+   "curriculumName": "HSK 1",
+   "errors": [],
+   "warnings": [],
+   "stats": {
+      "totalFiles": 1,
+      "validFiles": 1,
+      "invalidFiles": 0,
+      "totalLessons": 1,
+      "totalConversations": 2,
+      "totalConversationLines": 11,
+      "totalVocabulary": 20
+   },
+   "lessons": [
+      {
+         "fileName": "lesson1-sample.json",
+         "title": "Bài 1 你好",
+         "valid": true,
+         "errors": [],
+         "warnings": [],
+         "conversationCount": 2,
+         "vocabularyCount": 20,
+         "totalLines": 11,
+         "conversations": [
+            {
+               "section": "你好吗",
+               "vnTranslation": "Chào bạn!",
+               "lineCount": 6,
+               "speakers": [
+                  "大卫",
+                  "李军"
+               ]
+            },
+            {
+               "section": "你叫什么名字？",
+               "vnTranslation": "Bạn tên là gì?",
+               "lineCount": 5,
+               "speakers": [
+                  "大卫",
+                  "王老师"
+               ]
+            }
+         ],
+         "vocabulary": [
+            {
+               "word": "你好",
+               "pinyin": "nǐhǎo",
+               "type": "cụm từ",
+               "meaning": "Xin chào"
+            },
+            {
+               "word": "你",
+               "pinyin": "nǐ",
+               "type": "đại từ",
+               "meaning": "Bạn"
+            },
+            {
+               "word": "好",
+               "pinyin": "hǎo",
+               "type": "tính từ",
+               "meaning": "Tốt"
+            },
+            {
+               "word": "是",
+               "pinyin": "shì",
+               "type": "động từ",
+               "meaning": "Đúng"
+            },
+            {
+               "word": "老师",
+               "pinyin": "lǎoshī",
+               "type": "danh từ",
+               "meaning": "Giáo viên"
+            },
+            {
+               "word": "吗",
+               "pinyin": "ma",
+               "type": "trợ từ",
+               "meaning": "?"
+            },
+            {
+               "word": "不",
+               "pinyin": "bù",
+               "type": "phó từ",
+               "meaning": "KHÔNG"
+            },
+            {
+               "word": "我",
+               "pinyin": "wǒ",
+               "type": "đại từ",
+               "meaning": "Tôi"
+            },
+            {
+               "word": "学生",
+               "pinyin": "xuésheng",
+               "type": "danh từ",
+               "meaning": "Học sinh"
+            },
+            {
+               "word": "她",
+               "pinyin": "tā",
+               "type": "đại từ",
+               "meaning": "Cô ấy"
+            },
+            {
+               "word": "谢谢",
+               "pinyin": "xièxie",
+               "type": "động từ",
+               "meaning": "Cảm ơn"
+            },
+            {
+               "word": "不客气",
+               "pinyin": "bù kèqi",
+               "type": "cụm từ",
+               "meaning": "Không có gì"
+            },
+            {
+               "word": "您",
+               "pinyin": "nín",
+               "type": "đại từ",
+               "meaning": "Bạn (lịch sự)"
+            },
+            {
+               "word": "留学生",
+               "pinyin": "liúxuésheng",
+               "type": "danh từ",
+               "meaning": "Sinh viên quốc tế"
+            },
+            {
+               "word": "叫",
+               "pinyin": "jiào",
+               "type": "động từ",
+               "meaning": "Gọi"
+            },
+            {
+               "word": "什么",
+               "pinyin": "shénme",
+               "type": "đại từ",
+               "meaning": "Cái gì"
+            },
+            {
+               "word": "名字",
+               "pinyin": "míngzi",
+               "type": "danh từ",
+               "meaning": "Tên"
+            },
+            {
+               "word": "大卫",
+               "pinyin": "dàwèi",
+               "type": "tên riêng",
+               "meaning": "David"
+            },
+            {
+               "word": "李军",
+               "pinyin": "lǐjūn",
+               "type": "tên riêng",
+               "meaning": "Lý Quân"
+            },
+            {
+               "word": "王",
+               "pinyin": "wáng",
+               "type": "danh từ",
+               "meaning": "Nhà vua"
+            }
+         ]
+      }
+   ]
+}

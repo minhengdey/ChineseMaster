@@ -1,0 +1,4072 @@
+[
+  {
+    "id": 1,
+    "pinyin": "b",
+    "variants": [
+      {
+        "pinyin": "b",
+        "audio": "b1.mp3"
+      },
+      {
+        "pinyin": "b",
+        "audio": "b2.mp3"
+      },
+      {
+        "pinyin": "b",
+        "audio": "b3.mp3"
+      },
+      {
+        "pinyin": "b",
+        "audio": "b4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "pinyin": "p",
+    "variants": [
+      {
+        "pinyin": "p",
+        "audio": "p1.mp3"
+      },
+      {
+        "pinyin": "p",
+        "audio": "p2.mp3"
+      },
+      {
+        "pinyin": "p",
+        "audio": "p3.mp3"
+      },
+      {
+        "pinyin": "p",
+        "audio": "p4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "pinyin": "m",
+    "variants": [
+      {
+        "pinyin": "m",
+        "audio": "m1.mp3"
+      },
+      {
+        "pinyin": "m",
+        "audio": "m2.mp3"
+      },
+      {
+        "pinyin": "m",
+        "audio": "m3.mp3"
+      },
+      {
+        "pinyin": "m",
+        "audio": "m4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "pinyin": "f",
+    "variants": [
+      {
+        "pinyin": "f",
+        "audio": "f1.mp3"
+      },
+      {
+        "pinyin": "f",
+        "audio": "f2.mp3"
+      },
+      {
+        "pinyin": "f",
+        "audio": "f3.mp3"
+      },
+      {
+        "pinyin": "f",
+        "audio": "f4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "pinyin": "d",
+    "variants": [
+      {
+        "pinyin": "d",
+        "audio": "d1.mp3"
+      },
+      {
+        "pinyin": "d",
+        "audio": "d2.mp3"
+      },
+      {
+        "pinyin": "d",
+        "audio": "d3.mp3"
+      },
+      {
+        "pinyin": "d",
+        "audio": "d4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "pinyin": "t",
+    "variants": [
+      {
+        "pinyin": "t",
+        "audio": "t1.mp3"
+      },
+      {
+        "pinyin": "t",
+        "audio": "t2.mp3"
+      },
+      {
+        "pinyin": "t",
+        "audio": "t3.mp3"
+      },
+      {
+        "pinyin": "t",
+        "audio": "t4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "pinyin": "n",
+    "variants": [
+      {
+        "pinyin": "n",
+        "audio": "n1.mp3"
+      },
+      {
+        "pinyin": "n",
+        "audio": "n2.mp3"
+      },
+      {
+        "pinyin": "n",
+        "audio": "n3.mp3"
+      },
+      {
+        "pinyin": "n",
+        "audio": "n4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "pinyin": "l",
+    "variants": [
+      {
+        "pinyin": "l",
+        "audio": "l1.mp3"
+      },
+      {
+        "pinyin": "l",
+        "audio": "l2.mp3"
+      },
+      {
+        "pinyin": "l",
+        "audio": "l3.mp3"
+      },
+      {
+        "pinyin": "l",
+        "audio": "l4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "pinyin": "g",
+    "variants": [
+      {
+        "pinyin": "g",
+        "audio": "g1.mp3"
+      },
+      {
+        "pinyin": "g",
+        "audio": "g2.mp3"
+      },
+      {
+        "pinyin": "g",
+        "audio": "g3.mp3"
+      },
+      {
+        "pinyin": "g",
+        "audio": "g4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "pinyin": "k",
+    "variants": [
+      {
+        "pinyin": "k",
+        "audio": "k1.mp3"
+      },
+      {
+        "pinyin": "k",
+        "audio": "k2.mp3"
+      },
+      {
+        "pinyin": "k",
+        "audio": "k3.mp3"
+      },
+      {
+        "pinyin": "k",
+        "audio": "k4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "pinyin": "h",
+    "variants": [
+      {
+        "pinyin": "h",
+        "audio": "h1.mp3"
+      },
+      {
+        "pinyin": "h",
+        "audio": "h2.mp3"
+      },
+      {
+        "pinyin": "h",
+        "audio": "h3.mp3"
+      },
+      {
+        "pinyin": "h",
+        "audio": "h4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "pinyin": "j",
+    "variants": [
+      {
+        "pinyin": "j",
+        "audio": "j1.mp3"
+      },
+      {
+        "pinyin": "j",
+        "audio": "j2.mp3"
+      },
+      {
+        "pinyin": "j",
+        "audio": "j3.mp3"
+      },
+      {
+        "pinyin": "j",
+        "audio": "j4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "pinyin": "q",
+    "variants": [
+      {
+        "pinyin": "q",
+        "audio": "q1.mp3"
+      },
+      {
+        "pinyin": "q",
+        "audio": "q2.mp3"
+      },
+      {
+        "pinyin": "q",
+        "audio": "q3.mp3"
+      },
+      {
+        "pinyin": "q",
+        "audio": "q4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "pinyin": "x",
+    "variants": [
+      {
+        "pinyin": "x",
+        "audio": "x1.mp3"
+      },
+      {
+        "pinyin": "x",
+        "audio": "x2.mp3"
+      },
+      {
+        "pinyin": "x",
+        "audio": "x3.mp3"
+      },
+      {
+        "pinyin": "x",
+        "audio": "x4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "pinyin": "z",
+    "variants": [
+      {
+        "pinyin": "z",
+        "audio": "z1.mp3"
+      },
+      {
+        "pinyin": "z",
+        "audio": "z2.mp3"
+      },
+      {
+        "pinyin": "z",
+        "audio": "z3.mp3"
+      },
+      {
+        "pinyin": "z",
+        "audio": "z4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "pinyin": "c",
+    "variants": [
+      {
+        "pinyin": "c",
+        "audio": "c1.mp3"
+      },
+      {
+        "pinyin": "c",
+        "audio": "c2.mp3"
+      },
+      {
+        "pinyin": "c",
+        "audio": "c3.mp3"
+      },
+      {
+        "pinyin": "c",
+        "audio": "c4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "pinyin": "s",
+    "variants": [
+      {
+        "pinyin": "s",
+        "audio": "s1.mp3"
+      },
+      {
+        "pinyin": "s",
+        "audio": "s2.mp3"
+      },
+      {
+        "pinyin": "s",
+        "audio": "s3.mp3"
+      },
+      {
+        "pinyin": "s",
+        "audio": "s4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "pinyin": "zh",
+    "variants": [
+      {
+        "pinyin": "zh",
+        "audio": "zh1.mp3"
+      },
+      {
+        "pinyin": "zh",
+        "audio": "zh2.mp3"
+      },
+      {
+        "pinyin": "zh",
+        "audio": "zh3.mp3"
+      },
+      {
+        "pinyin": "zh",
+        "audio": "zh4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "pinyin": "ch",
+    "variants": [
+      {
+        "pinyin": "ch",
+        "audio": "ch1.mp3"
+      },
+      {
+        "pinyin": "ch",
+        "audio": "ch2.mp3"
+      },
+      {
+        "pinyin": "ch",
+        "audio": "ch3.mp3"
+      },
+      {
+        "pinyin": "ch",
+        "audio": "ch4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 20,
+    "pinyin": "sh",
+    "variants": [
+      {
+        "pinyin": "sh",
+        "audio": "sh1.mp3"
+      },
+      {
+        "pinyin": "sh",
+        "audio": "sh2.mp3"
+      },
+      {
+        "pinyin": "sh",
+        "audio": "sh3.mp3"
+      },
+      {
+        "pinyin": "sh",
+        "audio": "sh4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 21,
+    "pinyin": "r",
+    "variants": [
+      {
+        "pinyin": "r",
+        "audio": "r1.mp3"
+      },
+      {
+        "pinyin": "r",
+        "audio": "r2.mp3"
+      },
+      {
+        "pinyin": "r",
+        "audio": "r3.mp3"
+      },
+      {
+        "pinyin": "r",
+        "audio": "r4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 22,
+    "pinyin": "i",
+    "variants": [
+      {
+        "pinyin": "ī",
+        "audio": "i1.mp3"
+      },
+      {
+        "pinyin": "í",
+        "audio": "i2.mp3"
+      },
+      {
+        "pinyin": "ǐ",
+        "audio": "i3.mp3"
+      },
+      {
+        "pinyin": "ì",
+        "audio": "i4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 23,
+    "pinyin": "zi",
+    "variants": [
+      {
+        "pinyin": "zī",
+        "audio": "zi1.mp3"
+      },
+      {
+        "pinyin": "zí",
+        "audio": "zi2.mp3"
+      },
+      {
+        "pinyin": "zǐ",
+        "audio": "zi3.mp3"
+      },
+      {
+        "pinyin": "zì",
+        "audio": "zi4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 24,
+    "pinyin": "ci",
+    "variants": [
+      {
+        "pinyin": "cī",
+        "audio": "ci1.mp3"
+      },
+      {
+        "pinyin": "cí",
+        "audio": "ci2.mp3"
+      },
+      {
+        "pinyin": "cǐ",
+        "audio": "ci3.mp3"
+      },
+      {
+        "pinyin": "cì",
+        "audio": "ci4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 25,
+    "pinyin": "si",
+    "variants": [
+      {
+        "pinyin": "sī",
+        "audio": "si1.mp3"
+      },
+      {
+        "pinyin": "sí",
+        "audio": "si2.mp3"
+      },
+      {
+        "pinyin": "sǐ",
+        "audio": "si3.mp3"
+      },
+      {
+        "pinyin": "sì",
+        "audio": "si4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "pinyin": "zhi",
+    "variants": [
+      {
+        "pinyin": "zhī",
+        "audio": "zhi1.mp3"
+      },
+      {
+        "pinyin": "zhí",
+        "audio": "zhi2.mp3"
+      },
+      {
+        "pinyin": "zhǐ",
+        "audio": "zhi3.mp3"
+      },
+      {
+        "pinyin": "zhì",
+        "audio": "zhi4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 27,
+    "pinyin": "chi",
+    "variants": [
+      {
+        "pinyin": "chī",
+        "audio": "chi1.mp3"
+      },
+      {
+        "pinyin": "chí",
+        "audio": "chi2.mp3"
+      },
+      {
+        "pinyin": "chǐ",
+        "audio": "chi3.mp3"
+      },
+      {
+        "pinyin": "chì",
+        "audio": "chi4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 28,
+    "pinyin": "shi",
+    "variants": [
+      {
+        "pinyin": "shī",
+        "audio": "shi1.mp3"
+      },
+      {
+        "pinyin": "shí",
+        "audio": "shi2.mp3"
+      },
+      {
+        "pinyin": "shǐ",
+        "audio": "shi3.mp3"
+      },
+      {
+        "pinyin": "shì",
+        "audio": "shi4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 29,
+    "pinyin": "ri",
+    "variants": [
+      {
+        "pinyin": "rī",
+        "audio": "ri1.mp3"
+      },
+      {
+        "pinyin": "rí",
+        "audio": "ri2.mp3"
+      },
+      {
+        "pinyin": "rǐ",
+        "audio": "ri3.mp3"
+      },
+      {
+        "pinyin": "rì",
+        "audio": "ri4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 30,
+    "pinyin": "a",
+    "variants": [
+      {
+        "pinyin": "ā",
+        "audio": "a1.mp3"
+      },
+      {
+        "pinyin": "á",
+        "audio": "a2.mp3"
+      },
+      {
+        "pinyin": "ǎ",
+        "audio": "a3.mp3"
+      },
+      {
+        "pinyin": "à",
+        "audio": "a4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 31,
+    "pinyin": "ba",
+    "variants": [
+      {
+        "pinyin": "bā",
+        "audio": "ba1.mp3"
+      },
+      {
+        "pinyin": "bá",
+        "audio": "ba2.mp3"
+      },
+      {
+        "pinyin": "bǎ",
+        "audio": "ba3.mp3"
+      },
+      {
+        "pinyin": "bà",
+        "audio": "ba4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 32,
+    "pinyin": "pa",
+    "variants": [
+      {
+        "pinyin": "pā",
+        "audio": "pa1.mp3"
+      },
+      {
+        "pinyin": "pá",
+        "audio": "pa2.mp3"
+      },
+      {
+        "pinyin": "pǎ",
+        "audio": "pa3.mp3"
+      },
+      {
+        "pinyin": "pà",
+        "audio": "pa4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 33,
+    "pinyin": "ma",
+    "variants": [
+      {
+        "pinyin": "mā",
+        "audio": "ma1.mp3"
+      },
+      {
+        "pinyin": "má",
+        "audio": "ma2.mp3"
+      },
+      {
+        "pinyin": "mǎ",
+        "audio": "ma3.mp3"
+      },
+      {
+        "pinyin": "mà",
+        "audio": "ma4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 34,
+    "pinyin": "fa",
+    "variants": [
+      {
+        "pinyin": "fā",
+        "audio": "fa1.mp3"
+      },
+      {
+        "pinyin": "fá",
+        "audio": "fa2.mp3"
+      },
+      {
+        "pinyin": "fǎ",
+        "audio": "fa3.mp3"
+      },
+      {
+        "pinyin": "fà",
+        "audio": "fa4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 35,
+    "pinyin": "da",
+    "variants": [
+      {
+        "pinyin": "dā",
+        "audio": "da1.mp3"
+      },
+      {
+        "pinyin": "dá",
+        "audio": "da2.mp3"
+      },
+      {
+        "pinyin": "dǎ",
+        "audio": "da3.mp3"
+      },
+      {
+        "pinyin": "dà",
+        "audio": "da4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 36,
+    "pinyin": "ta",
+    "variants": [
+      {
+        "pinyin": "tā",
+        "audio": "ta1.mp3"
+      },
+      {
+        "pinyin": "tá",
+        "audio": "ta2.mp3"
+      },
+      {
+        "pinyin": "tǎ",
+        "audio": "ta3.mp3"
+      },
+      {
+        "pinyin": "tà",
+        "audio": "ta4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 37,
+    "pinyin": "na",
+    "variants": [
+      {
+        "pinyin": "nā",
+        "audio": "na1.mp3"
+      },
+      {
+        "pinyin": "ná",
+        "audio": "na2.mp3"
+      },
+      {
+        "pinyin": "nǎ",
+        "audio": "na3.mp3"
+      },
+      {
+        "pinyin": "nà",
+        "audio": "na4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 38,
+    "pinyin": "la",
+    "variants": [
+      {
+        "pinyin": "lā",
+        "audio": "la1.mp3"
+      },
+      {
+        "pinyin": "lá",
+        "audio": "la2.mp3"
+      },
+      {
+        "pinyin": "lǎ",
+        "audio": "la3.mp3"
+      },
+      {
+        "pinyin": "là",
+        "audio": "la4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 39,
+    "pinyin": "ga",
+    "variants": [
+      {
+        "pinyin": "gā",
+        "audio": "ga1.mp3"
+      },
+      {
+        "pinyin": "gá",
+        "audio": "ga2.mp3"
+      },
+      {
+        "pinyin": "gǎ",
+        "audio": "ga3.mp3"
+      },
+      {
+        "pinyin": "gà",
+        "audio": "ga4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 40,
+    "pinyin": "ka",
+    "variants": [
+      {
+        "pinyin": "kā",
+        "audio": "ka1.mp3"
+      },
+      {
+        "pinyin": "ká",
+        "audio": "ka2.mp3"
+      },
+      {
+        "pinyin": "kǎ",
+        "audio": "ka3.mp3"
+      },
+      {
+        "pinyin": "kà",
+        "audio": "ka4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 41,
+    "pinyin": "ha",
+    "variants": [
+      {
+        "pinyin": "hā",
+        "audio": "ha1.mp3"
+      },
+      {
+        "pinyin": "há",
+        "audio": "ha2.mp3"
+      },
+      {
+        "pinyin": "hǎ",
+        "audio": "ha3.mp3"
+      },
+      {
+        "pinyin": "hà",
+        "audio": "ha4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 42,
+    "pinyin": "za",
+    "variants": [
+      {
+        "pinyin": "zā",
+        "audio": "za1.mp3"
+      },
+      {
+        "pinyin": "zá",
+        "audio": "za2.mp3"
+      },
+      {
+        "pinyin": "zǎ",
+        "audio": "za3.mp3"
+      },
+      {
+        "pinyin": "zà",
+        "audio": "za4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 43,
+    "pinyin": "ca",
+    "variants": [
+      {
+        "pinyin": "cā",
+        "audio": "ca1.mp3"
+      },
+      {
+        "pinyin": "cá",
+        "audio": "ca2.mp3"
+      },
+      {
+        "pinyin": "cǎ",
+        "audio": "ca3.mp3"
+      },
+      {
+        "pinyin": "cà",
+        "audio": "ca4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 44,
+    "pinyin": "sa",
+    "variants": [
+      {
+        "pinyin": "sā",
+        "audio": "sa1.mp3"
+      },
+      {
+        "pinyin": "sá",
+        "audio": "sa2.mp3"
+      },
+      {
+        "pinyin": "sǎ",
+        "audio": "sa3.mp3"
+      },
+      {
+        "pinyin": "sà",
+        "audio": "sa4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 45,
+    "pinyin": "zha",
+    "variants": [
+      {
+        "pinyin": "zhā",
+        "audio": "zha1.mp3"
+      },
+      {
+        "pinyin": "zhá",
+        "audio": "zha2.mp3"
+      },
+      {
+        "pinyin": "zhǎ",
+        "audio": "zha3.mp3"
+      },
+      {
+        "pinyin": "zhà",
+        "audio": "zha4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 46,
+    "pinyin": "cha",
+    "variants": [
+      {
+        "pinyin": "chā",
+        "audio": "cha1.mp3"
+      },
+      {
+        "pinyin": "chá",
+        "audio": "cha2.mp3"
+      },
+      {
+        "pinyin": "chǎ",
+        "audio": "cha3.mp3"
+      },
+      {
+        "pinyin": "chà",
+        "audio": "cha4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 47,
+    "pinyin": "sha",
+    "variants": [
+      {
+        "pinyin": "shā",
+        "audio": "sha1.mp3"
+      },
+      {
+        "pinyin": "shá",
+        "audio": "sha2.mp3"
+      },
+      {
+        "pinyin": "shǎ",
+        "audio": "sha3.mp3"
+      },
+      {
+        "pinyin": "shà",
+        "audio": "sha4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 48,
+    "pinyin": "ai",
+    "variants": [
+      {
+        "pinyin": "āi",
+        "audio": "ai1.mp3"
+      },
+      {
+        "pinyin": "ái",
+        "audio": "ai2.mp3"
+      },
+      {
+        "pinyin": "ǎi",
+        "audio": "ai3.mp3"
+      },
+      {
+        "pinyin": "ài",
+        "audio": "ai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 49,
+    "pinyin": "bai",
+    "variants": [
+      {
+        "pinyin": "bāi",
+        "audio": "bai1.mp3"
+      },
+      {
+        "pinyin": "bái",
+        "audio": "bai2.mp3"
+      },
+      {
+        "pinyin": "bǎi",
+        "audio": "bai3.mp3"
+      },
+      {
+        "pinyin": "bài",
+        "audio": "bai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 50,
+    "pinyin": "pai",
+    "variants": [
+      {
+        "pinyin": "pāi",
+        "audio": "pai1.mp3"
+      },
+      {
+        "pinyin": "pái",
+        "audio": "pai2.mp3"
+      },
+      {
+        "pinyin": "pǎi",
+        "audio": "pai3.mp3"
+      },
+      {
+        "pinyin": "pài",
+        "audio": "pai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 51,
+    "pinyin": "mai",
+    "variants": [
+      {
+        "pinyin": "māi",
+        "audio": "mai1.mp3"
+      },
+      {
+        "pinyin": "mái",
+        "audio": "mai2.mp3"
+      },
+      {
+        "pinyin": "mǎi",
+        "audio": "mai3.mp3"
+      },
+      {
+        "pinyin": "mài",
+        "audio": "mai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 52,
+    "pinyin": "dai",
+    "variants": [
+      {
+        "pinyin": "dāi",
+        "audio": "dai1.mp3"
+      },
+      {
+        "pinyin": "dái",
+        "audio": "dai2.mp3"
+      },
+      {
+        "pinyin": "dǎi",
+        "audio": "dai3.mp3"
+      },
+      {
+        "pinyin": "dài",
+        "audio": "dai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 53,
+    "pinyin": "tai",
+    "variants": [
+      {
+        "pinyin": "tāi",
+        "audio": "tai1.mp3"
+      },
+      {
+        "pinyin": "tái",
+        "audio": "tai2.mp3"
+      },
+      {
+        "pinyin": "tǎi",
+        "audio": "tai3.mp3"
+      },
+      {
+        "pinyin": "tài",
+        "audio": "tai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 54,
+    "pinyin": "nai",
+    "variants": [
+      {
+        "pinyin": "nāi",
+        "audio": "nai1.mp3"
+      },
+      {
+        "pinyin": "nái",
+        "audio": "nai2.mp3"
+      },
+      {
+        "pinyin": "nǎi",
+        "audio": "nai3.mp3"
+      },
+      {
+        "pinyin": "nài",
+        "audio": "nai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 55,
+    "pinyin": "lai",
+    "variants": [
+      {
+        "pinyin": "lāi",
+        "audio": "lai1.mp3"
+      },
+      {
+        "pinyin": "lái",
+        "audio": "lai2.mp3"
+      },
+      {
+        "pinyin": "lǎi",
+        "audio": "lai3.mp3"
+      },
+      {
+        "pinyin": "lài",
+        "audio": "lai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 56,
+    "pinyin": "gai",
+    "variants": [
+      {
+        "pinyin": "gāi",
+        "audio": "gai1.mp3"
+      },
+      {
+        "pinyin": "gái",
+        "audio": "gai2.mp3"
+      },
+      {
+        "pinyin": "gǎi",
+        "audio": "gai3.mp3"
+      },
+      {
+        "pinyin": "gài",
+        "audio": "gai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 57,
+    "pinyin": "kai",
+    "variants": [
+      {
+        "pinyin": "kāi",
+        "audio": "kai1.mp3"
+      },
+      {
+        "pinyin": "kái",
+        "audio": "kai2.mp3"
+      },
+      {
+        "pinyin": "kǎi",
+        "audio": "kai3.mp3"
+      },
+      {
+        "pinyin": "kài",
+        "audio": "kai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 58,
+    "pinyin": "hai",
+    "variants": [
+      {
+        "pinyin": "hāi",
+        "audio": "hai1.mp3"
+      },
+      {
+        "pinyin": "hái",
+        "audio": "hai2.mp3"
+      },
+      {
+        "pinyin": "hǎi",
+        "audio": "hai3.mp3"
+      },
+      {
+        "pinyin": "hài",
+        "audio": "hai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 59,
+    "pinyin": "zai",
+    "variants": [
+      {
+        "pinyin": "zāi",
+        "audio": "zai1.mp3"
+      },
+      {
+        "pinyin": "zái",
+        "audio": "zai2.mp3"
+      },
+      {
+        "pinyin": "zǎi",
+        "audio": "zai3.mp3"
+      },
+      {
+        "pinyin": "zài",
+        "audio": "zai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 60,
+    "pinyin": "cai",
+    "variants": [
+      {
+        "pinyin": "cāi",
+        "audio": "cai1.mp3"
+      },
+      {
+        "pinyin": "cái",
+        "audio": "cai2.mp3"
+      },
+      {
+        "pinyin": "cǎi",
+        "audio": "cai3.mp3"
+      },
+      {
+        "pinyin": "cài",
+        "audio": "cai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 61,
+    "pinyin": "sai",
+    "variants": [
+      {
+        "pinyin": "sāi",
+        "audio": "sai1.mp3"
+      },
+      {
+        "pinyin": "sái",
+        "audio": "sai2.mp3"
+      },
+      {
+        "pinyin": "sǎi",
+        "audio": "sai3.mp3"
+      },
+      {
+        "pinyin": "sài",
+        "audio": "sai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 62,
+    "pinyin": "zhai",
+    "variants": [
+      {
+        "pinyin": "zhāi",
+        "audio": "zhai1.mp3"
+      },
+      {
+        "pinyin": "zhái",
+        "audio": "zhai2.mp3"
+      },
+      {
+        "pinyin": "zhǎi",
+        "audio": "zhai3.mp3"
+      },
+      {
+        "pinyin": "zhài",
+        "audio": "zhai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 63,
+    "pinyin": "chai",
+    "variants": [
+      {
+        "pinyin": "chāi",
+        "audio": "chai1.mp3"
+      },
+      {
+        "pinyin": "chái",
+        "audio": "chai2.mp3"
+      },
+      {
+        "pinyin": "chǎi",
+        "audio": "chai3.mp3"
+      },
+      {
+        "pinyin": "chài",
+        "audio": "chai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 64,
+    "pinyin": "shai",
+    "variants": [
+      {
+        "pinyin": "shāi",
+        "audio": "shai1.mp3"
+      },
+      {
+        "pinyin": "shái",
+        "audio": "shai2.mp3"
+      },
+      {
+        "pinyin": "shǎi",
+        "audio": "shai3.mp3"
+      },
+      {
+        "pinyin": "shài",
+        "audio": "shai4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 65,
+    "pinyin": "an",
+    "variants": [
+      {
+        "pinyin": "ān",
+        "audio": "an1.mp3"
+      },
+      {
+        "pinyin": "án",
+        "audio": "an2.mp3"
+      },
+      {
+        "pinyin": "ǎn",
+        "audio": "an3.mp3"
+      },
+      {
+        "pinyin": "àn",
+        "audio": "an4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 66,
+    "pinyin": "ban",
+    "variants": [
+      {
+        "pinyin": "bān",
+        "audio": "ban1.mp3"
+      },
+      {
+        "pinyin": "bán",
+        "audio": "ban2.mp3"
+      },
+      {
+        "pinyin": "bǎn",
+        "audio": "ban3.mp3"
+      },
+      {
+        "pinyin": "bàn",
+        "audio": "ban4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 67,
+    "pinyin": "pan",
+    "variants": [
+      {
+        "pinyin": "pān",
+        "audio": "pan1.mp3"
+      },
+      {
+        "pinyin": "pán",
+        "audio": "pan2.mp3"
+      },
+      {
+        "pinyin": "pǎn",
+        "audio": "pan3.mp3"
+      },
+      {
+        "pinyin": "pàn",
+        "audio": "pan4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 68,
+    "pinyin": "man",
+    "variants": [
+      {
+        "pinyin": "mān",
+        "audio": "man1.mp3"
+      },
+      {
+        "pinyin": "mán",
+        "audio": "man2.mp3"
+      },
+      {
+        "pinyin": "mǎn",
+        "audio": "man3.mp3"
+      },
+      {
+        "pinyin": "màn",
+        "audio": "man4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 69,
+    "pinyin": "fan",
+    "variants": [
+      {
+        "pinyin": "fān",
+        "audio": "fan1.mp3"
+      },
+      {
+        "pinyin": "fán",
+        "audio": "fan2.mp3"
+      },
+      {
+        "pinyin": "fǎn",
+        "audio": "fan3.mp3"
+      },
+      {
+        "pinyin": "fàn",
+        "audio": "fan4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 70,
+    "pinyin": "dan",
+    "variants": [
+      {
+        "pinyin": "dān",
+        "audio": "dan1.mp3"
+      },
+      {
+        "pinyin": "dán",
+        "audio": "dan2.mp3"
+      },
+      {
+        "pinyin": "dǎn",
+        "audio": "dan3.mp3"
+      },
+      {
+        "pinyin": "dàn",
+        "audio": "dan4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 71,
+    "pinyin": "tan",
+    "variants": [
+      {
+        "pinyin": "tān",
+        "audio": "tan1.mp3"
+      },
+      {
+        "pinyin": "tán",
+        "audio": "tan2.mp3"
+      },
+      {
+        "pinyin": "tǎn",
+        "audio": "tan3.mp3"
+      },
+      {
+        "pinyin": "tàn",
+        "audio": "tan4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 72,
+    "pinyin": "nan",
+    "variants": [
+      {
+        "pinyin": "nān",
+        "audio": "nan1.mp3"
+      },
+      {
+        "pinyin": "nán",
+        "audio": "nan2.mp3"
+      },
+      {
+        "pinyin": "nǎn",
+        "audio": "nan3.mp3"
+      },
+      {
+        "pinyin": "nàn",
+        "audio": "nan4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 73,
+    "pinyin": "lan",
+    "variants": [
+      {
+        "pinyin": "lān",
+        "audio": "lan1.mp3"
+      },
+      {
+        "pinyin": "lán",
+        "audio": "lan2.mp3"
+      },
+      {
+        "pinyin": "lǎn",
+        "audio": "lan3.mp3"
+      },
+      {
+        "pinyin": "làn",
+        "audio": "lan4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 74,
+    "pinyin": "gan",
+    "variants": [
+      {
+        "pinyin": "gān",
+        "audio": "gan1.mp3"
+      },
+      {
+        "pinyin": "gán",
+        "audio": "gan2.mp3"
+      },
+      {
+        "pinyin": "gǎn",
+        "audio": "gan3.mp3"
+      },
+      {
+        "pinyin": "gàn",
+        "audio": "gan4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 75,
+    "pinyin": "kan",
+    "variants": [
+      {
+        "pinyin": "kān",
+        "audio": "kan1.mp3"
+      },
+      {
+        "pinyin": "kán",
+        "audio": "kan2.mp3"
+      },
+      {
+        "pinyin": "kǎn",
+        "audio": "kan3.mp3"
+      },
+      {
+        "pinyin": "kàn",
+        "audio": "kan4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 76,
+    "pinyin": "han",
+    "variants": [
+      {
+        "pinyin": "hān",
+        "audio": "han1.mp3"
+      },
+      {
+        "pinyin": "hán",
+        "audio": "han2.mp3"
+      },
+      {
+        "pinyin": "hǎn",
+        "audio": "han3.mp3"
+      },
+      {
+        "pinyin": "hàn",
+        "audio": "han4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 77,
+    "pinyin": "zan",
+    "variants": [
+      {
+        "pinyin": "zān",
+        "audio": "zan1.mp3"
+      },
+      {
+        "pinyin": "zán",
+        "audio": "zan2.mp3"
+      },
+      {
+        "pinyin": "zǎn",
+        "audio": "zan3.mp3"
+      },
+      {
+        "pinyin": "zàn",
+        "audio": "zan4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 78,
+    "pinyin": "can",
+    "variants": [
+      {
+        "pinyin": "cān",
+        "audio": "can1.mp3"
+      },
+      {
+        "pinyin": "cán",
+        "audio": "can2.mp3"
+      },
+      {
+        "pinyin": "cǎn",
+        "audio": "can3.mp3"
+      },
+      {
+        "pinyin": "càn",
+        "audio": "can4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 79,
+    "pinyin": "san",
+    "variants": [
+      {
+        "pinyin": "sān",
+        "audio": "san1.mp3"
+      },
+      {
+        "pinyin": "sán",
+        "audio": "san2.mp3"
+      },
+      {
+        "pinyin": "sǎn",
+        "audio": "san3.mp3"
+      },
+      {
+        "pinyin": "sàn",
+        "audio": "san4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 80,
+    "pinyin": "zhan",
+    "variants": [
+      {
+        "pinyin": "zhān",
+        "audio": "zhan1.mp3"
+      },
+      {
+        "pinyin": "zhán",
+        "audio": "zhan2.mp3"
+      },
+      {
+        "pinyin": "zhǎn",
+        "audio": "zhan3.mp3"
+      },
+      {
+        "pinyin": "zhàn",
+        "audio": "zhan4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 81,
+    "pinyin": "chan",
+    "variants": [
+      {
+        "pinyin": "chān",
+        "audio": "chan1.mp3"
+      },
+      {
+        "pinyin": "chán",
+        "audio": "chan2.mp3"
+      },
+      {
+        "pinyin": "chǎn",
+        "audio": "chan3.mp3"
+      },
+      {
+        "pinyin": "chàn",
+        "audio": "chan4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 82,
+    "pinyin": "shan",
+    "variants": [
+      {
+        "pinyin": "shān",
+        "audio": "shan1.mp3"
+      },
+      {
+        "pinyin": "shán",
+        "audio": "shan2.mp3"
+      },
+      {
+        "pinyin": "shǎn",
+        "audio": "shan3.mp3"
+      },
+      {
+        "pinyin": "shàn",
+        "audio": "shan4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 83,
+    "pinyin": "ran",
+    "variants": [
+      {
+        "pinyin": "rān",
+        "audio": "ran1.mp3"
+      },
+      {
+        "pinyin": "rán",
+        "audio": "ran2.mp3"
+      },
+      {
+        "pinyin": "rǎn",
+        "audio": "ran3.mp3"
+      },
+      {
+        "pinyin": "ràn",
+        "audio": "ran4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 84,
+    "pinyin": "ang",
+    "variants": [
+      {
+        "pinyin": "āng",
+        "audio": "ang1.mp3"
+      },
+      {
+        "pinyin": "áng",
+        "audio": "ang2.mp3"
+      },
+      {
+        "pinyin": "ǎng",
+        "audio": "ang3.mp3"
+      },
+      {
+        "pinyin": "àng",
+        "audio": "ang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 85,
+    "pinyin": "bang",
+    "variants": [
+      {
+        "pinyin": "bāng",
+        "audio": "bang1.mp3"
+      },
+      {
+        "pinyin": "báng",
+        "audio": "bang2.mp3"
+      },
+      {
+        "pinyin": "bǎng",
+        "audio": "bang3.mp3"
+      },
+      {
+        "pinyin": "bàng",
+        "audio": "bang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 86,
+    "pinyin": "pang",
+    "variants": [
+      {
+        "pinyin": "pāng",
+        "audio": "pang1.mp3"
+      },
+      {
+        "pinyin": "páng",
+        "audio": "pang2.mp3"
+      },
+      {
+        "pinyin": "pǎng",
+        "audio": "pang3.mp3"
+      },
+      {
+        "pinyin": "pàng",
+        "audio": "pang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 87,
+    "pinyin": "mang",
+    "variants": [
+      {
+        "pinyin": "māng",
+        "audio": "mang1.mp3"
+      },
+      {
+        "pinyin": "máng",
+        "audio": "mang2.mp3"
+      },
+      {
+        "pinyin": "mǎng",
+        "audio": "mang3.mp3"
+      },
+      {
+        "pinyin": "màng",
+        "audio": "mang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 88,
+    "pinyin": "fang",
+    "variants": [
+      {
+        "pinyin": "fāng",
+        "audio": "fang1.mp3"
+      },
+      {
+        "pinyin": "fáng",
+        "audio": "fang2.mp3"
+      },
+      {
+        "pinyin": "fǎng",
+        "audio": "fang3.mp3"
+      },
+      {
+        "pinyin": "fàng",
+        "audio": "fang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 89,
+    "pinyin": "dang",
+    "variants": [
+      {
+        "pinyin": "dāng",
+        "audio": "dang1.mp3"
+      },
+      {
+        "pinyin": "dáng",
+        "audio": "dang2.mp3"
+      },
+      {
+        "pinyin": "dǎng",
+        "audio": "dang3.mp3"
+      },
+      {
+        "pinyin": "dàng",
+        "audio": "dang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 90,
+    "pinyin": "tang",
+    "variants": [
+      {
+        "pinyin": "tāng",
+        "audio": "tang1.mp3"
+      },
+      {
+        "pinyin": "táng",
+        "audio": "tang2.mp3"
+      },
+      {
+        "pinyin": "tǎng",
+        "audio": "tang3.mp3"
+      },
+      {
+        "pinyin": "tàng",
+        "audio": "tang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 91,
+    "pinyin": "nang",
+    "variants": [
+      {
+        "pinyin": "nāng",
+        "audio": "nang1.mp3"
+      },
+      {
+        "pinyin": "náng",
+        "audio": "nang2.mp3"
+      },
+      {
+        "pinyin": "nǎng",
+        "audio": "nang3.mp3"
+      },
+      {
+        "pinyin": "nàng",
+        "audio": "nang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 92,
+    "pinyin": "lang",
+    "variants": [
+      {
+        "pinyin": "lāng",
+        "audio": "lang1.mp3"
+      },
+      {
+        "pinyin": "láng",
+        "audio": "lang2.mp3"
+      },
+      {
+        "pinyin": "lǎng",
+        "audio": "lang3.mp3"
+      },
+      {
+        "pinyin": "làng",
+        "audio": "lang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 93,
+    "pinyin": "gang",
+    "variants": [
+      {
+        "pinyin": "gāng",
+        "audio": "gang1.mp3"
+      },
+      {
+        "pinyin": "gáng",
+        "audio": "gang2.mp3"
+      },
+      {
+        "pinyin": "gǎng",
+        "audio": "gang3.mp3"
+      },
+      {
+        "pinyin": "gàng",
+        "audio": "gang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 94,
+    "pinyin": "kang",
+    "variants": [
+      {
+        "pinyin": "kāng",
+        "audio": "kang1.mp3"
+      },
+      {
+        "pinyin": "káng",
+        "audio": "kang2.mp3"
+      },
+      {
+        "pinyin": "kǎng",
+        "audio": "kang3.mp3"
+      },
+      {
+        "pinyin": "kàng",
+        "audio": "kang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 95,
+    "pinyin": "hang",
+    "variants": [
+      {
+        "pinyin": "hāng",
+        "audio": "hang1.mp3"
+      },
+      {
+        "pinyin": "háng",
+        "audio": "hang2.mp3"
+      },
+      {
+        "pinyin": "hǎng",
+        "audio": "hang3.mp3"
+      },
+      {
+        "pinyin": "hàng",
+        "audio": "hang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 96,
+    "pinyin": "zang",
+    "variants": [
+      {
+        "pinyin": "zāng",
+        "audio": "zang1.mp3"
+      },
+      {
+        "pinyin": "záng",
+        "audio": "zang2.mp3"
+      },
+      {
+        "pinyin": "zǎng",
+        "audio": "zang3.mp3"
+      },
+      {
+        "pinyin": "zàng",
+        "audio": "zang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 97,
+    "pinyin": "cang",
+    "variants": [
+      {
+        "pinyin": "cāng",
+        "audio": "cang1.mp3"
+      },
+      {
+        "pinyin": "cáng",
+        "audio": "cang2.mp3"
+      },
+      {
+        "pinyin": "cǎng",
+        "audio": "cang3.mp3"
+      },
+      {
+        "pinyin": "càng",
+        "audio": "cang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 98,
+    "pinyin": "sang",
+    "variants": [
+      {
+        "pinyin": "sāng",
+        "audio": "sang1.mp3"
+      },
+      {
+        "pinyin": "sáng",
+        "audio": "sang2.mp3"
+      },
+      {
+        "pinyin": "sǎng",
+        "audio": "sang3.mp3"
+      },
+      {
+        "pinyin": "sàng",
+        "audio": "sang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 99,
+    "pinyin": "zhang",
+    "variants": [
+      {
+        "pinyin": "zhāng",
+        "audio": "zhang1.mp3"
+      },
+      {
+        "pinyin": "zháng",
+        "audio": "zhang2.mp3"
+      },
+      {
+        "pinyin": "zhǎng",
+        "audio": "zhang3.mp3"
+      },
+      {
+        "pinyin": "zhàng",
+        "audio": "zhang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 100,
+    "pinyin": "chang",
+    "variants": [
+      {
+        "pinyin": "chāng",
+        "audio": "chang1.mp3"
+      },
+      {
+        "pinyin": "cháng",
+        "audio": "chang2.mp3"
+      },
+      {
+        "pinyin": "chǎng",
+        "audio": "chang3.mp3"
+      },
+      {
+        "pinyin": "chàng",
+        "audio": "chang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 101,
+    "pinyin": "shang",
+    "variants": [
+      {
+        "pinyin": "shāng",
+        "audio": "shang1.mp3"
+      },
+      {
+        "pinyin": "sháng",
+        "audio": "shang2.mp3"
+      },
+      {
+        "pinyin": "shǎng",
+        "audio": "shang3.mp3"
+      },
+      {
+        "pinyin": "shàng",
+        "audio": "shang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 102,
+    "pinyin": "rang",
+    "variants": [
+      {
+        "pinyin": "rāng",
+        "audio": "rang1.mp3"
+      },
+      {
+        "pinyin": "ráng",
+        "audio": "rang2.mp3"
+      },
+      {
+        "pinyin": "rǎng",
+        "audio": "rang3.mp3"
+      },
+      {
+        "pinyin": "ràng",
+        "audio": "rang4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 103,
+    "pinyin": "ao",
+    "variants": [
+      {
+        "pinyin": "āo",
+        "audio": "ao1.mp3"
+      },
+      {
+        "pinyin": "áo",
+        "audio": "ao2.mp3"
+      },
+      {
+        "pinyin": "ǎo",
+        "audio": "ao3.mp3"
+      },
+      {
+        "pinyin": "ào",
+        "audio": "ao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 104,
+    "pinyin": "bao",
+    "variants": [
+      {
+        "pinyin": "bāo",
+        "audio": "bao1.mp3"
+      },
+      {
+        "pinyin": "báo",
+        "audio": "bao2.mp3"
+      },
+      {
+        "pinyin": "bǎo",
+        "audio": "bao3.mp3"
+      },
+      {
+        "pinyin": "bào",
+        "audio": "bao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 105,
+    "pinyin": "pao",
+    "variants": [
+      {
+        "pinyin": "pāo",
+        "audio": "pao1.mp3"
+      },
+      {
+        "pinyin": "páo",
+        "audio": "pao2.mp3"
+      },
+      {
+        "pinyin": "pǎo",
+        "audio": "pao3.mp3"
+      },
+      {
+        "pinyin": "pào",
+        "audio": "pao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 106,
+    "pinyin": "mao",
+    "variants": [
+      {
+        "pinyin": "māo",
+        "audio": "mao1.mp3"
+      },
+      {
+        "pinyin": "máo",
+        "audio": "mao2.mp3"
+      },
+      {
+        "pinyin": "mǎo",
+        "audio": "mao3.mp3"
+      },
+      {
+        "pinyin": "mào",
+        "audio": "mao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 107,
+    "pinyin": "dao",
+    "variants": [
+      {
+        "pinyin": "dāo",
+        "audio": "dao1.mp3"
+      },
+      {
+        "pinyin": "dáo",
+        "audio": "dao2.mp3"
+      },
+      {
+        "pinyin": "dǎo",
+        "audio": "dao3.mp3"
+      },
+      {
+        "pinyin": "dào",
+        "audio": "dao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 108,
+    "pinyin": "tao",
+    "variants": [
+      {
+        "pinyin": "tāo",
+        "audio": "tao1.mp3"
+      },
+      {
+        "pinyin": "táo",
+        "audio": "tao2.mp3"
+      },
+      {
+        "pinyin": "tǎo",
+        "audio": "tao3.mp3"
+      },
+      {
+        "pinyin": "tào",
+        "audio": "tao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 109,
+    "pinyin": "nao",
+    "variants": [
+      {
+        "pinyin": "nāo",
+        "audio": "nao1.mp3"
+      },
+      {
+        "pinyin": "náo",
+        "audio": "nao2.mp3"
+      },
+      {
+        "pinyin": "nǎo",
+        "audio": "nao3.mp3"
+      },
+      {
+        "pinyin": "nào",
+        "audio": "nao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 110,
+    "pinyin": "lao",
+    "variants": [
+      {
+        "pinyin": "lāo",
+        "audio": "lao1.mp3"
+      },
+      {
+        "pinyin": "láo",
+        "audio": "lao2.mp3"
+      },
+      {
+        "pinyin": "lǎo",
+        "audio": "lao3.mp3"
+      },
+      {
+        "pinyin": "lào",
+        "audio": "lao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 111,
+    "pinyin": "gao",
+    "variants": [
+      {
+        "pinyin": "gāo",
+        "audio": "gao1.mp3"
+      },
+      {
+        "pinyin": "gáo",
+        "audio": "gao2.mp3"
+      },
+      {
+        "pinyin": "gǎo",
+        "audio": "gao3.mp3"
+      },
+      {
+        "pinyin": "gào",
+        "audio": "gao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 112,
+    "pinyin": "kao",
+    "variants": [
+      {
+        "pinyin": "kāo",
+        "audio": "kao1.mp3"
+      },
+      {
+        "pinyin": "káo",
+        "audio": "kao2.mp3"
+      },
+      {
+        "pinyin": "kǎo",
+        "audio": "kao3.mp3"
+      },
+      {
+        "pinyin": "kào",
+        "audio": "kao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 113,
+    "pinyin": "hao",
+    "variants": [
+      {
+        "pinyin": "hāo",
+        "audio": "hao1.mp3"
+      },
+      {
+        "pinyin": "háo",
+        "audio": "hao2.mp3"
+      },
+      {
+        "pinyin": "hǎo",
+        "audio": "hao3.mp3"
+      },
+      {
+        "pinyin": "hào",
+        "audio": "hao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 114,
+    "pinyin": "zao",
+    "variants": [
+      {
+        "pinyin": "zāo",
+        "audio": "zao1.mp3"
+      },
+      {
+        "pinyin": "záo",
+        "audio": "zao2.mp3"
+      },
+      {
+        "pinyin": "zǎo",
+        "audio": "zao3.mp3"
+      },
+      {
+        "pinyin": "zào",
+        "audio": "zao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 115,
+    "pinyin": "cao",
+    "variants": [
+      {
+        "pinyin": "cāo",
+        "audio": "cao1.mp3"
+      },
+      {
+        "pinyin": "cáo",
+        "audio": "cao2.mp3"
+      },
+      {
+        "pinyin": "cǎo",
+        "audio": "cao3.mp3"
+      },
+      {
+        "pinyin": "cào",
+        "audio": "cao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 116,
+    "pinyin": "sao",
+    "variants": [
+      {
+        "pinyin": "sāo",
+        "audio": "sao1.mp3"
+      },
+      {
+        "pinyin": "sáo",
+        "audio": "sao2.mp3"
+      },
+      {
+        "pinyin": "sǎo",
+        "audio": "sao3.mp3"
+      },
+      {
+        "pinyin": "sào",
+        "audio": "sao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 117,
+    "pinyin": "zhao",
+    "variants": [
+      {
+        "pinyin": "zhāo",
+        "audio": "zhao1.mp3"
+      },
+      {
+        "pinyin": "zháo",
+        "audio": "zhao2.mp3"
+      },
+      {
+        "pinyin": "zhǎo",
+        "audio": "zhao3.mp3"
+      },
+      {
+        "pinyin": "zhào",
+        "audio": "zhao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 118,
+    "pinyin": "chao",
+    "variants": [
+      {
+        "pinyin": "chāo",
+        "audio": "chao1.mp3"
+      },
+      {
+        "pinyin": "cháo",
+        "audio": "chao2.mp3"
+      },
+      {
+        "pinyin": "chǎo",
+        "audio": "chao3.mp3"
+      },
+      {
+        "pinyin": "chào",
+        "audio": "chao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 119,
+    "pinyin": "shao",
+    "variants": [
+      {
+        "pinyin": "shāo",
+        "audio": "shao1.mp3"
+      },
+      {
+        "pinyin": "sháo",
+        "audio": "shao2.mp3"
+      },
+      {
+        "pinyin": "shǎo",
+        "audio": "shao3.mp3"
+      },
+      {
+        "pinyin": "shào",
+        "audio": "shao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 120,
+    "pinyin": "rao",
+    "variants": [
+      {
+        "pinyin": "rāo",
+        "audio": "rao1.mp3"
+      },
+      {
+        "pinyin": "ráo",
+        "audio": "rao2.mp3"
+      },
+      {
+        "pinyin": "rǎo",
+        "audio": "rao3.mp3"
+      },
+      {
+        "pinyin": "rào",
+        "audio": "rao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 121,
+    "pinyin": "e",
+    "variants": [
+      {
+        "pinyin": "ē",
+        "audio": "e1.mp3"
+      },
+      {
+        "pinyin": "é",
+        "audio": "e2.mp3"
+      },
+      {
+        "pinyin": "ě",
+        "audio": "e3.mp3"
+      },
+      {
+        "pinyin": "è",
+        "audio": "e4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 122,
+    "pinyin": "me",
+    "variants": [
+      {
+        "pinyin": "mē",
+        "audio": "me1.mp3"
+      },
+      {
+        "pinyin": "mé",
+        "audio": "me2.mp3"
+      },
+      {
+        "pinyin": "mě",
+        "audio": "me3.mp3"
+      },
+      {
+        "pinyin": "mè",
+        "audio": "me4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 123,
+    "pinyin": "de",
+    "variants": [
+      {
+        "pinyin": "dē",
+        "audio": "de1.mp3"
+      },
+      {
+        "pinyin": "dé",
+        "audio": "de2.mp3"
+      },
+      {
+        "pinyin": "dě",
+        "audio": "de3.mp3"
+      },
+      {
+        "pinyin": "dè",
+        "audio": "de4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 124,
+    "pinyin": "te",
+    "variants": [
+      {
+        "pinyin": "tē",
+        "audio": "te1.mp3"
+      },
+      {
+        "pinyin": "té",
+        "audio": "te2.mp3"
+      },
+      {
+        "pinyin": "tě",
+        "audio": "te3.mp3"
+      },
+      {
+        "pinyin": "tè",
+        "audio": "te4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 125,
+    "pinyin": "ne",
+    "variants": [
+      {
+        "pinyin": "nē",
+        "audio": "ne1.mp3"
+      },
+      {
+        "pinyin": "né",
+        "audio": "ne2.mp3"
+      },
+      {
+        "pinyin": "ně",
+        "audio": "ne3.mp3"
+      },
+      {
+        "pinyin": "nè",
+        "audio": "ne4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 126,
+    "pinyin": "le",
+    "variants": [
+      {
+        "pinyin": "lē",
+        "audio": "le1.mp3"
+      },
+      {
+        "pinyin": "lé",
+        "audio": "le2.mp3"
+      },
+      {
+        "pinyin": "lě",
+        "audio": "le3.mp3"
+      },
+      {
+        "pinyin": "lè",
+        "audio": "le4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 127,
+    "pinyin": "ge",
+    "variants": [
+      {
+        "pinyin": "gē",
+        "audio": "ge1.mp3"
+      },
+      {
+        "pinyin": "gé",
+        "audio": "ge2.mp3"
+      },
+      {
+        "pinyin": "gě",
+        "audio": "ge3.mp3"
+      },
+      {
+        "pinyin": "gè",
+        "audio": "ge4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 128,
+    "pinyin": "ke",
+    "variants": [
+      {
+        "pinyin": "kē",
+        "audio": "ke1.mp3"
+      },
+      {
+        "pinyin": "ké",
+        "audio": "ke2.mp3"
+      },
+      {
+        "pinyin": "kě",
+        "audio": "ke3.mp3"
+      },
+      {
+        "pinyin": "kè",
+        "audio": "ke4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 129,
+    "pinyin": "he",
+    "variants": [
+      {
+        "pinyin": "hē",
+        "audio": "he1.mp3"
+      },
+      {
+        "pinyin": "hé",
+        "audio": "he2.mp3"
+      },
+      {
+        "pinyin": "hě",
+        "audio": "he3.mp3"
+      },
+      {
+        "pinyin": "hè",
+        "audio": "he4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 130,
+    "pinyin": "ze",
+    "variants": [
+      {
+        "pinyin": "zē",
+        "audio": "ze1.mp3"
+      },
+      {
+        "pinyin": "zé",
+        "audio": "ze2.mp3"
+      },
+      {
+        "pinyin": "zě",
+        "audio": "ze3.mp3"
+      },
+      {
+        "pinyin": "zè",
+        "audio": "ze4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 131,
+    "pinyin": "ce",
+    "variants": [
+      {
+        "pinyin": "cē",
+        "audio": "ce1.mp3"
+      },
+      {
+        "pinyin": "cé",
+        "audio": "ce2.mp3"
+      },
+      {
+        "pinyin": "cě",
+        "audio": "ce3.mp3"
+      },
+      {
+        "pinyin": "cè",
+        "audio": "ce4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 132,
+    "pinyin": "se",
+    "variants": [
+      {
+        "pinyin": "sē",
+        "audio": "se1.mp3"
+      },
+      {
+        "pinyin": "sé",
+        "audio": "se2.mp3"
+      },
+      {
+        "pinyin": "sě",
+        "audio": "se3.mp3"
+      },
+      {
+        "pinyin": "sè",
+        "audio": "se4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 133,
+    "pinyin": "zhe",
+    "variants": [
+      {
+        "pinyin": "zhē",
+        "audio": "zhe1.mp3"
+      },
+      {
+        "pinyin": "zhé",
+        "audio": "zhe2.mp3"
+      },
+      {
+        "pinyin": "zhě",
+        "audio": "zhe3.mp3"
+      },
+      {
+        "pinyin": "zhè",
+        "audio": "zhe4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 134,
+    "pinyin": "che",
+    "variants": [
+      {
+        "pinyin": "chē",
+        "audio": "che1.mp3"
+      },
+      {
+        "pinyin": "ché",
+        "audio": "che2.mp3"
+      },
+      {
+        "pinyin": "chě",
+        "audio": "che3.mp3"
+      },
+      {
+        "pinyin": "chè",
+        "audio": "che4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 135,
+    "pinyin": "she",
+    "variants": [
+      {
+        "pinyin": "shē",
+        "audio": "she1.mp3"
+      },
+      {
+        "pinyin": "shé",
+        "audio": "she2.mp3"
+      },
+      {
+        "pinyin": "shě",
+        "audio": "she3.mp3"
+      },
+      {
+        "pinyin": "shè",
+        "audio": "she4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 136,
+    "pinyin": "re",
+    "variants": [
+      {
+        "pinyin": "rē",
+        "audio": "re1.mp3"
+      },
+      {
+        "pinyin": "ré",
+        "audio": "re2.mp3"
+      },
+      {
+        "pinyin": "rě",
+        "audio": "re3.mp3"
+      },
+      {
+        "pinyin": "rè",
+        "audio": "re4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 137,
+    "pinyin": "ei",
+    "variants": [
+      {
+        "pinyin": "ēi",
+        "audio": "ei1.mp3"
+      },
+      {
+        "pinyin": "éi",
+        "audio": "ei2.mp3"
+      },
+      {
+        "pinyin": "ěi",
+        "audio": "ei3.mp3"
+      },
+      {
+        "pinyin": "èi",
+        "audio": "ei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 138,
+    "pinyin": "bei",
+    "variants": [
+      {
+        "pinyin": "bēi",
+        "audio": "bei1.mp3"
+      },
+      {
+        "pinyin": "béi",
+        "audio": "bei2.mp3"
+      },
+      {
+        "pinyin": "běi",
+        "audio": "bei3.mp3"
+      },
+      {
+        "pinyin": "bèi",
+        "audio": "bei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 139,
+    "pinyin": "pei",
+    "variants": [
+      {
+        "pinyin": "pēi",
+        "audio": "pei1.mp3"
+      },
+      {
+        "pinyin": "péi",
+        "audio": "pei2.mp3"
+      },
+      {
+        "pinyin": "pěi",
+        "audio": "pei3.mp3"
+      },
+      {
+        "pinyin": "pèi",
+        "audio": "pei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 140,
+    "pinyin": "mei",
+    "variants": [
+      {
+        "pinyin": "mēi",
+        "audio": "mei1.mp3"
+      },
+      {
+        "pinyin": "méi",
+        "audio": "mei2.mp3"
+      },
+      {
+        "pinyin": "měi",
+        "audio": "mei3.mp3"
+      },
+      {
+        "pinyin": "mèi",
+        "audio": "mei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 141,
+    "pinyin": "fei",
+    "variants": [
+      {
+        "pinyin": "fēi",
+        "audio": "fei1.mp3"
+      },
+      {
+        "pinyin": "féi",
+        "audio": "fei2.mp3"
+      },
+      {
+        "pinyin": "fěi",
+        "audio": "fei3.mp3"
+      },
+      {
+        "pinyin": "fèi",
+        "audio": "fei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 142,
+    "pinyin": "dei",
+    "variants": [
+      {
+        "pinyin": "dēi",
+        "audio": "dei1.mp3"
+      },
+      {
+        "pinyin": "déi",
+        "audio": "dei2.mp3"
+      },
+      {
+        "pinyin": "děi",
+        "audio": "dei3.mp3"
+      },
+      {
+        "pinyin": "dèi",
+        "audio": "dei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 143,
+    "pinyin": "nei",
+    "variants": [
+      {
+        "pinyin": "nēi",
+        "audio": "nei1.mp3"
+      },
+      {
+        "pinyin": "néi",
+        "audio": "nei2.mp3"
+      },
+      {
+        "pinyin": "něi",
+        "audio": "nei3.mp3"
+      },
+      {
+        "pinyin": "nèi",
+        "audio": "nei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 144,
+    "pinyin": "lei",
+    "variants": [
+      {
+        "pinyin": "lēi",
+        "audio": "lei1.mp3"
+      },
+      {
+        "pinyin": "léi",
+        "audio": "lei2.mp3"
+      },
+      {
+        "pinyin": "lěi",
+        "audio": "lei3.mp3"
+      },
+      {
+        "pinyin": "lèi",
+        "audio": "lei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 145,
+    "pinyin": "gei",
+    "variants": [
+      {
+        "pinyin": "gēi",
+        "audio": "gei1.mp3"
+      },
+      {
+        "pinyin": "géi",
+        "audio": "gei2.mp3"
+      },
+      {
+        "pinyin": "gěi",
+        "audio": "gei3.mp3"
+      },
+      {
+        "pinyin": "gèi",
+        "audio": "gei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 146,
+    "pinyin": "hei",
+    "variants": [
+      {
+        "pinyin": "hēi",
+        "audio": "hei1.mp3"
+      },
+      {
+        "pinyin": "héi",
+        "audio": "hei2.mp3"
+      },
+      {
+        "pinyin": "hěi",
+        "audio": "hei3.mp3"
+      },
+      {
+        "pinyin": "hèi",
+        "audio": "hei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 147,
+    "pinyin": "zei",
+    "variants": [
+      {
+        "pinyin": "zēi",
+        "audio": "zei1.mp3"
+      },
+      {
+        "pinyin": "zéi",
+        "audio": "zei2.mp3"
+      },
+      {
+        "pinyin": "zěi",
+        "audio": "zei3.mp3"
+      },
+      {
+        "pinyin": "zèi",
+        "audio": "zei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 148,
+    "pinyin": "zhei",
+    "variants": [
+      {
+        "pinyin": "zhēi",
+        "audio": "zhei1.mp3"
+      },
+      {
+        "pinyin": "zhéi",
+        "audio": "zhei2.mp3"
+      },
+      {
+        "pinyin": "zhěi",
+        "audio": "zhei3.mp3"
+      },
+      {
+        "pinyin": "zhèi",
+        "audio": "zhei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 149,
+    "pinyin": "shei",
+    "variants": [
+      {
+        "pinyin": "shēi",
+        "audio": "shei1.mp3"
+      },
+      {
+        "pinyin": "shéi",
+        "audio": "shei2.mp3"
+      },
+      {
+        "pinyin": "shěi",
+        "audio": "shei3.mp3"
+      },
+      {
+        "pinyin": "shèi",
+        "audio": "shei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 150,
+    "pinyin": "en",
+    "variants": [
+      {
+        "pinyin": "ēn",
+        "audio": "en1.mp3"
+      },
+      {
+        "pinyin": "én",
+        "audio": "en2.mp3"
+      },
+      {
+        "pinyin": "ěn",
+        "audio": "en3.mp3"
+      },
+      {
+        "pinyin": "èn",
+        "audio": "en4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 151,
+    "pinyin": "ben",
+    "variants": [
+      {
+        "pinyin": "bēn",
+        "audio": "ben1.mp3"
+      },
+      {
+        "pinyin": "bén",
+        "audio": "ben2.mp3"
+      },
+      {
+        "pinyin": "běn",
+        "audio": "ben3.mp3"
+      },
+      {
+        "pinyin": "bèn",
+        "audio": "ben4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 152,
+    "pinyin": "pen",
+    "variants": [
+      {
+        "pinyin": "pēn",
+        "audio": "pen1.mp3"
+      },
+      {
+        "pinyin": "pén",
+        "audio": "pen2.mp3"
+      },
+      {
+        "pinyin": "pěn",
+        "audio": "pen3.mp3"
+      },
+      {
+        "pinyin": "pèn",
+        "audio": "pen4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 153,
+    "pinyin": "men",
+    "variants": [
+      {
+        "pinyin": "mēn",
+        "audio": "men1.mp3"
+      },
+      {
+        "pinyin": "mén",
+        "audio": "men2.mp3"
+      },
+      {
+        "pinyin": "měn",
+        "audio": "men3.mp3"
+      },
+      {
+        "pinyin": "mèn",
+        "audio": "men4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 154,
+    "pinyin": "fen",
+    "variants": [
+      {
+        "pinyin": "fēn",
+        "audio": "fen1.mp3"
+      },
+      {
+        "pinyin": "fén",
+        "audio": "fen2.mp3"
+      },
+      {
+        "pinyin": "fěn",
+        "audio": "fen3.mp3"
+      },
+      {
+        "pinyin": "fèn",
+        "audio": "fen4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 155,
+    "pinyin": "nen",
+    "variants": [
+      {
+        "pinyin": "nēn",
+        "audio": "nen1.mp3"
+      },
+      {
+        "pinyin": "nén",
+        "audio": "nen2.mp3"
+      },
+      {
+        "pinyin": "něn",
+        "audio": "nen3.mp3"
+      },
+      {
+        "pinyin": "nèn",
+        "audio": "nen4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 156,
+    "pinyin": "gen",
+    "variants": [
+      {
+        "pinyin": "gēn",
+        "audio": "gen1.mp3"
+      },
+      {
+        "pinyin": "gén",
+        "audio": "gen2.mp3"
+      },
+      {
+        "pinyin": "gěn",
+        "audio": "gen3.mp3"
+      },
+      {
+        "pinyin": "gèn",
+        "audio": "gen4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 157,
+    "pinyin": "ken",
+    "variants": [
+      {
+        "pinyin": "kēn",
+        "audio": "ken1.mp3"
+      },
+      {
+        "pinyin": "kén",
+        "audio": "ken2.mp3"
+      },
+      {
+        "pinyin": "kěn",
+        "audio": "ken3.mp3"
+      },
+      {
+        "pinyin": "kèn",
+        "audio": "ken4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 158,
+    "pinyin": "hen",
+    "variants": [
+      {
+        "pinyin": "hēn",
+        "audio": "hen1.mp3"
+      },
+      {
+        "pinyin": "hén",
+        "audio": "hen2.mp3"
+      },
+      {
+        "pinyin": "hěn",
+        "audio": "hen3.mp3"
+      },
+      {
+        "pinyin": "hèn",
+        "audio": "hen4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 159,
+    "pinyin": "zen",
+    "variants": [
+      {
+        "pinyin": "zēn",
+        "audio": "zen1.mp3"
+      },
+      {
+        "pinyin": "zén",
+        "audio": "zen2.mp3"
+      },
+      {
+        "pinyin": "zěn",
+        "audio": "zen3.mp3"
+      },
+      {
+        "pinyin": "zèn",
+        "audio": "zen4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 160,
+    "pinyin": "cen",
+    "variants": [
+      {
+        "pinyin": "cēn",
+        "audio": "cen1.mp3"
+      },
+      {
+        "pinyin": "cén",
+        "audio": "cen2.mp3"
+      },
+      {
+        "pinyin": "cěn",
+        "audio": "cen3.mp3"
+      },
+      {
+        "pinyin": "cèn",
+        "audio": "cen4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 161,
+    "pinyin": "sen",
+    "variants": [
+      {
+        "pinyin": "sēn",
+        "audio": "sen1.mp3"
+      },
+      {
+        "pinyin": "sén",
+        "audio": "sen2.mp3"
+      },
+      {
+        "pinyin": "sěn",
+        "audio": "sen3.mp3"
+      },
+      {
+        "pinyin": "sèn",
+        "audio": "sen4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 162,
+    "pinyin": "zhen",
+    "variants": [
+      {
+        "pinyin": "zhēn",
+        "audio": "zhen1.mp3"
+      },
+      {
+        "pinyin": "zhén",
+        "audio": "zhen2.mp3"
+      },
+      {
+        "pinyin": "zhěn",
+        "audio": "zhen3.mp3"
+      },
+      {
+        "pinyin": "zhèn",
+        "audio": "zhen4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 163,
+    "pinyin": "chen",
+    "variants": [
+      {
+        "pinyin": "chēn",
+        "audio": "chen1.mp3"
+      },
+      {
+        "pinyin": "chén",
+        "audio": "chen2.mp3"
+      },
+      {
+        "pinyin": "chěn",
+        "audio": "chen3.mp3"
+      },
+      {
+        "pinyin": "chèn",
+        "audio": "chen4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 164,
+    "pinyin": "shen",
+    "variants": [
+      {
+        "pinyin": "shēn",
+        "audio": "shen1.mp3"
+      },
+      {
+        "pinyin": "shén",
+        "audio": "shen2.mp3"
+      },
+      {
+        "pinyin": "shěn",
+        "audio": "shen3.mp3"
+      },
+      {
+        "pinyin": "shèn",
+        "audio": "shen4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 165,
+    "pinyin": "ren",
+    "variants": [
+      {
+        "pinyin": "rēn",
+        "audio": "ren1.mp3"
+      },
+      {
+        "pinyin": "rén",
+        "audio": "ren2.mp3"
+      },
+      {
+        "pinyin": "rěn",
+        "audio": "ren3.mp3"
+      },
+      {
+        "pinyin": "rèn",
+        "audio": "ren4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 166,
+    "pinyin": "eng",
+    "variants": [
+      {
+        "pinyin": "ēng",
+        "audio": "eng1.mp3"
+      },
+      {
+        "pinyin": "éng",
+        "audio": "eng2.mp3"
+      },
+      {
+        "pinyin": "ěng",
+        "audio": "eng3.mp3"
+      },
+      {
+        "pinyin": "èng",
+        "audio": "eng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 167,
+    "pinyin": "beng",
+    "variants": [
+      {
+        "pinyin": "bēng",
+        "audio": "beng1.mp3"
+      },
+      {
+        "pinyin": "béng",
+        "audio": "beng2.mp3"
+      },
+      {
+        "pinyin": "běng",
+        "audio": "beng3.mp3"
+      },
+      {
+        "pinyin": "bèng",
+        "audio": "beng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 168,
+    "pinyin": "peng",
+    "variants": [
+      {
+        "pinyin": "pēng",
+        "audio": "peng1.mp3"
+      },
+      {
+        "pinyin": "péng",
+        "audio": "peng2.mp3"
+      },
+      {
+        "pinyin": "pěng",
+        "audio": "peng3.mp3"
+      },
+      {
+        "pinyin": "pèng",
+        "audio": "peng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 169,
+    "pinyin": "meng",
+    "variants": [
+      {
+        "pinyin": "mēng",
+        "audio": "meng1.mp3"
+      },
+      {
+        "pinyin": "méng",
+        "audio": "meng2.mp3"
+      },
+      {
+        "pinyin": "měng",
+        "audio": "meng3.mp3"
+      },
+      {
+        "pinyin": "mèng",
+        "audio": "meng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 170,
+    "pinyin": "feng",
+    "variants": [
+      {
+        "pinyin": "fēng",
+        "audio": "feng1.mp3"
+      },
+      {
+        "pinyin": "féng",
+        "audio": "feng2.mp3"
+      },
+      {
+        "pinyin": "fěng",
+        "audio": "feng3.mp3"
+      },
+      {
+        "pinyin": "fèng",
+        "audio": "feng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 171,
+    "pinyin": "deng",
+    "variants": [
+      {
+        "pinyin": "dēng",
+        "audio": "deng1.mp3"
+      },
+      {
+        "pinyin": "déng",
+        "audio": "deng2.mp3"
+      },
+      {
+        "pinyin": "děng",
+        "audio": "deng3.mp3"
+      },
+      {
+        "pinyin": "dèng",
+        "audio": "deng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 172,
+    "pinyin": "teng",
+    "variants": [
+      {
+        "pinyin": "tēng",
+        "audio": "teng1.mp3"
+      },
+      {
+        "pinyin": "téng",
+        "audio": "teng2.mp3"
+      },
+      {
+        "pinyin": "těng",
+        "audio": "teng3.mp3"
+      },
+      {
+        "pinyin": "tèng",
+        "audio": "teng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 173,
+    "pinyin": "neng",
+    "variants": [
+      {
+        "pinyin": "nēng",
+        "audio": "neng1.mp3"
+      },
+      {
+        "pinyin": "néng",
+        "audio": "neng2.mp3"
+      },
+      {
+        "pinyin": "něng",
+        "audio": "neng3.mp3"
+      },
+      {
+        "pinyin": "nèng",
+        "audio": "neng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 174,
+    "pinyin": "leng",
+    "variants": [
+      {
+        "pinyin": "lēng",
+        "audio": "leng1.mp3"
+      },
+      {
+        "pinyin": "léng",
+        "audio": "leng2.mp3"
+      },
+      {
+        "pinyin": "lěng",
+        "audio": "leng3.mp3"
+      },
+      {
+        "pinyin": "lèng",
+        "audio": "leng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 175,
+    "pinyin": "geng",
+    "variants": [
+      {
+        "pinyin": "gēng",
+        "audio": "geng1.mp3"
+      },
+      {
+        "pinyin": "géng",
+        "audio": "geng2.mp3"
+      },
+      {
+        "pinyin": "gěng",
+        "audio": "geng3.mp3"
+      },
+      {
+        "pinyin": "gèng",
+        "audio": "geng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 176,
+    "pinyin": "keng",
+    "variants": [
+      {
+        "pinyin": "kēng",
+        "audio": "keng1.mp3"
+      },
+      {
+        "pinyin": "kéng",
+        "audio": "keng2.mp3"
+      },
+      {
+        "pinyin": "kěng",
+        "audio": "keng3.mp3"
+      },
+      {
+        "pinyin": "kèng",
+        "audio": "keng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 177,
+    "pinyin": "heng",
+    "variants": [
+      {
+        "pinyin": "hēng",
+        "audio": "heng1.mp3"
+      },
+      {
+        "pinyin": "héng",
+        "audio": "heng2.mp3"
+      },
+      {
+        "pinyin": "hěng",
+        "audio": "heng3.mp3"
+      },
+      {
+        "pinyin": "hèng",
+        "audio": "heng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 178,
+    "pinyin": "zeng",
+    "variants": [
+      {
+        "pinyin": "zēng",
+        "audio": "zeng1.mp3"
+      },
+      {
+        "pinyin": "zéng",
+        "audio": "zeng2.mp3"
+      },
+      {
+        "pinyin": "zěng",
+        "audio": "zeng3.mp3"
+      },
+      {
+        "pinyin": "zèng",
+        "audio": "zeng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 179,
+    "pinyin": "ceng",
+    "variants": [
+      {
+        "pinyin": "cēng",
+        "audio": "ceng1.mp3"
+      },
+      {
+        "pinyin": "céng",
+        "audio": "ceng2.mp3"
+      },
+      {
+        "pinyin": "cěng",
+        "audio": "ceng3.mp3"
+      },
+      {
+        "pinyin": "cèng",
+        "audio": "ceng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 180,
+    "pinyin": "seng",
+    "variants": [
+      {
+        "pinyin": "sēng",
+        "audio": "seng1.mp3"
+      },
+      {
+        "pinyin": "séng",
+        "audio": "seng2.mp3"
+      },
+      {
+        "pinyin": "sěng",
+        "audio": "seng3.mp3"
+      },
+      {
+        "pinyin": "sèng",
+        "audio": "seng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 181,
+    "pinyin": "zheng",
+    "variants": [
+      {
+        "pinyin": "zhēng",
+        "audio": "zheng1.mp3"
+      },
+      {
+        "pinyin": "zhéng",
+        "audio": "zheng2.mp3"
+      },
+      {
+        "pinyin": "zhěng",
+        "audio": "zheng3.mp3"
+      },
+      {
+        "pinyin": "zhèng",
+        "audio": "zheng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 182,
+    "pinyin": "cheng",
+    "variants": [
+      {
+        "pinyin": "chēng",
+        "audio": "cheng1.mp3"
+      },
+      {
+        "pinyin": "chéng",
+        "audio": "cheng2.mp3"
+      },
+      {
+        "pinyin": "chěng",
+        "audio": "cheng3.mp3"
+      },
+      {
+        "pinyin": "chèng",
+        "audio": "cheng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 183,
+    "pinyin": "sheng",
+    "variants": [
+      {
+        "pinyin": "shēng",
+        "audio": "sheng1.mp3"
+      },
+      {
+        "pinyin": "shéng",
+        "audio": "sheng2.mp3"
+      },
+      {
+        "pinyin": "shěng",
+        "audio": "sheng3.mp3"
+      },
+      {
+        "pinyin": "shèng",
+        "audio": "sheng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 184,
+    "pinyin": "reng",
+    "variants": [
+      {
+        "pinyin": "rēng",
+        "audio": "reng1.mp3"
+      },
+      {
+        "pinyin": "réng",
+        "audio": "reng2.mp3"
+      },
+      {
+        "pinyin": "rěng",
+        "audio": "reng3.mp3"
+      },
+      {
+        "pinyin": "rèng",
+        "audio": "reng4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 185,
+    "pinyin": "er",
+    "variants": [
+      {
+        "pinyin": "ēr",
+        "audio": "er1.mp3"
+      },
+      {
+        "pinyin": "ér",
+        "audio": "er2.mp3"
+      },
+      {
+        "pinyin": "ěr",
+        "audio": "er3.mp3"
+      },
+      {
+        "pinyin": "èr",
+        "audio": "er4.mp3"
+      }
+    ]
+  }
+]
