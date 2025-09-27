@@ -1,0 +1,158 @@
+[
+  {
+    "id": 1,
+    "pinyin": "ma",
+    "variants": [
+      {
+        "pinyin": "mā",
+        "tone": 1,
+        "audio": "ma1.mp3"
+      },
+      {
+        "pinyin": "má",
+        "tone": 2,
+        "audio": "ma2.mp3"
+      },
+      {
+        "pinyin": "mǎ",
+        "tone": 3,
+        "audio": "ma3.mp3"
+      },
+      {
+        "pinyin": "mà",
+        "tone": 4,
+        "audio": "ma4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "pinyin": "mei",
+    "variants": [
+      {
+        "pinyin": "mēi",
+        "tone": 1,
+        "audio": "mei1.mp3"
+      },
+      {
+        "pinyin": "méi",
+        "tone": 2,
+        "audio": "mei2.mp3"
+      },
+      {
+        "pinyin": "měi",
+        "tone": 3,
+        "audio": "mei3.mp3"
+      },
+      {
+        "pinyin": "mèi",
+        "tone": 4,
+        "audio": "mei4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "pinyin": "hao",
+    "variants": [
+      {
+        "pinyin": "hāo",
+        "tone": 1,
+        "audio": "hao1.mp3"
+      },
+      {
+        "pinyin": "háo",
+        "tone": 2,
+        "audio": "hao2.mp3"
+      },
+      {
+        "pinyin": "hǎo",
+        "tone": 3,
+        "audio": "hao3.mp3"
+      },
+      {
+        "pinyin": "hào",
+        "tone": 4,
+        "audio": "hao4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "pinyin": "liu",
+    "variants": [
+      {
+        "pinyin": "liū",
+        "tone": 1,
+        "audio": "liu1.mp3"
+      },
+      {
+        "pinyin": "liú",
+        "tone": 2,
+        "audio": "liu2.mp3"
+      },
+      {
+        "pinyin": "liǔ",
+        "tone": 3,
+        "audio": "liu3.mp3"
+      },
+      {
+        "pinyin": "liù",
+        "tone": 4,
+        "audio": "liu4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "pinyin": "gui",
+    "variants": [
+      {
+        "pinyin": "guī",
+        "tone": 1,
+        "audio": "gui1.mp3"
+      },
+      {
+        "pinyin": "guí",
+        "tone": 2,
+        "audio": "gui2.mp3"
+      },
+      {
+        "pinyin": "guǐ",
+        "tone": 3,
+        "audio": "gui3.mp3"
+      },
+      {
+        "pinyin": "guì",
+        "tone": 4,
+        "audio": "gui4.mp3"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "pinyin": "teng",
+    "variants": [
+      {
+        "pinyin": "tēng",
+        "tone": 1,
+        "audio": "teng1.mp3"
+      },
+      {
+        "pinyin": "téng",
+        "tone": 2,
+        "audio": "teng2.mp3"
+      },
+      {
+        "pinyin": "těng",
+        "tone": 3,
+        "audio": "teng3.mp3"
+      },
+      {
+        "pinyin": "tèng",
+        "tone": 4,
+        "audio": "teng4.mp3"
+      }
+    ]
+  }
+]
