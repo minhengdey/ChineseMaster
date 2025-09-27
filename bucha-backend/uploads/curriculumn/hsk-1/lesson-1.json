@@ -1,0 +1,206 @@
+{
+   "order": 1,
+   "title": "Bài 1 你好",
+   "conversations": [
+      {
+         "section": "你好吗",
+         "vn_translation": "Chào bạn!",
+         "lines": [
+            {
+               "speaker": "大卫",
+               "zh": "你好！",
+               "pinyin": "Nǐ hǎo!",
+               "vn": "Xin chào!"
+            },
+            {
+               "speaker": "李军",
+               "zh": "你好！",
+               "pinyin": "Nǐ hǎo!",
+               "vn": "Chào bạn!"
+            },
+            {
+               "speaker": "大卫",
+               "zh": "你是老师吗？",
+               "pinyin": "Nǐ shì lǎoshī ma?",
+               "vn": "Bạn là giáo viên phải không?"
+            },
+            {
+               "speaker": "李军",
+               "zh": "不是，我不是老师，我是学生。她是老师。",
+               "pinyin": "Bú shì, wǒ bú shì lǎoshī, wǒ shì xuésheng. Tā shì lǎoshī.",
+               "vn": "Không, tôi không phải giáo viên, tôi là học sinh. Cô ấy là giáo viên."
+            },
+            {
+               "speaker": "大卫",
+               "zh": "谢谢。",
+               "pinyin": "Xièxie.",
+               "vn": "Cảm ơn."
+            },
+            {
+               "speaker": "李军",
+               "zh": "不客气。",
+               "pinyin": "Bú kèqi.",
+               "vn": "Không có gì."
+            }
+         ]
+      },
+      {
+         "section": "你叫什么名字？",
+         "vn_translation": "Bạn tên là gì?",
+         "lines": [
+            {
+               "speaker": "大卫",
+               "zh": "老师，您好！",
+               "pinyin": "Lǎoshī, nín hǎo!",
+               "vn": "Thầy/cô giáo, xin chào!"
+            },
+            {
+               "speaker": "王老师",
+               "zh": "你好！你是留学生吗？",
+               "pinyin": "Nǐ hǎo! Nǐ shì liúxuésheng ma?",
+               "vn": "Chào bạn! Bạn là lưu học sinh phải không?"
+            },
+            {
+               "speaker": "大卫",
+               "zh": "是。我是留学生。",
+               "pinyin": "Shì. Wǒ shì liúxuésheng.",
+               "vn": "Vâng. Tôi là lưu học sinh."
+            },
+            {
+               "speaker": "王老师",
+               "zh": "你叫什么名字？",
+               "pinyin": "Nǐ jiào shénme míngzi?",
+               "vn": "Bạn tên là gì?"
+            },
+            {
+               "speaker": "大卫",
+               "zh": "我叫大卫。",
+               "pinyin": "Wǒ jiào Dàwèi.",
+               "vn": "Tôi tên là David."
+            }
+         ]
+      }
+   ],
+   "vocabulary": [
+      {
+         "word": "你好",
+         "pinyin": "nǐhǎo",
+         "type": "cụm từ",
+         "meaning": "Xin chào"
+      },
+      {
+         "word": "你",
+         "pinyin": "nǐ",
+         "type": "đại từ",
+         "meaning": "Bạn"
+      },
+      {
+         "word": "好",
+         "pinyin": "hǎo",
+         "type": "tính từ",
+         "meaning": "Tốt"
+      },
+      {
+         "word": "是",
+         "pinyin": "shì",
+         "type": "động từ",
+         "meaning": "Đúng"
+      },
+      {
+         "word": "老师",
+         "pinyin": "lǎoshī",
+         "type": "danh từ",
+         "meaning": "Giáo viên"
+      },
+      {
+         "word": "吗",
+         "pinyin": "ma",
+         "type": "trợ từ",
+         "meaning": "?"
+      },
+      {
+         "word": "不",
+         "pinyin": "bù",
+         "type": "phó từ",
+         "meaning": "KHÔNG"
+      },
+      {
+         "word": "我",
+         "pinyin": "wǒ",
+         "type": "đại từ",
+         "meaning": "Tôi"
+      },
+      {
+         "word": "学生",
+         "pinyin": "xuésheng",
+         "type": "danh từ",
+         "meaning": "Học sinh"
+      },
+      {
+         "word": "她",
+         "pinyin": "tā",
+         "type": "đại từ",
+         "meaning": "Cô ấy"
+      },
+      {
+         "word": "谢谢",
+         "pinyin": "xièxie",
+         "type": "động từ",
+         "meaning": "Cảm ơn"
+      },
+      {
+         "word": "不客气",
+         "pinyin": "bù kèqi",
+         "type": "cụm từ",
+         "meaning": "Không có gì"
+      },
+      {
+         "word": "您",
+         "pinyin": "nín",
+         "type": "đại từ",
+         "meaning": "Bạn (lịch sự)"
+      },
+      {
+         "word": "留学生",
+         "pinyin": "liúxuésheng",
+         "type": "danh từ",
+         "meaning": "Sinh viên quốc tế"
+      },
+      {
+         "word": "叫",
+         "pinyin": "jiào",
+         "type": "động từ",
+         "meaning": "Gọi"
+      },
+      {
+         "word": "什么",
+         "pinyin": "shénme",
+         "type": "đại từ",
+         "meaning": "Cái gì"
+      },
+      {
+         "word": "名字",
+         "pinyin": "míngzi",
+         "type": "danh từ",
+         "meaning": "Tên"
+      },
+      {
+         "word": "大卫",
+         "pinyin": "dàwèi",
+         "type": "tên riêng",
+         "meaning": "David"
+      },
+      {
+         "word": "李军",
+         "pinyin": "lǐjūn",
+         "type": "tên riêng",
+         "meaning": "Lý Quân"
+      },
+      {
+         "word": "王",
+         "pinyin": "wáng",
+         "type": "danh từ",
+         "meaning": "Nhà vua"
+      }
+   ]
+}
