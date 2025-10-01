@@ -5,16 +5,14 @@ spring:
       username: ${DB_USERNAME}
       password: ${DB_PASSWORD}
    jpa:
-      hibernate:
-        format_sql: true
-        ddl-auto: update
-  h2:
-    console:
-      enabled: true
-  servlet:
-    multipart:
-      max-file-size: 50MB
-      max-request-size: 50MB
+     hibernate:
+       ddl-auto: update
+     properties:
+       hibernate:
+         format_sql: true
+   h2:
+     console:
+       enabled: true
 
 jwt:
    secret: ${JWT_SECRET}
