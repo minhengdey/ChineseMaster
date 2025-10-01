@@ -18,7 +18,7 @@ const Navbar = ({ user, onLogout }) => {
             </svg>
           </div>
           <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-            <li><Link to="/lessons">Bài học</Link></li>
+            <li><Link to="/curriculum">Giáo trình</Link></li>
             <li><Link to="/flashcards">Thẻ ghi nhớ</Link></li>
             <li><Link to="/pronunciation">Phát âm</Link></li>
             <li><Link to="/alphabet">Bảng chữ cái</Link></li>
@@ -34,10 +34,10 @@ const Navbar = ({ user, onLogout }) => {
         <ul className="menu menu-horizontal px-1">
           <li>
             <Link 
-              to="/lessons" 
-              className={isActive('/lessons') ? 'active' : ''}
+              to="/curriculum" 
+              className={isActive('/curriculum') || location.pathname.startsWith('/curriculum') ? 'active' : ''}
             >
-              📚 Bài học
+              📚 Giáo trình
             </Link>
           </li>
           <li>

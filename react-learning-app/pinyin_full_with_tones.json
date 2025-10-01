@@ -1,0 +1,6050 @@
+{
+  "a": [
+    "a",
+    "ā",
+    "á",
+    "ǎ",
+    "à"
+  ],
+  "ai": [
+    "ai",
+    "āi",
+    "ái",
+    "ǎi",
+    "ài"
+  ],
+  "an": [
+    "an",
+    "ān",
+    "án",
+    "ǎn",
+    "àn"
+  ],
+  "ang": [
+    "ang",
+    "āng",
+    "áng",
+    "ǎng",
+    "àng"
+  ],
+  "ao": [
+    "ao",
+    "āo",
+    "áo",
+    "ǎo",
+    "ào"
+  ],
+  "e": [
+    "e",
+    "ē",
+    "é",
+    "ě",
+    "è"
+  ],
+  "ei": [
+    "ei",
+    "ēi",
+    "éi",
+    "ěi",
+    "èi"
+  ],
+  "en": [
+    "en",
+    "ēn",
+    "én",
+    "ěn",
+    "èn"
+  ],
+  "eng": [
+    "eng",
+    "ēng",
+    "éng",
+    "ěng",
+    "èng"
+  ],
+  "er": [
+    "er",
+    "ēr",
+    "ér",
+    "ěr",
+    "èr"
+  ],
+  "i": [
+    "i",
+    "ī",
+    "í",
+    "ǐ",
+    "ì"
+  ],
+  "ia": [
+    "ia",
+    "iā",
+    "iá",
+    "iǎ",
+    "ià"
+  ],
+  "ian": [
+    "ian",
+    "iān",
+    "ián",
+    "iǎn",
+    "iàn"
+  ],
+  "iang": [
+    "iang",
+    "iāng",
+    "iáng",
+    "iǎng",
+    "iàng"
+  ],
+  "iao": [
+    "iao",
+    "iāo",
+    "iáo",
+    "iǎo",
+    "iào"
+  ],
+  "ie": [
+    "ie",
+    "iē",
+    "ié",
+    "iě",
+    "iè"
+  ],
+  "in": [
+    "in",
+    "īn",
+    "ín",
+    "ǐn",
+    "ìn"
+  ],
+  "ing": [
+    "ing",
+    "īng",
+    "íng",
+    "ǐng",
+    "ìng"
+  ],
+  "iong": [
+    "iong",
+    "iōng",
+    "ióng",
+    "iǒng",
+    "iòng"
+  ],
+  "iu": [
+    "iu",
+    "īu",
+    "íu",
+    "ǐu",
+    "ìu"
+  ],
+  "o": [
+    "o",
+    "ō",
+    "ó",
+    "ǒ",
+    "ò"
+  ],
+  "ong": [
+    "ong",
+    "ōng",
+    "óng",
+    "ǒng",
+    "òng"
+  ],
+  "ou": [
+    "ou",
+    "ōu",
+    "óu",
+    "ǒu",
+    "òu"
+  ],
+  "u": [
+    "u",
+    "ū",
+    "ú",
+    "ǔ",
+    "ù"
+  ],
+  "ua": [
+    "ua",
+    "uā",
+    "uá",
+    "uǎ",
+    "uà"
+  ],
+  "uai": [
+    "uai",
+    "uāi",
+    "uái",
+    "uǎi",
+    "uài"
+  ],
+  "uan": [
+    "uan",
+    "uān",
+    "uán",
+    "uǎn",
+    "uàn"
+  ],
+  "uang": [
+    "uang",
+    "uāng",
+    "uáng",
+    "uǎng",
+    "uàng"
+  ],
+  "ue": [
+    "ue",
+    "uē",
+    "ué",
+    "uě",
+    "uè"
+  ],
+  "ui": [
+    "ui",
+    "uī",
+    "uí",
+    "uǐ",
+    "uì"
+  ],
+  "un": [
+    "un",
+    "ūn",
+    "ún",
+    "ǔn",
+    "ùn"
+  ],
+  "uo": [
+    "uo",
+    "uō",
+    "uó",
+    "uǒ",
+    "uò"
+  ],
+  "ü": [
+    "ü",
+    "ǖ",
+    "ǘ",
+    "ǚ",
+    "ǜ"
+  ],
+  "üe": [
+    "üe",
+    "üē",
+    "üé",
+    "üě",
+    "üè"
+  ],
+  "üan": [
+    "üan",
+    "üān",
+    "üán",
+    "üǎn",
+    "üàn"
+  ],
+  "ün": [
+    "ün",
+    "ǖn",
+    "ǘn",
+    "ǚn",
+    "ǜn"
+  ],
+  "ba": [
+    "ba",
+    "bā",
+    "bá",
+    "bǎ",
+    "bà"
+  ],
+  "bai": [
+    "bai",
+    "bāi",
+    "bái",
+    "bǎi",
+    "bài"
+  ],
+  "ban": [
+    "ban",
+    "bān",
+    "bán",
+    "bǎn",
+    "bàn"
+  ],
+  "bang": [
+    "bang",
+    "bāng",
+    "báng",
+    "bǎng",
+    "bàng"
+  ],
+  "bao": [
+    "bao",
+    "bāo",
+    "báo",
+    "bǎo",
+    "bào"
+  ],
+  "be": [
+    "be",
+    "bē",
+    "bé",
+    "bě",
+    "bè"
+  ],
+  "bei": [
+    "bei",
+    "bēi",
+    "béi",
+    "běi",
+    "bèi"
+  ],
+  "ben": [
+    "ben",
+    "bēn",
+    "bén",
+    "běn",
+    "bèn"
+  ],
+  "beng": [
+    "beng",
+    "bēng",
+    "béng",
+    "běng",
+    "bèng"
+  ],
+  "ber": [
+    "ber",
+    "bēr",
+    "bér",
+    "běr",
+    "bèr"
+  ],
+  "bi": [
+    "bi",
+    "bī",
+    "bí",
+    "bǐ",
+    "bì"
+  ],
+  "bia": [
+    "bia",
+    "biā",
+    "biá",
+    "biǎ",
+    "bià"
+  ],
+  "bian": [
+    "bian",
+    "biān",
+    "bián",
+    "biǎn",
+    "biàn"
+  ],
+  "biang": [
+    "biang",
+    "biāng",
+    "biáng",
+    "biǎng",
+    "biàng"
+  ],
+  "biao": [
+    "biao",
+    "biāo",
+    "biáo",
+    "biǎo",
+    "biào"
+  ],
+  "bie": [
+    "bie",
+    "biē",
+    "bié",
+    "biě",
+    "biè"
+  ],
+  "bin": [
+    "bin",
+    "bīn",
+    "bín",
+    "bǐn",
+    "bìn"
+  ],
+  "bing": [
+    "bing",
+    "bīng",
+    "bíng",
+    "bǐng",
+    "bìng"
+  ],
+  "biong": [
+    "biong",
+    "biōng",
+    "bióng",
+    "biǒng",
+    "biòng"
+  ],
+  "biu": [
+    "biu",
+    "bīu",
+    "bíu",
+    "bǐu",
+    "bìu"
+  ],
+  "bo": [
+    "bo",
+    "bō",
+    "bó",
+    "bǒ",
+    "bò"
+  ],
+  "bong": [
+    "bong",
+    "bōng",
+    "bóng",
+    "bǒng",
+    "bòng"
+  ],
+  "bou": [
+    "bou",
+    "bōu",
+    "bóu",
+    "bǒu",
+    "bòu"
+  ],
+  "bu": [
+    "bu",
+    "bū",
+    "bú",
+    "bǔ",
+    "bù"
+  ],
+  "bua": [
+    "bua",
+    "buā",
+    "buá",
+    "buǎ",
+    "buà"
+  ],
+  "buai": [
+    "buai",
+    "buāi",
+    "buái",
+    "buǎi",
+    "buài"
+  ],
+  "buan": [
+    "buan",
+    "buān",
+    "buán",
+    "buǎn",
+    "buàn"
+  ],
+  "buang": [
+    "buang",
+    "buāng",
+    "buáng",
+    "buǎng",
+    "buàng"
+  ],
+  "bue": [
+    "bue",
+    "buē",
+    "bué",
+    "buě",
+    "buè"
+  ],
+  "bui": [
+    "bui",
+    "buī",
+    "buí",
+    "buǐ",
+    "buì"
+  ],
+  "bun": [
+    "bun",
+    "būn",
+    "bún",
+    "bǔn",
+    "bùn"
+  ],
+  "buo": [
+    "buo",
+    "buō",
+    "buó",
+    "buǒ",
+    "buò"
+  ],
+  "bü": [
+    "bü",
+    "bǖ",
+    "bǘ",
+    "bǚ",
+    "bǜ"
+  ],
+  "büe": [
+    "büe",
+    "büē",
+    "büé",
+    "büě",
+    "büè"
+  ],
+  "büan": [
+    "büan",
+    "büān",
+    "büán",
+    "büǎn",
+    "büàn"
+  ],
+  "bün": [
+    "bün",
+    "bǖn",
+    "bǘn",
+    "bǚn",
+    "bǜn"
+  ],
+  "pa": [
+    "pa",
+    "pā",
+    "pá",
+    "pǎ",
+    "pà"
+  ],
+  "pai": [
+    "pai",
+    "pāi",
+    "pái",
+    "pǎi",
+    "pài"
+  ],
+  "pan": [
+    "pan",
+    "pān",
+    "pán",
+    "pǎn",
+    "pàn"
+  ],
+  "pang": [
+    "pang",
+    "pāng",
+    "páng",
+    "pǎng",
+    "pàng"
+  ],
+  "pao": [
+    "pao",
+    "pāo",
+    "páo",
+    "pǎo",
+    "pào"
+  ],
+  "pe": [
+    "pe",
+    "pē",
+    "pé",
+    "pě",
+    "pè"
+  ],
+  "pei": [
+    "pei",
+    "pēi",
+    "péi",
+    "pěi",
+    "pèi"
+  ],
+  "pen": [
+    "pen",
+    "pēn",
+    "pén",
+    "pěn",
+    "pèn"
+  ],
+  "peng": [
+    "peng",
+    "pēng",
+    "péng",
+    "pěng",
+    "pèng"
+  ],
+  "per": [
+    "per",
+    "pēr",
+    "pér",
+    "pěr",
+    "pèr"
+  ],
+  "pi": [
+    "pi",
+    "pī",
+    "pí",
+    "pǐ",
+    "pì"
+  ],
+  "pia": [
+    "pia",
+    "piā",
+    "piá",
+    "piǎ",
+    "pià"
+  ],
+  "pian": [
+    "pian",
+    "piān",
+    "pián",
+    "piǎn",
+    "piàn"
+  ],
+  "piang": [
+    "piang",
+    "piāng",
+    "piáng",
+    "piǎng",
+    "piàng"
+  ],
+  "piao": [
+    "piao",
+    "piāo",
+    "piáo",
+    "piǎo",
+    "piào"
+  ],
+  "pie": [
+    "pie",
+    "piē",
+    "pié",
+    "piě",
+    "piè"
+  ],
+  "pin": [
+    "pin",
+    "pīn",
+    "pín",
+    "pǐn",
+    "pìn"
+  ],
+  "ping": [
+    "ping",
+    "pīng",
+    "píng",
+    "pǐng",
+    "pìng"
+  ],
+  "piong": [
+    "piong",
+    "piōng",
+    "pióng",
+    "piǒng",
+    "piòng"
+  ],
+  "piu": [
+    "piu",
+    "pīu",
+    "píu",
+    "pǐu",
+    "pìu"
+  ],
+  "po": [
+    "po",
+    "pō",
+    "pó",
+    "pǒ",
+    "pò"
+  ],
+  "pong": [
+    "pong",
+    "pōng",
+    "póng",
+    "pǒng",
+    "pòng"
+  ],
+  "pou": [
+    "pou",
+    "pōu",
+    "póu",
+    "pǒu",
+    "pòu"
+  ],
+  "pu": [
+    "pu",
+    "pū",
+    "pú",
+    "pǔ",
+    "pù"
+  ],
+  "pua": [
+    "pua",
+    "puā",
+    "puá",
+    "puǎ",
+    "puà"
+  ],
+  "puai": [
+    "puai",
+    "puāi",
+    "puái",
+    "puǎi",
+    "puài"
+  ],
+  "puan": [
+    "puan",
+    "puān",
+    "puán",
+    "puǎn",
+    "puàn"
+  ],
+  "puang": [
+    "puang",
+    "puāng",
+    "puáng",
+    "puǎng",
+    "puàng"
+  ],
+  "pue": [
+    "pue",
+    "puē",
+    "pué",
+    "puě",
+    "puè"
+  ],
+  "pui": [
+    "pui",
+    "puī",
+    "puí",
+    "puǐ",
+    "puì"
+  ],
+  "pun": [
+    "pun",
+    "pūn",
+    "pún",
+    "pǔn",
+    "pùn"
+  ],
+  "puo": [
+    "puo",
+    "puō",
+    "puó",
+    "puǒ",
+    "può"
+  ],
+  "pü": [
+    "pü",
+    "pǖ",
+    "pǘ",
+    "pǚ",
+    "pǜ"
+  ],
+  "püe": [
+    "püe",
+    "püē",
+    "püé",
+    "püě",
+    "püè"
+  ],
+  "püan": [
+    "püan",
+    "püān",
+    "püán",
+    "püǎn",
+    "püàn"
+  ],
+  "pün": [
+    "pün",
+    "pǖn",
+    "pǘn",
+    "pǚn",
+    "pǜn"
+  ],
+  "ma": [
+    "ma",
+    "mā",
+    "má",
+    "mǎ",
+    "mà"
+  ],
+  "mai": [
+    "mai",
+    "māi",
+    "mái",
+    "mǎi",
+    "mài"
+  ],
+  "man": [
+    "man",
+    "mān",
+    "mán",
+    "mǎn",
+    "màn"
+  ],
+  "mang": [
+    "mang",
+    "māng",
+    "máng",
+    "mǎng",
+    "màng"
+  ],
+  "mao": [
+    "mao",
+    "māo",
+    "máo",
+    "mǎo",
+    "mào"
+  ],
+  "me": [
+    "me",
+    "mē",
+    "mé",
+    "mě",
+    "mè"
+  ],
+  "mei": [
+    "mei",
+    "mēi",
+    "méi",
+    "měi",
+    "mèi"
+  ],
+  "men": [
+    "men",
+    "mēn",
+    "mén",
+    "měn",
+    "mèn"
+  ],
+  "meng": [
+    "meng",
+    "mēng",
+    "méng",
+    "měng",
+    "mèng"
+  ],
+  "mer": [
+    "mer",
+    "mēr",
+    "mér",
+    "měr",
+    "mèr"
+  ],
+  "mi": [
+    "mi",
+    "mī",
+    "mí",
+    "mǐ",
+    "mì"
+  ],
+  "mia": [
+    "mia",
+    "miā",
+    "miá",
+    "miǎ",
+    "mià"
+  ],
+  "mian": [
+    "mian",
+    "miān",
+    "mián",
+    "miǎn",
+    "miàn"
+  ],
+  "miang": [
+    "miang",
+    "miāng",
+    "miáng",
+    "miǎng",
+    "miàng"
+  ],
+  "miao": [
+    "miao",
+    "miāo",
+    "miáo",
+    "miǎo",
+    "miào"
+  ],
+  "mie": [
+    "mie",
+    "miē",
+    "mié",
+    "miě",
+    "miè"
+  ],
+  "min": [
+    "min",
+    "mīn",
+    "mín",
+    "mǐn",
+    "mìn"
+  ],
+  "ming": [
+    "ming",
+    "mīng",
+    "míng",
+    "mǐng",
+    "mìng"
+  ],
+  "miong": [
+    "miong",
+    "miōng",
+    "mióng",
+    "miǒng",
+    "miòng"
+  ],
+  "miu": [
+    "miu",
+    "mīu",
+    "míu",
+    "mǐu",
+    "mìu"
+  ],
+  "mo": [
+    "mo",
+    "mō",
+    "mó",
+    "mǒ",
+    "mò"
+  ],
+  "mong": [
+    "mong",
+    "mōng",
+    "móng",
+    "mǒng",
+    "mòng"
+  ],
+  "mou": [
+    "mou",
+    "mōu",
+    "móu",
+    "mǒu",
+    "mòu"
+  ],
+  "mu": [
+    "mu",
+    "mū",
+    "mú",
+    "mǔ",
+    "mù"
+  ],
+  "mua": [
+    "mua",
+    "muā",
+    "muá",
+    "muǎ",
+    "muà"
+  ],
+  "muai": [
+    "muai",
+    "muāi",
+    "muái",
+    "muǎi",
+    "muài"
+  ],
+  "muan": [
+    "muan",
+    "muān",
+    "muán",
+    "muǎn",
+    "muàn"
+  ],
+  "muang": [
+    "muang",
+    "muāng",
+    "muáng",
+    "muǎng",
+    "muàng"
+  ],
+  "mue": [
+    "mue",
+    "muē",
+    "mué",
+    "muě",
+    "muè"
+  ],
+  "mui": [
+    "mui",
+    "muī",
+    "muí",
+    "muǐ",
+    "muì"
+  ],
+  "mun": [
+    "mun",
+    "mūn",
+    "mún",
+    "mǔn",
+    "mùn"
+  ],
+  "muo": [
+    "muo",
+    "muō",
+    "muó",
+    "muǒ",
+    "muò"
+  ],
+  "mü": [
+    "mü",
+    "mǖ",
+    "mǘ",
+    "mǚ",
+    "mǜ"
+  ],
+  "müe": [
+    "müe",
+    "müē",
+    "müé",
+    "müě",
+    "müè"
+  ],
+  "müan": [
+    "müan",
+    "müān",
+    "müán",
+    "müǎn",
+    "müàn"
+  ],
+  "mün": [
+    "mün",
+    "mǖn",
+    "mǘn",
+    "mǚn",
+    "mǜn"
+  ],
+  "fa": [
+    "fa",
+    "fā",
+    "fá",
+    "fǎ",
+    "fà"
+  ],
+  "fai": [
+    "fai",
+    "fāi",
+    "fái",
+    "fǎi",
+    "fài"
+  ],
+  "fan": [
+    "fan",
+    "fān",
+    "fán",
+    "fǎn",
+    "fàn"
+  ],
+  "fang": [
+    "fang",
+    "fāng",
+    "fáng",
+    "fǎng",
+    "fàng"
+  ],
+  "fao": [
+    "fao",
+    "fāo",
+    "fáo",
+    "fǎo",
+    "fào"
+  ],
+  "fe": [
+    "fe",
+    "fē",
+    "fé",
+    "fě",
+    "fè"
+  ],
+  "fei": [
+    "fei",
+    "fēi",
+    "féi",
+    "fěi",
+    "fèi"
+  ],
+  "fen": [
+    "fen",
+    "fēn",
+    "fén",
+    "fěn",
+    "fèn"
+  ],
+  "feng": [
+    "feng",
+    "fēng",
+    "féng",
+    "fěng",
+    "fèng"
+  ],
+  "fer": [
+    "fer",
+    "fēr",
+    "fér",
+    "fěr",
+    "fèr"
+  ],
+  "fi": [
+    "fi",
+    "fī",
+    "fí",
+    "fǐ",
+    "fì"
+  ],
+  "fia": [
+    "fia",
+    "fiā",
+    "fiá",
+    "fiǎ",
+    "fià"
+  ],
+  "fian": [
+    "fian",
+    "fiān",
+    "fián",
+    "fiǎn",
+    "fiàn"
+  ],
+  "fiang": [
+    "fiang",
+    "fiāng",
+    "fiáng",
+    "fiǎng",
+    "fiàng"
+  ],
+  "fiao": [
+    "fiao",
+    "fiāo",
+    "fiáo",
+    "fiǎo",
+    "fiào"
+  ],
+  "fie": [
+    "fie",
+    "fiē",
+    "fié",
+    "fiě",
+    "fiè"
+  ],
+  "fin": [
+    "fin",
+    "fīn",
+    "fín",
+    "fǐn",
+    "fìn"
+  ],
+  "fing": [
+    "fing",
+    "fīng",
+    "fíng",
+    "fǐng",
+    "fìng"
+  ],
+  "fiong": [
+    "fiong",
+    "fiōng",
+    "fióng",
+    "fiǒng",
+    "fiòng"
+  ],
+  "fiu": [
+    "fiu",
+    "fīu",
+    "fíu",
+    "fǐu",
+    "fìu"
+  ],
+  "fo": [
+    "fo",
+    "fō",
+    "fó",
+    "fǒ",
+    "fò"
+  ],
+  "fong": [
+    "fong",
+    "fōng",
+    "fóng",
+    "fǒng",
+    "fòng"
+  ],
+  "fou": [
+    "fou",
+    "fōu",
+    "fóu",
+    "fǒu",
+    "fòu"
+  ],
+  "fu": [
+    "fu",
+    "fū",
+    "fú",
+    "fǔ",
+    "fù"
+  ],
+  "fua": [
+    "fua",
+    "fuā",
+    "fuá",
+    "fuǎ",
+    "fuà"
+  ],
+  "fuai": [
+    "fuai",
+    "fuāi",
+    "fuái",
+    "fuǎi",
+    "fuài"
+  ],
+  "fuan": [
+    "fuan",
+    "fuān",
+    "fuán",
+    "fuǎn",
+    "fuàn"
+  ],
+  "fuang": [
+    "fuang",
+    "fuāng",
+    "fuáng",
+    "fuǎng",
+    "fuàng"
+  ],
+  "fue": [
+    "fue",
+    "fuē",
+    "fué",
+    "fuě",
+    "fuè"
+  ],
+  "fui": [
+    "fui",
+    "fuī",
+    "fuí",
+    "fuǐ",
+    "fuì"
+  ],
+  "fun": [
+    "fun",
+    "fūn",
+    "fún",
+    "fǔn",
+    "fùn"
+  ],
+  "fuo": [
+    "fuo",
+    "fuō",
+    "fuó",
+    "fuǒ",
+    "fuò"
+  ],
+  "fü": [
+    "fü",
+    "fǖ",
+    "fǘ",
+    "fǚ",
+    "fǜ"
+  ],
+  "füe": [
+    "füe",
+    "füē",
+    "füé",
+    "füě",
+    "füè"
+  ],
+  "füan": [
+    "füan",
+    "füān",
+    "füán",
+    "füǎn",
+    "füàn"
+  ],
+  "fün": [
+    "fün",
+    "fǖn",
+    "fǘn",
+    "fǚn",
+    "fǜn"
+  ],
+  "da": [
+    "da",
+    "dā",
+    "dá",
+    "dǎ",
+    "dà"
+  ],
+  "dai": [
+    "dai",
+    "dāi",
+    "dái",
+    "dǎi",
+    "dài"
+  ],
+  "dan": [
+    "dan",
+    "dān",
+    "dán",
+    "dǎn",
+    "dàn"
+  ],
+  "dang": [
+    "dang",
+    "dāng",
+    "dáng",
+    "dǎng",
+    "dàng"
+  ],
+  "dao": [
+    "dao",
+    "dāo",
+    "dáo",
+    "dǎo",
+    "dào"
+  ],
+  "de": [
+    "de",
+    "dē",
+    "dé",
+    "dě",
+    "dè"
+  ],
+  "dei": [
+    "dei",
+    "dēi",
+    "déi",
+    "děi",
+    "dèi"
+  ],
+  "den": [
+    "den",
+    "dēn",
+    "dén",
+    "děn",
+    "dèn"
+  ],
+  "deng": [
+    "deng",
+    "dēng",
+    "déng",
+    "děng",
+    "dèng"
+  ],
+  "der": [
+    "der",
+    "dēr",
+    "dér",
+    "děr",
+    "dèr"
+  ],
+  "di": [
+    "di",
+    "dī",
+    "dí",
+    "dǐ",
+    "dì"
+  ],
+  "dia": [
+    "dia",
+    "diā",
+    "diá",
+    "diǎ",
+    "dià"
+  ],
+  "dian": [
+    "dian",
+    "diān",
+    "dián",
+    "diǎn",
+    "diàn"
+  ],
+  "diang": [
+    "diang",
+    "diāng",
+    "diáng",
+    "diǎng",
+    "diàng"
+  ],
+  "diao": [
+    "diao",
+    "diāo",
+    "diáo",
+    "diǎo",
+    "diào"
+  ],
+  "die": [
+    "die",
+    "diē",
+    "dié",
+    "diě",
+    "diè"
+  ],
+  "din": [
+    "din",
+    "dīn",
+    "dín",
+    "dǐn",
+    "dìn"
+  ],
+  "ding": [
+    "ding",
+    "dīng",
+    "díng",
+    "dǐng",
+    "dìng"
+  ],
+  "diong": [
+    "diong",
+    "diōng",
+    "dióng",
+    "diǒng",
+    "diòng"
+  ],
+  "diu": [
+    "diu",
+    "dīu",
+    "díu",
+    "dǐu",
+    "dìu"
+  ],
+  "do": [
+    "do",
+    "dō",
+    "dó",
+    "dǒ",
+    "dò"
+  ],
+  "dong": [
+    "dong",
+    "dōng",
+    "dóng",
+    "dǒng",
+    "dòng"
+  ],
+  "dou": [
+    "dou",
+    "dōu",
+    "dóu",
+    "dǒu",
+    "dòu"
+  ],
+  "du": [
+    "du",
+    "dū",
+    "dú",
+    "dǔ",
+    "dù"
+  ],
+  "dua": [
+    "dua",
+    "duā",
+    "duá",
+    "duǎ",
+    "duà"
+  ],
+  "duai": [
+    "duai",
+    "duāi",
+    "duái",
+    "duǎi",
+    "duài"
+  ],
+  "duan": [
+    "duan",
+    "duān",
+    "duán",
+    "duǎn",
+    "duàn"
+  ],
+  "duang": [
+    "duang",
+    "duāng",
+    "duáng",
+    "duǎng",
+    "duàng"
+  ],
+  "due": [
+    "due",
+    "duē",
+    "dué",
+    "duě",
+    "duè"
+  ],
+  "dui": [
+    "dui",
+    "duī",
+    "duí",
+    "duǐ",
+    "duì"
+  ],
+  "dun": [
+    "dun",
+    "dūn",
+    "dún",
+    "dǔn",
+    "dùn"
+  ],
+  "duo": [
+    "duo",
+    "duō",
+    "duó",
+    "duǒ",
+    "duò"
+  ],
+  "dü": [
+    "dü",
+    "dǖ",
+    "dǘ",
+    "dǚ",
+    "dǜ"
+  ],
+  "düe": [
+    "düe",
+    "düē",
+    "düé",
+    "düě",
+    "düè"
+  ],
+  "düan": [
+    "düan",
+    "düān",
+    "düán",
+    "düǎn",
+    "düàn"
+  ],
+  "dün": [
+    "dün",
+    "dǖn",
+    "dǘn",
+    "dǚn",
+    "dǜn"
+  ],
+  "ta": [
+    "ta",
+    "tā",
+    "tá",
+    "tǎ",
+    "tà"
+  ],
+  "tai": [
+    "tai",
+    "tāi",
+    "tái",
+    "tǎi",
+    "tài"
+  ],
+  "tan": [
+    "tan",
+    "tān",
+    "tán",
+    "tǎn",
+    "tàn"
+  ],
+  "tang": [
+    "tang",
+    "tāng",
+    "táng",
+    "tǎng",
+    "tàng"
+  ],
+  "tao": [
+    "tao",
+    "tāo",
+    "táo",
+    "tǎo",
+    "tào"
+  ],
+  "te": [
+    "te",
+    "tē",
+    "té",
+    "tě",
+    "tè"
+  ],
+  "tei": [
+    "tei",
+    "tēi",
+    "téi",
+    "těi",
+    "tèi"
+  ],
+  "ten": [
+    "ten",
+    "tēn",
+    "tén",
+    "těn",
+    "tèn"
+  ],
+  "teng": [
+    "teng",
+    "tēng",
+    "téng",
+    "těng",
+    "tèng"
+  ],
+  "ter": [
+    "ter",
+    "tēr",
+    "tér",
+    "těr",
+    "tèr"
+  ],
+  "ti": [
+    "ti",
+    "tī",
+    "tí",
+    "tǐ",
+    "tì"
+  ],
+  "tia": [
+    "tia",
+    "tiā",
+    "tiá",
+    "tiǎ",
+    "tià"
+  ],
+  "tian": [
+    "tian",
+    "tiān",
+    "tián",
+    "tiǎn",
+    "tiàn"
+  ],
+  "tiang": [
+    "tiang",
+    "tiāng",
+    "tiáng",
+    "tiǎng",
+    "tiàng"
+  ],
+  "tiao": [
+    "tiao",
+    "tiāo",
+    "tiáo",
+    "tiǎo",
+    "tiào"
+  ],
+  "tie": [
+    "tie",
+    "tiē",
+    "tié",
+    "tiě",
+    "tiè"
+  ],
+  "tin": [
+    "tin",
+    "tīn",
+    "tín",
+    "tǐn",
+    "tìn"
+  ],
+  "ting": [
+    "ting",
+    "tīng",
+    "tíng",
+    "tǐng",
+    "tìng"
+  ],
+  "tiong": [
+    "tiong",
+    "tiōng",
+    "tióng",
+    "tiǒng",
+    "tiòng"
+  ],
+  "tiu": [
+    "tiu",
+    "tīu",
+    "tíu",
+    "tǐu",
+    "tìu"
+  ],
+  "to": [
+    "to",
+    "tō",
+    "tó",
+    "tǒ",
+    "tò"
+  ],
+  "tong": [
+    "tong",
+    "tōng",
+    "tóng",
+    "tǒng",
+    "tòng"
+  ],
+  "tou": [
+    "tou",
+    "tōu",
+    "tóu",
+    "tǒu",
+    "tòu"
+  ],
+  "tu": [
+    "tu",
+    "tū",
+    "tú",
+    "tǔ",
+    "tù"
+  ],
+  "tua": [
+    "tua",
+    "tuā",
+    "tuá",
+    "tuǎ",
+    "tuà"
+  ],
+  "tuai": [
+    "tuai",
+    "tuāi",
+    "tuái",
+    "tuǎi",
+    "tuài"
+  ],
+  "tuan": [
+    "tuan",
+    "tuān",
+    "tuán",
+    "tuǎn",
+    "tuàn"
+  ],
+  "tuang": [
+    "tuang",
+    "tuāng",
+    "tuáng",
+    "tuǎng",
+    "tuàng"
+  ],
+  "tue": [
+    "tue",
+    "tuē",
+    "tué",
+    "tuě",
+    "tuè"
+  ],
+  "tui": [
+    "tui",
+    "tuī",
+    "tuí",
+    "tuǐ",
+    "tuì"
+  ],
+  "tun": [
+    "tun",
+    "tūn",
+    "tún",
+    "tǔn",
+    "tùn"
+  ],
+  "tuo": [
+    "tuo",
+    "tuō",
+    "tuó",
+    "tuǒ",
+    "tuò"
+  ],
+  "tü": [
+    "tü",
+    "tǖ",
+    "tǘ",
+    "tǚ",
+    "tǜ"
+  ],
+  "tüe": [
+    "tüe",
+    "tüē",
+    "tüé",
+    "tüě",
+    "tüè"
+  ],
+  "tüan": [
+    "tüan",
+    "tüān",
+    "tüán",
+    "tüǎn",
+    "tüàn"
+  ],
+  "tün": [
+    "tün",
+    "tǖn",
+    "tǘn",
+    "tǚn",
+    "tǜn"
+  ],
+  "na": [
+    "na",
+    "nā",
+    "ná",
+    "nǎ",
+    "nà"
+  ],
+  "nai": [
+    "nai",
+    "nāi",
+    "nái",
+    "nǎi",
+    "nài"
+  ],
+  "nan": [
+    "nan",
+    "nān",
+    "nán",
+    "nǎn",
+    "nàn"
+  ],
+  "nang": [
+    "nang",
+    "nāng",
+    "náng",
+    "nǎng",
+    "nàng"
+  ],
+  "nao": [
+    "nao",
+    "nāo",
+    "náo",
+    "nǎo",
+    "nào"
+  ],
+  "ne": [
+    "ne",
+    "nē",
+    "né",
+    "ně",
+    "nè"
+  ],
+  "nei": [
+    "nei",
+    "nēi",
+    "néi",
+    "něi",
+    "nèi"
+  ],
+  "nen": [
+    "nen",
+    "nēn",
+    "nén",
+    "něn",
+    "nèn"
+  ],
+  "neng": [
+    "neng",
+    "nēng",
+    "néng",
+    "něng",
+    "nèng"
+  ],
+  "ner": [
+    "ner",
+    "nēr",
+    "nér",
+    "něr",
+    "nèr"
+  ],
+  "ni": [
+    "ni",
+    "nī",
+    "ní",
+    "nǐ",
+    "nì"
+  ],
+  "nia": [
+    "nia",
+    "niā",
+    "niá",
+    "niǎ",
+    "nià"
+  ],
+  "nian": [
+    "nian",
+    "niān",
+    "nián",
+    "niǎn",
+    "niàn"
+  ],
+  "niang": [
+    "niang",
+    "niāng",
+    "niáng",
+    "niǎng",
+    "niàng"
+  ],
+  "niao": [
+    "niao",
+    "niāo",
+    "niáo",
+    "niǎo",
+    "niào"
+  ],
+  "nie": [
+    "nie",
+    "niē",
+    "nié",
+    "niě",
+    "niè"
+  ],
+  "nin": [
+    "nin",
+    "nīn",
+    "nín",
+    "nǐn",
+    "nìn"
+  ],
+  "ning": [
+    "ning",
+    "nīng",
+    "níng",
+    "nǐng",
+    "nìng"
+  ],
+  "niong": [
+    "niong",
+    "niōng",
+    "nióng",
+    "niǒng",
+    "niòng"
+  ],
+  "niu": [
+    "niu",
+    "nīu",
+    "níu",
+    "nǐu",
+    "nìu"
+  ],
+  "no": [
+    "no",
+    "nō",
+    "nó",
+    "nǒ",
+    "nò"
+  ],
+  "nong": [
+    "nong",
+    "nōng",
+    "nóng",
+    "nǒng",
+    "nòng"
+  ],
+  "nou": [
+    "nou",
+    "nōu",
+    "nóu",
+    "nǒu",
+    "nòu"
+  ],
+  "nu": [
+    "nu",
+    "nū",
+    "nú",
+    "nǔ",
+    "nù"
+  ],
+  "nua": [
+    "nua",
+    "nuā",
+    "nuá",
+    "nuǎ",
+    "nuà"
+  ],
+  "nuai": [
+    "nuai",
+    "nuāi",
+    "nuái",
+    "nuǎi",
+    "nuài"
+  ],
+  "nuan": [
+    "nuan",
+    "nuān",
+    "nuán",
+    "nuǎn",
+    "nuàn"
+  ],
+  "nuang": [
+    "nuang",
+    "nuāng",
+    "nuáng",
+    "nuǎng",
+    "nuàng"
+  ],
+  "nue": [
+    "nue",
+    "nuē",
+    "nué",
+    "nuě",
+    "nuè"
+  ],
+  "nui": [
+    "nui",
+    "nuī",
+    "nuí",
+    "nuǐ",
+    "nuì"
+  ],
+  "nun": [
+    "nun",
+    "nūn",
+    "nún",
+    "nǔn",
+    "nùn"
+  ],
+  "nuo": [
+    "nuo",
+    "nuō",
+    "nuó",
+    "nuǒ",
+    "nuò"
+  ],
+  "nü": [
+    "nü",
+    "nǖ",
+    "nǘ",
+    "nǚ",
+    "nǜ"
+  ],
+  "nüe": [
+    "nüe",
+    "nüē",
+    "nüé",
+    "nüě",
+    "nüè"
+  ],
+  "nüan": [
+    "nüan",
+    "nüān",
+    "nüán",
+    "nüǎn",
+    "nüàn"
+  ],
+  "nün": [
+    "nün",
+    "nǖn",
+    "nǘn",
+    "nǚn",
+    "nǜn"
+  ],
+  "la": [
+    "la",
+    "lā",
+    "lá",
+    "lǎ",
+    "là"
+  ],
+  "lai": [
+    "lai",
+    "lāi",
+    "lái",
+    "lǎi",
+    "lài"
+  ],
+  "lan": [
+    "lan",
+    "lān",
+    "lán",
+    "lǎn",
+    "làn"
+  ],
+  "lang": [
+    "lang",
+    "lāng",
+    "láng",
+    "lǎng",
+    "làng"
+  ],
+  "lao": [
+    "lao",
+    "lāo",
+    "láo",
+    "lǎo",
+    "lào"
+  ],
+  "le": [
+    "le",
+    "lē",
+    "lé",
+    "lě",
+    "lè"
+  ],
+  "lei": [
+    "lei",
+    "lēi",
+    "léi",
+    "lěi",
+    "lèi"
+  ],
+  "len": [
+    "len",
+    "lēn",
+    "lén",
+    "lěn",
+    "lèn"
+  ],
+  "leng": [
+    "leng",
+    "lēng",
+    "léng",
+    "lěng",
+    "lèng"
+  ],
+  "ler": [
+    "ler",
+    "lēr",
+    "lér",
+    "lěr",
+    "lèr"
+  ],
+  "li": [
+    "li",
+    "lī",
+    "lí",
+    "lǐ",
+    "lì"
+  ],
+  "lia": [
+    "lia",
+    "liā",
+    "liá",
+    "liǎ",
+    "lià"
+  ],
+  "lian": [
+    "lian",
+    "liān",
+    "lián",
+    "liǎn",
+    "liàn"
+  ],
+  "liang": [
+    "liang",
+    "liāng",
+    "liáng",
+    "liǎng",
+    "liàng"
+  ],
+  "liao": [
+    "liao",
+    "liāo",
+    "liáo",
+    "liǎo",
+    "liào"
+  ],
+  "lie": [
+    "lie",
+    "liē",
+    "lié",
+    "liě",
+    "liè"
+  ],
+  "lin": [
+    "lin",
+    "līn",
+    "lín",
+    "lǐn",
+    "lìn"
+  ],
+  "ling": [
+    "ling",
+    "līng",
+    "líng",
+    "lǐng",
+    "lìng"
+  ],
+  "liong": [
+    "liong",
+    "liōng",
+    "lióng",
+    "liǒng",
+    "liòng"
+  ],
+  "liu": [
+    "liu",
+    "līu",
+    "líu",
+    "lǐu",
+    "lìu"
+  ],
+  "lo": [
+    "lo",
+    "lō",
+    "ló",
+    "lǒ",
+    "lò"
+  ],
+  "long": [
+    "long",
+    "lōng",
+    "lóng",
+    "lǒng",
+    "lòng"
+  ],
+  "lou": [
+    "lou",
+    "lōu",
+    "lóu",
+    "lǒu",
+    "lòu"
+  ],
+  "lu": [
+    "lu",
+    "lū",
+    "lú",
+    "lǔ",
+    "lù"
+  ],
+  "lua": [
+    "lua",
+    "luā",
+    "luá",
+    "luǎ",
+    "luà"
+  ],
+  "luai": [
+    "luai",
+    "luāi",
+    "luái",
+    "luǎi",
+    "luài"
+  ],
+  "luan": [
+    "luan",
+    "luān",
+    "luán",
+    "luǎn",
+    "luàn"
+  ],
+  "luang": [
+    "luang",
+    "luāng",
+    "luáng",
+    "luǎng",
+    "luàng"
+  ],
+  "lue": [
+    "lue",
+    "luē",
+    "lué",
+    "luě",
+    "luè"
+  ],
+  "lui": [
+    "lui",
+    "luī",
+    "luí",
+    "luǐ",
+    "luì"
+  ],
+  "lun": [
+    "lun",
+    "lūn",
+    "lún",
+    "lǔn",
+    "lùn"
+  ],
+  "luo": [
+    "luo",
+    "luō",
+    "luó",
+    "luǒ",
+    "luò"
+  ],
+  "lü": [
+    "lü",
+    "lǖ",
+    "lǘ",
+    "lǚ",
+    "lǜ"
+  ],
+  "lüe": [
+    "lüe",
+    "lüē",
+    "lüé",
+    "lüě",
+    "lüè"
+  ],
+  "lüan": [
+    "lüan",
+    "lüān",
+    "lüán",
+    "lüǎn",
+    "lüàn"
+  ],
+  "lün": [
+    "lün",
+    "lǖn",
+    "lǘn",
+    "lǚn",
+    "lǜn"
+  ],
+  "ga": [
+    "ga",
+    "gā",
+    "gá",
+    "gǎ",
+    "gà"
+  ],
+  "gai": [
+    "gai",
+    "gāi",
+    "gái",
+    "gǎi",
+    "gài"
+  ],
+  "gan": [
+    "gan",
+    "gān",
+    "gán",
+    "gǎn",
+    "gàn"
+  ],
+  "gang": [
+    "gang",
+    "gāng",
+    "gáng",
+    "gǎng",
+    "gàng"
+  ],
+  "gao": [
+    "gao",
+    "gāo",
+    "gáo",
+    "gǎo",
+    "gào"
+  ],
+  "ge": [
+    "ge",
+    "gē",
+    "gé",
+    "gě",
+    "gè"
+  ],
+  "gei": [
+    "gei",
+    "gēi",
+    "géi",
+    "gěi",
+    "gèi"
+  ],
+  "gen": [
+    "gen",
+    "gēn",
+    "gén",
+    "gěn",
+    "gèn"
+  ],
+  "geng": [
+    "geng",
+    "gēng",
+    "géng",
+    "gěng",
+    "gèng"
+  ],
+  "ger": [
+    "ger",
+    "gēr",
+    "gér",
+    "gěr",
+    "gèr"
+  ],
+  "gi": [
+    "gi",
+    "gī",
+    "gí",
+    "gǐ",
+    "gì"
+  ],
+  "gia": [
+    "gia",
+    "giā",
+    "giá",
+    "giǎ",
+    "già"
+  ],
+  "gian": [
+    "gian",
+    "giān",
+    "gián",
+    "giǎn",
+    "giàn"
+  ],
+  "giang": [
+    "giang",
+    "giāng",
+    "giáng",
+    "giǎng",
+    "giàng"
+  ],
+  "giao": [
+    "giao",
+    "giāo",
+    "giáo",
+    "giǎo",
+    "giào"
+  ],
+  "gie": [
+    "gie",
+    "giē",
+    "gié",
+    "giě",
+    "giè"
+  ],
+  "gin": [
+    "gin",
+    "gīn",
+    "gín",
+    "gǐn",
+    "gìn"
+  ],
+  "ging": [
+    "ging",
+    "gīng",
+    "gíng",
+    "gǐng",
+    "gìng"
+  ],
+  "giong": [
+    "giong",
+    "giōng",
+    "gióng",
+    "giǒng",
+    "giòng"
+  ],
+  "giu": [
+    "giu",
+    "gīu",
+    "gíu",
+    "gǐu",
+    "gìu"
+  ],
+  "go": [
+    "go",
+    "gō",
+    "gó",
+    "gǒ",
+    "gò"
+  ],
+  "gong": [
+    "gong",
+    "gōng",
+    "góng",
+    "gǒng",
+    "gòng"
+  ],
+  "gou": [
+    "gou",
+    "gōu",
+    "góu",
+    "gǒu",
+    "gòu"
+  ],
+  "gu": [
+    "gu",
+    "gū",
+    "gú",
+    "gǔ",
+    "gù"
+  ],
+  "gua": [
+    "gua",
+    "guā",
+    "guá",
+    "guǎ",
+    "guà"
+  ],
+  "guai": [
+    "guai",
+    "guāi",
+    "guái",
+    "guǎi",
+    "guài"
+  ],
+  "guan": [
+    "guan",
+    "guān",
+    "guán",
+    "guǎn",
+    "guàn"
+  ],
+  "guang": [
+    "guang",
+    "guāng",
+    "guáng",
+    "guǎng",
+    "guàng"
+  ],
+  "gue": [
+    "gue",
+    "guē",
+    "gué",
+    "guě",
+    "guè"
+  ],
+  "gui": [
+    "gui",
+    "guī",
+    "guí",
+    "guǐ",
+    "guì"
+  ],
+  "gun": [
+    "gun",
+    "gūn",
+    "gún",
+    "gǔn",
+    "gùn"
+  ],
+  "guo": [
+    "guo",
+    "guō",
+    "guó",
+    "guǒ",
+    "guò"
+  ],
+  "gü": [
+    "gü",
+    "gǖ",
+    "gǘ",
+    "gǚ",
+    "gǜ"
+  ],
+  "güe": [
+    "güe",
+    "güē",
+    "güé",
+    "güě",
+    "güè"
+  ],
+  "güan": [
+    "güan",
+    "güān",
+    "güán",
+    "güǎn",
+    "güàn"
+  ],
+  "gün": [
+    "gün",
+    "gǖn",
+    "gǘn",
+    "gǚn",
+    "gǜn"
+  ],
+  "ka": [
+    "ka",
+    "kā",
+    "ká",
+    "kǎ",
+    "kà"
+  ],
+  "kai": [
+    "kai",
+    "kāi",
+    "kái",
+    "kǎi",
+    "kài"
+  ],
+  "kan": [
+    "kan",
+    "kān",
+    "kán",
+    "kǎn",
+    "kàn"
+  ],
+  "kang": [
+    "kang",
+    "kāng",
+    "káng",
+    "kǎng",
+    "kàng"
+  ],
+  "kao": [
+    "kao",
+    "kāo",
+    "káo",
+    "kǎo",
+    "kào"
+  ],
+  "ke": [
+    "ke",
+    "kē",
+    "ké",
+    "kě",
+    "kè"
+  ],
+  "kei": [
+    "kei",
+    "kēi",
+    "kéi",
+    "kěi",
+    "kèi"
+  ],
+  "ken": [
+    "ken",
+    "kēn",
+    "kén",
+    "kěn",
+    "kèn"
+  ],
+  "keng": [
+    "keng",
+    "kēng",
+    "kéng",
+    "kěng",
+    "kèng"
+  ],
+  "ker": [
+    "ker",
+    "kēr",
+    "kér",
+    "kěr",
+    "kèr"
+  ],
+  "ki": [
+    "ki",
+    "kī",
+    "kí",
+    "kǐ",
+    "kì"
+  ],
+  "kia": [
+    "kia",
+    "kiā",
+    "kiá",
+    "kiǎ",
+    "kià"
+  ],
+  "kian": [
+    "kian",
+    "kiān",
+    "kián",
+    "kiǎn",
+    "kiàn"
+  ],
+  "kiang": [
+    "kiang",
+    "kiāng",
+    "kiáng",
+    "kiǎng",
+    "kiàng"
+  ],
+  "kiao": [
+    "kiao",
+    "kiāo",
+    "kiáo",
+    "kiǎo",
+    "kiào"
+  ],
+  "kie": [
+    "kie",
+    "kiē",
+    "kié",
+    "kiě",
+    "kiè"
+  ],
+  "kin": [
+    "kin",
+    "kīn",
+    "kín",
+    "kǐn",
+    "kìn"
+  ],
+  "king": [
+    "king",
+    "kīng",
+    "kíng",
+    "kǐng",
+    "kìng"
+  ],
+  "kiong": [
+    "kiong",
+    "kiōng",
+    "kióng",
+    "kiǒng",
+    "kiòng"
+  ],
+  "kiu": [
+    "kiu",
+    "kīu",
+    "kíu",
+    "kǐu",
+    "kìu"
+  ],
+  "ko": [
+    "ko",
+    "kō",
+    "kó",
+    "kǒ",
+    "kò"
+  ],
+  "kong": [
+    "kong",
+    "kōng",
+    "kóng",
+    "kǒng",
+    "kòng"
+  ],
+  "kou": [
+    "kou",
+    "kōu",
+    "kóu",
+    "kǒu",
+    "kòu"
+  ],
+  "ku": [
+    "ku",
+    "kū",
+    "kú",
+    "kǔ",
+    "kù"
+  ],
+  "kua": [
+    "kua",
+    "kuā",
+    "kuá",
+    "kuǎ",
+    "kuà"
+  ],
+  "kuai": [
+    "kuai",
+    "kuāi",
+    "kuái",
+    "kuǎi",
+    "kuài"
+  ],
+  "kuan": [
+    "kuan",
+    "kuān",
+    "kuán",
+    "kuǎn",
+    "kuàn"
+  ],
+  "kuang": [
+    "kuang",
+    "kuāng",
+    "kuáng",
+    "kuǎng",
+    "kuàng"
+  ],
+  "kue": [
+    "kue",
+    "kuē",
+    "kué",
+    "kuě",
+    "kuè"
+  ],
+  "kui": [
+    "kui",
+    "kuī",
+    "kuí",
+    "kuǐ",
+    "kuì"
+  ],
+  "kun": [
+    "kun",
+    "kūn",
+    "kún",
+    "kǔn",
+    "kùn"
+  ],
+  "kuo": [
+    "kuo",
+    "kuō",
+    "kuó",
+    "kuǒ",
+    "kuò"
+  ],
+  "kü": [
+    "kü",
+    "kǖ",
+    "kǘ",
+    "kǚ",
+    "kǜ"
+  ],
+  "küe": [
+    "küe",
+    "küē",
+    "küé",
+    "küě",
+    "küè"
+  ],
+  "küan": [
+    "küan",
+    "küān",
+    "küán",
+    "küǎn",
+    "küàn"
+  ],
+  "kün": [
+    "kün",
+    "kǖn",
+    "kǘn",
+    "kǚn",
+    "kǜn"
+  ],
+  "ha": [
+    "ha",
+    "hā",
+    "há",
+    "hǎ",
+    "hà"
+  ],
+  "hai": [
+    "hai",
+    "hāi",
+    "hái",
+    "hǎi",
+    "hài"
+  ],
+  "han": [
+    "han",
+    "hān",
+    "hán",
+    "hǎn",
+    "hàn"
+  ],
+  "hang": [
+    "hang",
+    "hāng",
+    "háng",
+    "hǎng",
+    "hàng"
+  ],
+  "hao": [
+    "hao",
+    "hāo",
+    "háo",
+    "hǎo",
+    "hào"
+  ],
+  "he": [
+    "he",
+    "hē",
+    "hé",
+    "hě",
+    "hè"
+  ],
+  "hei": [
+    "hei",
+    "hēi",
+    "héi",
+    "hěi",
+    "hèi"
+  ],
+  "hen": [
+    "hen",
+    "hēn",
+    "hén",
+    "hěn",
+    "hèn"
+  ],
+  "heng": [
+    "heng",
+    "hēng",
+    "héng",
+    "hěng",
+    "hèng"
+  ],
+  "her": [
+    "her",
+    "hēr",
+    "hér",
+    "hěr",
+    "hèr"
+  ],
+  "hi": [
+    "hi",
+    "hī",
+    "hí",
+    "hǐ",
+    "hì"
+  ],
+  "hia": [
+    "hia",
+    "hiā",
+    "hiá",
+    "hiǎ",
+    "hià"
+  ],
+  "hian": [
+    "hian",
+    "hiān",
+    "hián",
+    "hiǎn",
+    "hiàn"
+  ],
+  "hiang": [
+    "hiang",
+    "hiāng",
+    "hiáng",
+    "hiǎng",
+    "hiàng"
+  ],
+  "hiao": [
+    "hiao",
+    "hiāo",
+    "hiáo",
+    "hiǎo",
+    "hiào"
+  ],
+  "hie": [
+    "hie",
+    "hiē",
+    "hié",
+    "hiě",
+    "hiè"
+  ],
+  "hin": [
+    "hin",
+    "hīn",
+    "hín",
+    "hǐn",
+    "hìn"
+  ],
+  "hing": [
+    "hing",
+    "hīng",
+    "híng",
+    "hǐng",
+    "hìng"
+  ],
+  "hiong": [
+    "hiong",
+    "hiōng",
+    "hióng",
+    "hiǒng",
+    "hiòng"
+  ],
+  "hiu": [
+    "hiu",
+    "hīu",
+    "híu",
+    "hǐu",
+    "hìu"
+  ],
+  "ho": [
+    "ho",
+    "hō",
+    "hó",
+    "hǒ",
+    "hò"
+  ],
+  "hong": [
+    "hong",
+    "hōng",
+    "hóng",
+    "hǒng",
+    "hòng"
+  ],
+  "hou": [
+    "hou",
+    "hōu",
+    "hóu",
+    "hǒu",
+    "hòu"
+  ],
+  "hu": [
+    "hu",
+    "hū",
+    "hú",
+    "hǔ",
+    "hù"
+  ],
+  "hua": [
+    "hua",
+    "huā",
+    "huá",
+    "huǎ",
+    "huà"
+  ],
+  "huai": [
+    "huai",
+    "huāi",
+    "huái",
+    "huǎi",
+    "huài"
+  ],
+  "huan": [
+    "huan",
+    "huān",
+    "huán",
+    "huǎn",
+    "huàn"
+  ],
+  "huang": [
+    "huang",
+    "huāng",
+    "huáng",
+    "huǎng",
+    "huàng"
+  ],
+  "hue": [
+    "hue",
+    "huē",
+    "hué",
+    "huě",
+    "huè"
+  ],
+  "hui": [
+    "hui",
+    "huī",
+    "huí",
+    "huǐ",
+    "huì"
+  ],
+  "hun": [
+    "hun",
+    "hūn",
+    "hún",
+    "hǔn",
+    "hùn"
+  ],
+  "huo": [
+    "huo",
+    "huō",
+    "huó",
+    "huǒ",
+    "huò"
+  ],
+  "hü": [
+    "hü",
+    "hǖ",
+    "hǘ",
+    "hǚ",
+    "hǜ"
+  ],
+  "hüe": [
+    "hüe",
+    "hüē",
+    "hüé",
+    "hüě",
+    "hüè"
+  ],
+  "hüan": [
+    "hüan",
+    "hüān",
+    "hüán",
+    "hüǎn",
+    "hüàn"
+  ],
+  "hün": [
+    "hün",
+    "hǖn",
+    "hǘn",
+    "hǚn",
+    "hǜn"
+  ],
+  "ja": [
+    "ja",
+    "jā",
+    "já",
+    "jǎ",
+    "jà"
+  ],
+  "jai": [
+    "jai",
+    "jāi",
+    "jái",
+    "jǎi",
+    "jài"
+  ],
+  "jan": [
+    "jan",
+    "jān",
+    "ján",
+    "jǎn",
+    "jàn"
+  ],
+  "jang": [
+    "jang",
+    "jāng",
+    "jáng",
+    "jǎng",
+    "jàng"
+  ],
+  "jao": [
+    "jao",
+    "jāo",
+    "jáo",
+    "jǎo",
+    "jào"
+  ],
+  "je": [
+    "je",
+    "jē",
+    "jé",
+    "jě",
+    "jè"
+  ],
+  "jei": [
+    "jei",
+    "jēi",
+    "jéi",
+    "jěi",
+    "jèi"
+  ],
+  "jen": [
+    "jen",
+    "jēn",
+    "jén",
+    "jěn",
+    "jèn"
+  ],
+  "jeng": [
+    "jeng",
+    "jēng",
+    "jéng",
+    "jěng",
+    "jèng"
+  ],
+  "jer": [
+    "jer",
+    "jēr",
+    "jér",
+    "jěr",
+    "jèr"
+  ],
+  "ji": [
+    "ji",
+    "jī",
+    "jí",
+    "jǐ",
+    "jì"
+  ],
+  "jia": [
+    "jia",
+    "jiā",
+    "jiá",
+    "jiǎ",
+    "jià"
+  ],
+  "jian": [
+    "jian",
+    "jiān",
+    "jián",
+    "jiǎn",
+    "jiàn"
+  ],
+  "jiang": [
+    "jiang",
+    "jiāng",
+    "jiáng",
+    "jiǎng",
+    "jiàng"
+  ],
+  "jiao": [
+    "jiao",
+    "jiāo",
+    "jiáo",
+    "jiǎo",
+    "jiào"
+  ],
+  "jie": [
+    "jie",
+    "jiē",
+    "jié",
+    "jiě",
+    "jiè"
+  ],
+  "jin": [
+    "jin",
+    "jīn",
+    "jín",
+    "jǐn",
+    "jìn"
+  ],
+  "jing": [
+    "jing",
+    "jīng",
+    "jíng",
+    "jǐng",
+    "jìng"
+  ],
+  "jiong": [
+    "jiong",
+    "jiōng",
+    "jióng",
+    "jiǒng",
+    "jiòng"
+  ],
+  "jiu": [
+    "jiu",
+    "jīu",
+    "jíu",
+    "jǐu",
+    "jìu"
+  ],
+  "jo": [
+    "jo",
+    "jō",
+    "jó",
+    "jǒ",
+    "jò"
+  ],
+  "jong": [
+    "jong",
+    "jōng",
+    "jóng",
+    "jǒng",
+    "jòng"
+  ],
+  "jou": [
+    "jou",
+    "jōu",
+    "jóu",
+    "jǒu",
+    "jòu"
+  ],
+  "ju": [
+    "ju",
+    "jū",
+    "jú",
+    "jǔ",
+    "jù"
+  ],
+  "jua": [
+    "jua",
+    "juā",
+    "juá",
+    "juǎ",
+    "juà"
+  ],
+  "juai": [
+    "juai",
+    "juāi",
+    "juái",
+    "juǎi",
+    "juài"
+  ],
+  "juan": [
+    "juan",
+    "juān",
+    "juán",
+    "juǎn",
+    "juàn"
+  ],
+  "juang": [
+    "juang",
+    "juāng",
+    "juáng",
+    "juǎng",
+    "juàng"
+  ],
+  "jue": [
+    "jue",
+    "juē",
+    "jué",
+    "juě",
+    "juè"
+  ],
+  "jui": [
+    "jui",
+    "juī",
+    "juí",
+    "juǐ",
+    "juì"
+  ],
+  "jun": [
+    "jun",
+    "jūn",
+    "jún",
+    "jǔn",
+    "jùn"
+  ],
+  "juo": [
+    "juo",
+    "juō",
+    "juó",
+    "juǒ",
+    "juò"
+  ],
+  "jü": [
+    "jü",
+    "jǖ",
+    "jǘ",
+    "jǚ",
+    "jǜ"
+  ],
+  "jüe": [
+    "jüe",
+    "jüē",
+    "jüé",
+    "jüě",
+    "jüè"
+  ],
+  "jüan": [
+    "jüan",
+    "jüān",
+    "jüán",
+    "jüǎn",
+    "jüàn"
+  ],
+  "jün": [
+    "jün",
+    "jǖn",
+    "jǘn",
+    "jǚn",
+    "jǜn"
+  ],
+  "qa": [
+    "qa",
+    "qā",
+    "qá",
+    "qǎ",
+    "qà"
+  ],
+  "qai": [
+    "qai",
+    "qāi",
+    "qái",
+    "qǎi",
+    "qài"
+  ],
+  "qan": [
+    "qan",
+    "qān",
+    "qán",
+    "qǎn",
+    "qàn"
+  ],
+  "qang": [
+    "qang",
+    "qāng",
+    "qáng",
+    "qǎng",
+    "qàng"
+  ],
+  "qao": [
+    "qao",
+    "qāo",
+    "qáo",
+    "qǎo",
+    "qào"
+  ],
+  "qe": [
+    "qe",
+    "qē",
+    "qé",
+    "qě",
+    "qè"
+  ],
+  "qei": [
+    "qei",
+    "qēi",
+    "qéi",
+    "qěi",
+    "qèi"
+  ],
+  "qen": [
+    "qen",
+    "qēn",
+    "qén",
+    "qěn",
+    "qèn"
+  ],
+  "qeng": [
+    "qeng",
+    "qēng",
+    "qéng",
+    "qěng",
+    "qèng"
+  ],
+  "qer": [
+    "qer",
+    "qēr",
+    "qér",
+    "qěr",
+    "qèr"
+  ],
+  "qi": [
+    "qi",
+    "qī",
+    "qí",
+    "qǐ",
+    "qì"
+  ],
+  "qia": [
+    "qia",
+    "qiā",
+    "qiá",
+    "qiǎ",
+    "qià"
+  ],
+  "qian": [
+    "qian",
+    "qiān",
+    "qián",
+    "qiǎn",
+    "qiàn"
+  ],
+  "qiang": [
+    "qiang",
+    "qiāng",
+    "qiáng",
+    "qiǎng",
+    "qiàng"
+  ],
+  "qiao": [
+    "qiao",
+    "qiāo",
+    "qiáo",
+    "qiǎo",
+    "qiào"
+  ],
+  "qie": [
+    "qie",
+    "qiē",
+    "qié",
+    "qiě",
+    "qiè"
+  ],
+  "qin": [
+    "qin",
+    "qīn",
+    "qín",
+    "qǐn",
+    "qìn"
+  ],
+  "qing": [
+    "qing",
+    "qīng",
+    "qíng",
+    "qǐng",
+    "qìng"
+  ],
+  "qiong": [
+    "qiong",
+    "qiōng",
+    "qióng",
+    "qiǒng",
+    "qiòng"
+  ],
+  "qiu": [
+    "qiu",
+    "qīu",
+    "qíu",
+    "qǐu",
+    "qìu"
+  ],
+  "qo": [
+    "qo",
+    "qō",
+    "qó",
+    "qǒ",
+    "qò"
+  ],
+  "qong": [
+    "qong",
+    "qōng",
+    "qóng",
+    "qǒng",
+    "qòng"
+  ],
+  "qou": [
+    "qou",
+    "qōu",
+    "qóu",
+    "qǒu",
+    "qòu"
+  ],
+  "qu": [
+    "qu",
+    "qū",
+    "qú",
+    "qǔ",
+    "qù"
+  ],
+  "qua": [
+    "qua",
+    "quā",
+    "quá",
+    "quǎ",
+    "quà"
+  ],
+  "quai": [
+    "quai",
+    "quāi",
+    "quái",
+    "quǎi",
+    "quài"
+  ],
+  "quan": [
+    "quan",
+    "quān",
+    "quán",
+    "quǎn",
+    "quàn"
+  ],
+  "quang": [
+    "quang",
+    "quāng",
+    "quáng",
+    "quǎng",
+    "quàng"
+  ],
+  "que": [
+    "que",
+    "quē",
+    "qué",
+    "quě",
+    "què"
+  ],
+  "qui": [
+    "qui",
+    "quī",
+    "quí",
+    "quǐ",
+    "quì"
+  ],
+  "qun": [
+    "qun",
+    "qūn",
+    "qún",
+    "qǔn",
+    "qùn"
+  ],
+  "quo": [
+    "quo",
+    "quō",
+    "quó",
+    "quǒ",
+    "quò"
+  ],
+  "qü": [
+    "qü",
+    "qǖ",
+    "qǘ",
+    "qǚ",
+    "qǜ"
+  ],
+  "qüe": [
+    "qüe",
+    "qüē",
+    "qüé",
+    "qüě",
+    "qüè"
+  ],
+  "qüan": [
+    "qüan",
+    "qüān",
+    "qüán",
+    "qüǎn",
+    "qüàn"
+  ],
+  "qün": [
+    "qün",
+    "qǖn",
+    "qǘn",
+    "qǚn",
+    "qǜn"
+  ],
+  "xa": [
+    "xa",
+    "xā",
+    "xá",
+    "xǎ",
+    "xà"
+  ],
+  "xai": [
+    "xai",
+    "xāi",
+    "xái",
+    "xǎi",
+    "xài"
+  ],
+  "xan": [
+    "xan",
+    "xān",
+    "xán",
+    "xǎn",
+    "xàn"
+  ],
+  "xang": [
+    "xang",
+    "xāng",
+    "xáng",
+    "xǎng",
+    "xàng"
+  ],
+  "xao": [
+    "xao",
+    "xāo",
+    "xáo",
+    "xǎo",
+    "xào"
+  ],
+  "xe": [
+    "xe",
+    "xē",
+    "xé",
+    "xě",
+    "xè"
+  ],
+  "xei": [
+    "xei",
+    "xēi",
+    "xéi",
+    "xěi",
+    "xèi"
+  ],
+  "xen": [
+    "xen",
+    "xēn",
+    "xén",
+    "xěn",
+    "xèn"
+  ],
+  "xeng": [
+    "xeng",
+    "xēng",
+    "xéng",
+    "xěng",
+    "xèng"
+  ],
+  "xer": [
+    "xer",
+    "xēr",
+    "xér",
+    "xěr",
+    "xèr"
+  ],
+  "xi": [
+    "xi",
+    "xī",
+    "xí",
+    "xǐ",
+    "xì"
+  ],
+  "xia": [
+    "xia",
+    "xiā",
+    "xiá",
+    "xiǎ",
+    "xià"
+  ],
+  "xian": [
+    "xian",
+    "xiān",
+    "xián",
+    "xiǎn",
+    "xiàn"
+  ],
+  "xiang": [
+    "xiang",
+    "xiāng",
+    "xiáng",
+    "xiǎng",
+    "xiàng"
+  ],
+  "xiao": [
+    "xiao",
+    "xiāo",
+    "xiáo",
+    "xiǎo",
+    "xiào"
+  ],
+  "xie": [
+    "xie",
+    "xiē",
+    "xié",
+    "xiě",
+    "xiè"
+  ],
+  "xin": [
+    "xin",
+    "xīn",
+    "xín",
+    "xǐn",
+    "xìn"
+  ],
+  "xing": [
+    "xing",
+    "xīng",
+    "xíng",
+    "xǐng",
+    "xìng"
+  ],
+  "xiong": [
+    "xiong",
+    "xiōng",
+    "xióng",
+    "xiǒng",
+    "xiòng"
+  ],
+  "xiu": [
+    "xiu",
+    "xīu",
+    "xíu",
+    "xǐu",
+    "xìu"
+  ],
+  "xo": [
+    "xo",
+    "xō",
+    "xó",
+    "xǒ",
+    "xò"
+  ],
+  "xong": [
+    "xong",
+    "xōng",
+    "xóng",
+    "xǒng",
+    "xòng"
+  ],
+  "xou": [
+    "xou",
+    "xōu",
+    "xóu",
+    "xǒu",
+    "xòu"
+  ],
+  "xu": [
+    "xu",
+    "xū",
+    "xú",
+    "xǔ",
+    "xù"
+  ],
+  "xua": [
+    "xua",
+    "xuā",
+    "xuá",
+    "xuǎ",
+    "xuà"
+  ],
+  "xuai": [
+    "xuai",
+    "xuāi",
+    "xuái",
+    "xuǎi",
+    "xuài"
+  ],
+  "xuan": [
+    "xuan",
+    "xuān",
+    "xuán",
+    "xuǎn",
+    "xuàn"
+  ],
+  "xuang": [
+    "xuang",
+    "xuāng",
+    "xuáng",
+    "xuǎng",
+    "xuàng"
+  ],
+  "xue": [
+    "xue",
+    "xuē",
+    "xué",
+    "xuě",
+    "xuè"
+  ],
+  "xui": [
+    "xui",
+    "xuī",
+    "xuí",
+    "xuǐ",
+    "xuì"
+  ],
+  "xun": [
+    "xun",
+    "xūn",
+    "xún",
+    "xǔn",
+    "xùn"
+  ],
+  "xuo": [
+    "xuo",
+    "xuō",
+    "xuó",
+    "xuǒ",
+    "xuò"
+  ],
+  "xü": [
+    "xü",
+    "xǖ",
+    "xǘ",
+    "xǚ",
+    "xǜ"
+  ],
+  "xüe": [
+    "xüe",
+    "xüē",
+    "xüé",
+    "xüě",
+    "xüè"
+  ],
+  "xüan": [
+    "xüan",
+    "xüān",
+    "xüán",
+    "xüǎn",
+    "xüàn"
+  ],
+  "xün": [
+    "xün",
+    "xǖn",
+    "xǘn",
+    "xǚn",
+    "xǜn"
+  ],
+  "zha": [
+    "zha",
+    "zhā",
+    "zhá",
+    "zhǎ",
+    "zhà"
+  ],
+  "zhai": [
+    "zhai",
+    "zhāi",
+    "zhái",
+    "zhǎi",
+    "zhài"
+  ],
+  "zhan": [
+    "zhan",
+    "zhān",
+    "zhán",
+    "zhǎn",
+    "zhàn"
+  ],
+  "zhang": [
+    "zhang",
+    "zhāng",
+    "zháng",
+    "zhǎng",
+    "zhàng"
+  ],
+  "zhao": [
+    "zhao",
+    "zhāo",
+    "zháo",
+    "zhǎo",
+    "zhào"
+  ],
+  "zhe": [
+    "zhe",
+    "zhē",
+    "zhé",
+    "zhě",
+    "zhè"
+  ],
+  "zhei": [
+    "zhei",
+    "zhēi",
+    "zhéi",
+    "zhěi",
+    "zhèi"
+  ],
+  "zhen": [
+    "zhen",
+    "zhēn",
+    "zhén",
+    "zhěn",
+    "zhèn"
+  ],
+  "zheng": [
+    "zheng",
+    "zhēng",
+    "zhéng",
+    "zhěng",
+    "zhèng"
+  ],
+  "zher": [
+    "zher",
+    "zhēr",
+    "zhér",
+    "zhěr",
+    "zhèr"
+  ],
+  "zhi": [
+    "zhi",
+    "zhī",
+    "zhí",
+    "zhǐ",
+    "zhì"
+  ],
+  "zhia": [
+    "zhia",
+    "zhiā",
+    "zhiá",
+    "zhiǎ",
+    "zhià"
+  ],
+  "zhian": [
+    "zhian",
+    "zhiān",
+    "zhián",
+    "zhiǎn",
+    "zhiàn"
+  ],
+  "zhiang": [
+    "zhiang",
+    "zhiāng",
+    "zhiáng",
+    "zhiǎng",
+    "zhiàng"
+  ],
+  "zhiao": [
+    "zhiao",
+    "zhiāo",
+    "zhiáo",
+    "zhiǎo",
+    "zhiào"
+  ],
+  "zhie": [
+    "zhie",
+    "zhiē",
+    "zhié",
+    "zhiě",
+    "zhiè"
+  ],
+  "zhin": [
+    "zhin",
+    "zhīn",
+    "zhín",
+    "zhǐn",
+    "zhìn"
+  ],
+  "zhing": [
+    "zhing",
+    "zhīng",
+    "zhíng",
+    "zhǐng",
+    "zhìng"
+  ],
+  "zhiong": [
+    "zhiong",
+    "zhiōng",
+    "zhióng",
+    "zhiǒng",
+    "zhiòng"
+  ],
+  "zhiu": [
+    "zhiu",
+    "zhīu",
+    "zhíu",
+    "zhǐu",
+    "zhìu"
+  ],
+  "zho": [
+    "zho",
+    "zhō",
+    "zhó",
+    "zhǒ",
+    "zhò"
+  ],
+  "zhong": [
+    "zhong",
+    "zhōng",
+    "zhóng",
+    "zhǒng",
+    "zhòng"
+  ],
+  "zhou": [
+    "zhou",
+    "zhōu",
+    "zhóu",
+    "zhǒu",
+    "zhòu"
+  ],
+  "zhu": [
+    "zhu",
+    "zhū",
+    "zhú",
+    "zhǔ",
+    "zhù"
+  ],
+  "zhua": [
+    "zhua",
+    "zhuā",
+    "zhuá",
+    "zhuǎ",
+    "zhuà"
+  ],
+  "zhuai": [
+    "zhuai",
+    "zhuāi",
+    "zhuái",
+    "zhuǎi",
+    "zhuài"
+  ],
+  "zhuan": [
+    "zhuan",
+    "zhuān",
+    "zhuán",
+    "zhuǎn",
+    "zhuàn"
+  ],
+  "zhuang": [
+    "zhuang",
+    "zhuāng",
+    "zhuáng",
+    "zhuǎng",
+    "zhuàng"
+  ],
+  "zhue": [
+    "zhue",
+    "zhuē",
+    "zhué",
+    "zhuě",
+    "zhuè"
+  ],
+  "zhui": [
+    "zhui",
+    "zhuī",
+    "zhuí",
+    "zhuǐ",
+    "zhuì"
+  ],
+  "zhun": [
+    "zhun",
+    "zhūn",
+    "zhún",
+    "zhǔn",
+    "zhùn"
+  ],
+  "zhuo": [
+    "zhuo",
+    "zhuō",
+    "zhuó",
+    "zhuǒ",
+    "zhuò"
+  ],
+  "zhü": [
+    "zhü",
+    "zhǖ",
+    "zhǘ",
+    "zhǚ",
+    "zhǜ"
+  ],
+  "zhüe": [
+    "zhüe",
+    "zhüē",
+    "zhüé",
+    "zhüě",
+    "zhüè"
+  ],
+  "zhüan": [
+    "zhüan",
+    "zhüān",
+    "zhüán",
+    "zhüǎn",
+    "zhüàn"
+  ],
+  "zhün": [
+    "zhün",
+    "zhǖn",
+    "zhǘn",
+    "zhǚn",
+    "zhǜn"
+  ],
+  "cha": [
+    "cha",
+    "chā",
+    "chá",
+    "chǎ",
+    "chà"
+  ],
+  "chai": [
+    "chai",
+    "chāi",
+    "chái",
+    "chǎi",
+    "chài"
+  ],
+  "chan": [
+    "chan",
+    "chān",
+    "chán",
+    "chǎn",
+    "chàn"
+  ],
+  "chang": [
+    "chang",
+    "chāng",
+    "cháng",
+    "chǎng",
+    "chàng"
+  ],
+  "chao": [
+    "chao",
+    "chāo",
+    "cháo",
+    "chǎo",
+    "chào"
+  ],
+  "che": [
+    "che",
+    "chē",
+    "ché",
+    "chě",
+    "chè"
+  ],
+  "chei": [
+    "chei",
+    "chēi",
+    "chéi",
+    "chěi",
+    "chèi"
+  ],
+  "chen": [
+    "chen",
+    "chēn",
+    "chén",
+    "chěn",
+    "chèn"
+  ],
+  "cheng": [
+    "cheng",
+    "chēng",
+    "chéng",
+    "chěng",
+    "chèng"
+  ],
+  "cher": [
+    "cher",
+    "chēr",
+    "chér",
+    "chěr",
+    "chèr"
+  ],
+  "chi": [
+    "chi",
+    "chī",
+    "chí",
+    "chǐ",
+    "chì"
+  ],
+  "chia": [
+    "chia",
+    "chiā",
+    "chiá",
+    "chiǎ",
+    "chià"
+  ],
+  "chian": [
+    "chian",
+    "chiān",
+    "chián",
+    "chiǎn",
+    "chiàn"
+  ],
+  "chiang": [
+    "chiang",
+    "chiāng",
+    "chiáng",
+    "chiǎng",
+    "chiàng"
+  ],
+  "chiao": [
+    "chiao",
+    "chiāo",
+    "chiáo",
+    "chiǎo",
+    "chiào"
+  ],
+  "chie": [
+    "chie",
+    "chiē",
+    "chié",
+    "chiě",
+    "chiè"
+  ],
+  "chin": [
+    "chin",
+    "chīn",
+    "chín",
+    "chǐn",
+    "chìn"
+  ],
+  "ching": [
+    "ching",
+    "chīng",
+    "chíng",
+    "chǐng",
+    "chìng"
+  ],
+  "chiong": [
+    "chiong",
+    "chiōng",
+    "chióng",
+    "chiǒng",
+    "chiòng"
+  ],
+  "chiu": [
+    "chiu",
+    "chīu",
+    "chíu",
+    "chǐu",
+    "chìu"
+  ],
+  "cho": [
+    "cho",
+    "chō",
+    "chó",
+    "chǒ",
+    "chò"
+  ],
+  "chong": [
+    "chong",
+    "chōng",
+    "chóng",
+    "chǒng",
+    "chòng"
+  ],
+  "chou": [
+    "chou",
+    "chōu",
+    "chóu",
+    "chǒu",
+    "chòu"
+  ],
+  "chu": [
+    "chu",
+    "chū",
+    "chú",
+    "chǔ",
+    "chù"
+  ],
+  "chua": [
+    "chua",
+    "chuā",
+    "chuá",
+    "chuǎ",
+    "chuà"
+  ],
+  "chuai": [
+    "chuai",
+    "chuāi",
+    "chuái",
+    "chuǎi",
+    "chuài"
+  ],
+  "chuan": [
+    "chuan",
+    "chuān",
+    "chuán",
+    "chuǎn",
+    "chuàn"
+  ],
+  "chuang": [
+    "chuang",
+    "chuāng",
+    "chuáng",
+    "chuǎng",
+    "chuàng"
+  ],
+  "chue": [
+    "chue",
+    "chuē",
+    "chué",
+    "chuě",
+    "chuè"
+  ],
+  "chui": [
+    "chui",
+    "chuī",
+    "chuí",
+    "chuǐ",
+    "chuì"
+  ],
+  "chun": [
+    "chun",
+    "chūn",
+    "chún",
+    "chǔn",
+    "chùn"
+  ],
+  "chuo": [
+    "chuo",
+    "chuō",
+    "chuó",
+    "chuǒ",
+    "chuò"
+  ],
+  "chü": [
+    "chü",
+    "chǖ",
+    "chǘ",
+    "chǚ",
+    "chǜ"
+  ],
+  "chüe": [
+    "chüe",
+    "chüē",
+    "chüé",
+    "chüě",
+    "chüè"
+  ],
+  "chüan": [
+    "chüan",
+    "chüān",
+    "chüán",
+    "chüǎn",
+    "chüàn"
+  ],
+  "chün": [
+    "chün",
+    "chǖn",
+    "chǘn",
+    "chǚn",
+    "chǜn"
+  ],
+  "sha": [
+    "sha",
+    "shā",
+    "shá",
+    "shǎ",
+    "shà"
+  ],
+  "shai": [
+    "shai",
+    "shāi",
+    "shái",
+    "shǎi",
+    "shài"
+  ],
+  "shan": [
+    "shan",
+    "shān",
+    "shán",
+    "shǎn",
+    "shàn"
+  ],
+  "shang": [
+    "shang",
+    "shāng",
+    "sháng",
+    "shǎng",
+    "shàng"
+  ],
+  "shao": [
+    "shao",
+    "shāo",
+    "sháo",
+    "shǎo",
+    "shào"
+  ],
+  "she": [
+    "she",
+    "shē",
+    "shé",
+    "shě",
+    "shè"
+  ],
+  "shei": [
+    "shei",
+    "shēi",
+    "shéi",
+    "shěi",
+    "shèi"
+  ],
+  "shen": [
+    "shen",
+    "shēn",
+    "shén",
+    "shěn",
+    "shèn"
+  ],
+  "sheng": [
+    "sheng",
+    "shēng",
+    "shéng",
+    "shěng",
+    "shèng"
+  ],
+  "sher": [
+    "sher",
+    "shēr",
+    "shér",
+    "shěr",
+    "shèr"
+  ],
+  "shi": [
+    "shi",
+    "shī",
+    "shí",
+    "shǐ",
+    "shì"
+  ],
+  "shia": [
+    "shia",
+    "shiā",
+    "shiá",
+    "shiǎ",
+    "shià"
+  ],
+  "shian": [
+    "shian",
+    "shiān",
+    "shián",
+    "shiǎn",
+    "shiàn"
+  ],
+  "shiang": [
+    "shiang",
+    "shiāng",
+    "shiáng",
+    "shiǎng",
+    "shiàng"
+  ],
+  "shiao": [
+    "shiao",
+    "shiāo",
+    "shiáo",
+    "shiǎo",
+    "shiào"
+  ],
+  "shie": [
+    "shie",
+    "shiē",
+    "shié",
+    "shiě",
+    "shiè"
+  ],
+  "shin": [
+    "shin",
+    "shīn",
+    "shín",
+    "shǐn",
+    "shìn"
+  ],
+  "shing": [
+    "shing",
+    "shīng",
+    "shíng",
+    "shǐng",
+    "shìng"
+  ],
+  "shiong": [
+    "shiong",
+    "shiōng",
+    "shióng",
+    "shiǒng",
+    "shiòng"
+  ],
+  "shiu": [
+    "shiu",
+    "shīu",
+    "shíu",
+    "shǐu",
+    "shìu"
+  ],
+  "sho": [
+    "sho",
+    "shō",
+    "shó",
+    "shǒ",
+    "shò"
+  ],
+  "shong": [
+    "shong",
+    "shōng",
+    "shóng",
+    "shǒng",
+    "shòng"
+  ],
+  "shou": [
+    "shou",
+    "shōu",
+    "shóu",
+    "shǒu",
+    "shòu"
+  ],
+  "shu": [
+    "shu",
+    "shū",
+    "shú",
+    "shǔ",
+    "shù"
+  ],
+  "shua": [
+    "shua",
+    "shuā",
+    "shuá",
+    "shuǎ",
+    "shuà"
+  ],
+  "shuai": [
+    "shuai",
+    "shuāi",
+    "shuái",
+    "shuǎi",
+    "shuài"
+  ],
+  "shuan": [
+    "shuan",
+    "shuān",
+    "shuán",
+    "shuǎn",
+    "shuàn"
+  ],
+  "shuang": [
+    "shuang",
+    "shuāng",
+    "shuáng",
+    "shuǎng",
+    "shuàng"
+  ],
+  "shue": [
+    "shue",
+    "shuē",
+    "shué",
+    "shuě",
+    "shuè"
+  ],
+  "shui": [
+    "shui",
+    "shuī",
+    "shuí",
+    "shuǐ",
+    "shuì"
+  ],
+  "shun": [
+    "shun",
+    "shūn",
+    "shún",
+    "shǔn",
+    "shùn"
+  ],
+  "shuo": [
+    "shuo",
+    "shuō",
+    "shuó",
+    "shuǒ",
+    "shuò"
+  ],
+  "shü": [
+    "shü",
+    "shǖ",
+    "shǘ",
+    "shǚ",
+    "shǜ"
+  ],
+  "shüe": [
+    "shüe",
+    "shüē",
+    "shüé",
+    "shüě",
+    "shüè"
+  ],
+  "shüan": [
+    "shüan",
+    "shüān",
+    "shüán",
+    "shüǎn",
+    "shüàn"
+  ],
+  "shün": [
+    "shün",
+    "shǖn",
+    "shǘn",
+    "shǚn",
+    "shǜn"
+  ],
+  "ra": [
+    "ra",
+    "rā",
+    "rá",
+    "rǎ",
+    "rà"
+  ],
+  "rai": [
+    "rai",
+    "rāi",
+    "rái",
+    "rǎi",
+    "rài"
+  ],
+  "ran": [
+    "ran",
+    "rān",
+    "rán",
+    "rǎn",
+    "ràn"
+  ],
+  "rang": [
+    "rang",
+    "rāng",
+    "ráng",
+    "rǎng",
+    "ràng"
+  ],
+  "rao": [
+    "rao",
+    "rāo",
+    "ráo",
+    "rǎo",
+    "rào"
+  ],
+  "re": [
+    "re",
+    "rē",
+    "ré",
+    "rě",
+    "rè"
+  ],
+  "rei": [
+    "rei",
+    "rēi",
+    "réi",
+    "rěi",
+    "rèi"
+  ],
+  "ren": [
+    "ren",
+    "rēn",
+    "rén",
+    "rěn",
+    "rèn"
+  ],
+  "reng": [
+    "reng",
+    "rēng",
+    "réng",
+    "rěng",
+    "rèng"
+  ],
+  "rer": [
+    "rer",
+    "rēr",
+    "rér",
+    "rěr",
+    "rèr"
+  ],
+  "ri": [
+    "ri",
+    "rī",
+    "rí",
+    "rǐ",
+    "rì"
+  ],
+  "ria": [
+    "ria",
+    "riā",
+    "riá",
+    "riǎ",
+    "rià"
+  ],
+  "rian": [
+    "rian",
+    "riān",
+    "rián",
+    "riǎn",
+    "riàn"
+  ],
+  "riang": [
+    "riang",
+    "riāng",
+    "riáng",
+    "riǎng",
+    "riàng"
+  ],
+  "riao": [
+    "riao",
+    "riāo",
+    "riáo",
+    "riǎo",
+    "riào"
+  ],
+  "rie": [
+    "rie",
+    "riē",
+    "rié",
+    "riě",
+    "riè"
+  ],
+  "rin": [
+    "rin",
+    "rīn",
+    "rín",
+    "rǐn",
+    "rìn"
+  ],
+  "ring": [
+    "ring",
+    "rīng",
+    "ríng",
+    "rǐng",
+    "rìng"
+  ],
+  "riong": [
+    "riong",
+    "riōng",
+    "rióng",
+    "riǒng",
+    "riòng"
+  ],
+  "riu": [
+    "riu",
+    "rīu",
+    "ríu",
+    "rǐu",
+    "rìu"
+  ],
+  "ro": [
+    "ro",
+    "rō",
+    "ró",
+    "rǒ",
+    "rò"
+  ],
+  "rong": [
+    "rong",
+    "rōng",
+    "róng",
+    "rǒng",
+    "ròng"
+  ],
+  "rou": [
+    "rou",
+    "rōu",
+    "róu",
+    "rǒu",
+    "ròu"
+  ],
+  "ru": [
+    "ru",
+    "rū",
+    "rú",
+    "rǔ",
+    "rù"
+  ],
+  "rua": [
+    "rua",
+    "ruā",
+    "ruá",
+    "ruǎ",
+    "ruà"
+  ],
+  "ruai": [
+    "ruai",
+    "ruāi",
+    "ruái",
+    "ruǎi",
+    "ruài"
+  ],
+  "ruan": [
+    "ruan",
+    "ruān",
+    "ruán",
+    "ruǎn",
+    "ruàn"
+  ],
+  "ruang": [
+    "ruang",
+    "ruāng",
+    "ruáng",
+    "ruǎng",
+    "ruàng"
+  ],
+  "rue": [
+    "rue",
+    "ruē",
+    "rué",
+    "ruě",
+    "ruè"
+  ],
+  "rui": [
+    "rui",
+    "ruī",
+    "ruí",
+    "ruǐ",
+    "ruì"
+  ],
+  "run": [
+    "run",
+    "rūn",
+    "rún",
+    "rǔn",
+    "rùn"
+  ],
+  "ruo": [
+    "ruo",
+    "ruō",
+    "ruó",
+    "ruǒ",
+    "ruò"
+  ],
+  "rü": [
+    "rü",
+    "rǖ",
+    "rǘ",
+    "rǚ",
+    "rǜ"
+  ],
+  "rüe": [
+    "rüe",
+    "rüē",
+    "rüé",
+    "rüě",
+    "rüè"
+  ],
+  "rüan": [
+    "rüan",
+    "rüān",
+    "rüán",
+    "rüǎn",
+    "rüàn"
+  ],
+  "rün": [
+    "rün",
+    "rǖn",
+    "rǘn",
+    "rǚn",
+    "rǜn"
+  ],
+  "za": [
+    "za",
+    "zā",
+    "zá",
+    "zǎ",
+    "zà"
+  ],
+  "zai": [
+    "zai",
+    "zāi",
+    "zái",
+    "zǎi",
+    "zài"
+  ],
+  "zan": [
+    "zan",
+    "zān",
+    "zán",
+    "zǎn",
+    "zàn"
+  ],
+  "zang": [
+    "zang",
+    "zāng",
+    "záng",
+    "zǎng",
+    "zàng"
+  ],
+  "zao": [
+    "zao",
+    "zāo",
+    "záo",
+    "zǎo",
+    "zào"
+  ],
+  "ze": [
+    "ze",
+    "zē",
+    "zé",
+    "zě",
+    "zè"
+  ],
+  "zei": [
+    "zei",
+    "zēi",
+    "zéi",
+    "zěi",
+    "zèi"
+  ],
+  "zen": [
+    "zen",
+    "zēn",
+    "zén",
+    "zěn",
+    "zèn"
+  ],
+  "zeng": [
+    "zeng",
+    "zēng",
+    "zéng",
+    "zěng",
+    "zèng"
+  ],
+  "zer": [
+    "zer",
+    "zēr",
+    "zér",
+    "zěr",
+    "zèr"
+  ],
+  "zi": [
+    "zi",
+    "zī",
+    "zí",
+    "zǐ",
+    "zì"
+  ],
+  "zia": [
+    "zia",
+    "ziā",
+    "ziá",
+    "ziǎ",
+    "zià"
+  ],
+  "zian": [
+    "zian",
+    "ziān",
+    "zián",
+    "ziǎn",
+    "ziàn"
+  ],
+  "ziang": [
+    "ziang",
+    "ziāng",
+    "ziáng",
+    "ziǎng",
+    "ziàng"
+  ],
+  "ziao": [
+    "ziao",
+    "ziāo",
+    "ziáo",
+    "ziǎo",
+    "ziào"
+  ],
+  "zie": [
+    "zie",
+    "ziē",
+    "zié",
+    "ziě",
+    "ziè"
+  ],
+  "zin": [
+    "zin",
+    "zīn",
+    "zín",
+    "zǐn",
+    "zìn"
+  ],
+  "zing": [
+    "zing",
+    "zīng",
+    "zíng",
+    "zǐng",
+    "zìng"
+  ],
+  "ziong": [
+    "ziong",
+    "ziōng",
+    "zióng",
+    "ziǒng",
+    "ziòng"
+  ],
+  "ziu": [
+    "ziu",
+    "zīu",
+    "zíu",
+    "zǐu",
+    "zìu"
+  ],
+  "zo": [
+    "zo",
+    "zō",
+    "zó",
+    "zǒ",
+    "zò"
+  ],
+  "zong": [
+    "zong",
+    "zōng",
+    "zóng",
+    "zǒng",
+    "zòng"
+  ],
+  "zou": [
+    "zou",
+    "zōu",
+    "zóu",
+    "zǒu",
+    "zòu"
+  ],
+  "zu": [
+    "zu",
+    "zū",
+    "zú",
+    "zǔ",
+    "zù"
+  ],
+  "zua": [
+    "zua",
+    "zuā",
+    "zuá",
+    "zuǎ",
+    "zuà"
+  ],
+  "zuai": [
+    "zuai",
+    "zuāi",
+    "zuái",
+    "zuǎi",
+    "zuài"
+  ],
+  "zuan": [
+    "zuan",
+    "zuān",
+    "zuán",
+    "zuǎn",
+    "zuàn"
+  ],
+  "zuang": [
+    "zuang",
+    "zuāng",
+    "zuáng",
+    "zuǎng",
+    "zuàng"
+  ],
+  "zue": [
+    "zue",
+    "zuē",
+    "zué",
+    "zuě",
+    "zuè"
+  ],
+  "zui": [
+    "zui",
+    "zuī",
+    "zuí",
+    "zuǐ",
+    "zuì"
+  ],
+  "zun": [
+    "zun",
+    "zūn",
+    "zún",
+    "zǔn",
+    "zùn"
+  ],
+  "zuo": [
+    "zuo",
+    "zuō",
+    "zuó",
+    "zuǒ",
+    "zuò"
+  ],
+  "zü": [
+    "zü",
+    "zǖ",
+    "zǘ",
+    "zǚ",
+    "zǜ"
+  ],
+  "züe": [
+    "züe",
+    "züē",
+    "züé",
+    "züě",
+    "züè"
+  ],
+  "züan": [
+    "züan",
+    "züān",
+    "züán",
+    "züǎn",
+    "züàn"
+  ],
+  "zün": [
+    "zün",
+    "zǖn",
+    "zǘn",
+    "zǚn",
+    "zǜn"
+  ],
+  "ca": [
+    "ca",
+    "cā",
+    "cá",
+    "cǎ",
+    "cà"
+  ],
+  "cai": [
+    "cai",
+    "cāi",
+    "cái",
+    "cǎi",
+    "cài"
+  ],
+  "can": [
+    "can",
+    "cān",
+    "cán",
+    "cǎn",
+    "càn"
+  ],
+  "cang": [
+    "cang",
+    "cāng",
+    "cáng",
+    "cǎng",
+    "càng"
+  ],
+  "cao": [
+    "cao",
+    "cāo",
+    "cáo",
+    "cǎo",
+    "cào"
+  ],
+  "ce": [
+    "ce",
+    "cē",
+    "cé",
+    "cě",
+    "cè"
+  ],
+  "cei": [
+    "cei",
+    "cēi",
+    "céi",
+    "cěi",
+    "cèi"
+  ],
+  "cen": [
+    "cen",
+    "cēn",
+    "cén",
+    "cěn",
+    "cèn"
+  ],
+  "ceng": [
+    "ceng",
+    "cēng",
+    "céng",
+    "cěng",
+    "cèng"
+  ],
+  "cer": [
+    "cer",
+    "cēr",
+    "cér",
+    "cěr",
+    "cèr"
+  ],
+  "ci": [
+    "ci",
+    "cī",
+    "cí",
+    "cǐ",
+    "cì"
+  ],
+  "cia": [
+    "cia",
+    "ciā",
+    "ciá",
+    "ciǎ",
+    "cià"
+  ],
+  "cian": [
+    "cian",
+    "ciān",
+    "cián",
+    "ciǎn",
+    "ciàn"
+  ],
+  "ciang": [
+    "ciang",
+    "ciāng",
+    "ciáng",
+    "ciǎng",
+    "ciàng"
+  ],
+  "ciao": [
+    "ciao",
+    "ciāo",
+    "ciáo",
+    "ciǎo",
+    "ciào"
+  ],
+  "cie": [
+    "cie",
+    "ciē",
+    "cié",
+    "ciě",
+    "ciè"
+  ],
+  "cin": [
+    "cin",
+    "cīn",
+    "cín",
+    "cǐn",
+    "cìn"
+  ],
+  "cing": [
+    "cing",
+    "cīng",
+    "cíng",
+    "cǐng",
+    "cìng"
+  ],
+  "ciong": [
+    "ciong",
+    "ciōng",
+    "cióng",
+    "ciǒng",
+    "ciòng"
+  ],
+  "ciu": [
+    "ciu",
+    "cīu",
+    "cíu",
+    "cǐu",
+    "cìu"
+  ],
+  "co": [
+    "co",
+    "cō",
+    "có",
+    "cǒ",
+    "cò"
+  ],
+  "cong": [
+    "cong",
+    "cōng",
+    "cóng",
+    "cǒng",
+    "còng"
+  ],
+  "cou": [
+    "cou",
+    "cōu",
+    "cóu",
+    "cǒu",
+    "còu"
+  ],
+  "cu": [
+    "cu",
+    "cū",
+    "cú",
+    "cǔ",
+    "cù"
+  ],
+  "cua": [
+    "cua",
+    "cuā",
+    "cuá",
+    "cuǎ",
+    "cuà"
+  ],
+  "cuai": [
+    "cuai",
+    "cuāi",
+    "cuái",
+    "cuǎi",
+    "cuài"
+  ],
+  "cuan": [
+    "cuan",
+    "cuān",
+    "cuán",
+    "cuǎn",
+    "cuàn"
+  ],
+  "cuang": [
+    "cuang",
+    "cuāng",
+    "cuáng",
+    "cuǎng",
+    "cuàng"
+  ],
+  "cue": [
+    "cue",
+    "cuē",
+    "cué",
+    "cuě",
+    "cuè"
+  ],
+  "cui": [
+    "cui",
+    "cuī",
+    "cuí",
+    "cuǐ",
+    "cuì"
+  ],
+  "cun": [
+    "cun",
+    "cūn",
+    "cún",
+    "cǔn",
+    "cùn"
+  ],
+  "cuo": [
+    "cuo",
+    "cuō",
+    "cuó",
+    "cuǒ",
+    "cuò"
+  ],
+  "cü": [
+    "cü",
+    "cǖ",
+    "cǘ",
+    "cǚ",
+    "cǜ"
+  ],
+  "cüe": [
+    "cüe",
+    "cüē",
+    "cüé",
+    "cüě",
+    "cüè"
+  ],
+  "cüan": [
+    "cüan",
+    "cüān",
+    "cüán",
+    "cüǎn",
+    "cüàn"
+  ],
+  "cün": [
+    "cün",
+    "cǖn",
+    "cǘn",
+    "cǚn",
+    "cǜn"
+  ],
+  "sa": [
+    "sa",
+    "sā",
+    "sá",
+    "sǎ",
+    "sà"
+  ],
+  "sai": [
+    "sai",
+    "sāi",
+    "sái",
+    "sǎi",
+    "sài"
+  ],
+  "san": [
+    "san",
+    "sān",
+    "sán",
+    "sǎn",
+    "sàn"
+  ],
+  "sang": [
+    "sang",
+    "sāng",
+    "sáng",
+    "sǎng",
+    "sàng"
+  ],
+  "sao": [
+    "sao",
+    "sāo",
+    "sáo",
+    "sǎo",
+    "sào"
+  ],
+  "se": [
+    "se",
+    "sē",
+    "sé",
+    "sě",
+    "sè"
+  ],
+  "sei": [
+    "sei",
+    "sēi",
+    "séi",
+    "sěi",
+    "sèi"
+  ],
+  "sen": [
+    "sen",
+    "sēn",
+    "sén",
+    "sěn",
+    "sèn"
+  ],
+  "seng": [
+    "seng",
+    "sēng",
+    "séng",
+    "sěng",
+    "sèng"
+  ],
+  "ser": [
+    "ser",
+    "sēr",
+    "sér",
+    "sěr",
+    "sèr"
+  ],
+  "si": [
+    "si",
+    "sī",
+    "sí",
+    "sǐ",
+    "sì"
+  ],
+  "sia": [
+    "sia",
+    "siā",
+    "siá",
+    "siǎ",
+    "sià"
+  ],
+  "sian": [
+    "sian",
+    "siān",
+    "sián",
+    "siǎn",
+    "siàn"
+  ],
+  "siang": [
+    "siang",
+    "siāng",
+    "siáng",
+    "siǎng",
+    "siàng"
+  ],
+  "siao": [
+    "siao",
+    "siāo",
+    "siáo",
+    "siǎo",
+    "siào"
+  ],
+  "sie": [
+    "sie",
+    "siē",
+    "sié",
+    "siě",
+    "siè"
+  ],
+  "sin": [
+    "sin",
+    "sīn",
+    "sín",
+    "sǐn",
+    "sìn"
+  ],
+  "sing": [
+    "sing",
+    "sīng",
+    "síng",
+    "sǐng",
+    "sìng"
+  ],
+  "siong": [
+    "siong",
+    "siōng",
+    "sióng",
+    "siǒng",
+    "siòng"
+  ],
+  "siu": [
+    "siu",
+    "sīu",
+    "síu",
+    "sǐu",
+    "sìu"
+  ],
+  "so": [
+    "so",
+    "sō",
+    "só",
+    "sǒ",
+    "sò"
+  ],
+  "song": [
+    "song",
+    "sōng",
+    "sóng",
+    "sǒng",
+    "sòng"
+  ],
+  "sou": [
+    "sou",
+    "sōu",
+    "sóu",
+    "sǒu",
+    "sòu"
+  ],
+  "su": [
+    "su",
+    "sū",
+    "sú",
+    "sǔ",
+    "sù"
+  ],
+  "sua": [
+    "sua",
+    "suā",
+    "suá",
+    "suǎ",
+    "suà"
+  ],
+  "suai": [
+    "suai",
+    "suāi",
+    "suái",
+    "suǎi",
+    "suài"
+  ],
+  "suan": [
+    "suan",
+    "suān",
+    "suán",
+    "suǎn",
+    "suàn"
+  ],
+  "suang": [
+    "suang",
+    "suāng",
+    "suáng",
+    "suǎng",
+    "suàng"
+  ],
+  "sue": [
+    "sue",
+    "suē",
+    "sué",
+    "suě",
+    "suè"
+  ],
+  "sui": [
+    "sui",
+    "suī",
+    "suí",
+    "suǐ",
+    "suì"
+  ],
+  "sun": [
+    "sun",
+    "sūn",
+    "sún",
+    "sǔn",
+    "sùn"
+  ],
+  "suo": [
+    "suo",
+    "suō",
+    "suó",
+    "suǒ",
+    "suò"
+  ],
+  "sü": [
+    "sü",
+    "sǖ",
+    "sǘ",
+    "sǚ",
+    "sǜ"
+  ],
+  "süe": [
+    "süe",
+    "süē",
+    "süé",
+    "süě",
+    "süè"
+  ],
+  "süan": [
+    "süan",
+    "süān",
+    "süán",
+    "süǎn",
+    "süàn"
+  ],
+  "sün": [
+    "sün",
+    "sǖn",
+    "sǘn",
+    "sǚn",
+    "sǜn"
+  ],
+  "ya": [
+    "ya",
+    "yā",
+    "yá",
+    "yǎ",
+    "yà"
+  ],
+  "yai": [
+    "yai",
+    "yāi",
+    "yái",
+    "yǎi",
+    "yài"
+  ],
+  "yan": [
+    "yan",
+    "yān",
+    "yán",
+    "yǎn",
+    "yàn"
+  ],
+  "yang": [
+    "yang",
+    "yāng",
+    "yáng",
+    "yǎng",
+    "yàng"
+  ],
+  "yao": [
+    "yao",
+    "yāo",
+    "yáo",
+    "yǎo",
+    "yào"
+  ],
+  "ye": [
+    "ye",
+    "yē",
+    "yé",
+    "yě",
+    "yè"
+  ],
+  "yei": [
+    "yei",
+    "yēi",
+    "yéi",
+    "yěi",
+    "yèi"
+  ],
+  "yen": [
+    "yen",
+    "yēn",
+    "yén",
+    "yěn",
+    "yèn"
+  ],
+  "yeng": [
+    "yeng",
+    "yēng",
+    "yéng",
+    "yěng",
+    "yèng"
+  ],
+  "yer": [
+    "yer",
+    "yēr",
+    "yér",
+    "yěr",
+    "yèr"
+  ],
+  "yi": [
+    "yi",
+    "yī",
+    "yí",
+    "yǐ",
+    "yì"
+  ],
+  "yia": [
+    "yia",
+    "yiā",
+    "yiá",
+    "yiǎ",
+    "yià"
+  ],
+  "yian": [
+    "yian",
+    "yiān",
+    "yián",
+    "yiǎn",
+    "yiàn"
+  ],
+  "yiang": [
+    "yiang",
+    "yiāng",
+    "yiáng",
+    "yiǎng",
+    "yiàng"
+  ],
+  "yiao": [
+    "yiao",
+    "yiāo",
+    "yiáo",
+    "yiǎo",
+    "yiào"
+  ],
+  "yie": [
+    "yie",
+    "yiē",
+    "yié",
+    "yiě",
+    "yiè"
+  ],
+  "yin": [
+    "yin",
+    "yīn",
+    "yín",
+    "yǐn",
+    "yìn"
+  ],
+  "ying": [
+    "ying",
+    "yīng",
+    "yíng",
+    "yǐng",
+    "yìng"
+  ],
+  "yiong": [
+    "yiong",
+    "yiōng",
+    "yióng",
+    "yiǒng",
+    "yiòng"
+  ],
+  "yiu": [
+    "yiu",
+    "yīu",
+    "yíu",
+    "yǐu",
+    "yìu"
+  ],
+  "yo": [
+    "yo",
+    "yō",
+    "yó",
+    "yǒ",
+    "yò"
+  ],
+  "yong": [
+    "yong",
+    "yōng",
+    "yóng",
+    "yǒng",
+    "yòng"
+  ],
+  "you": [
+    "you",
+    "yōu",
+    "yóu",
+    "yǒu",
+    "yòu"
+  ],
+  "yu": [
+    "yu",
+    "yū",
+    "yú",
+    "yǔ",
+    "yù"
+  ],
+  "yua": [
+    "yua",
+    "yuā",
+    "yuá",
+    "yuǎ",
+    "yuà"
+  ],
+  "yuai": [
+    "yuai",
+    "yuāi",
+    "yuái",
+    "yuǎi",
+    "yuài"
+  ],
+  "yuan": [
+    "yuan",
+    "yuān",
+    "yuán",
+    "yuǎn",
+    "yuàn"
+  ],
+  "yuang": [
+    "yuang",
+    "yuāng",
+    "yuáng",
+    "yuǎng",
+    "yuàng"
+  ],
+  "yue": [
+    "yue",
+    "yuē",
+    "yué",
+    "yuě",
+    "yuè"
+  ],
+  "yui": [
+    "yui",
+    "yuī",
+    "yuí",
+    "yuǐ",
+    "yuì"
+  ],
+  "yun": [
+    "yun",
+    "yūn",
+    "yún",
+    "yǔn",
+    "yùn"
+  ],
+  "yuo": [
+    "yuo",
+    "yuō",
+    "yuó",
+    "yuǒ",
+    "yuò"
+  ],
+  "yü": [
+    "yü",
+    "yǖ",
+    "yǘ",
+    "yǚ",
+    "yǜ"
+  ],
+  "yüe": [
+    "yüe",
+    "yüē",
+    "yüé",
+    "yüě",
+    "yüè"
+  ],
+  "yüan": [
+    "yüan",
+    "yüān",
+    "yüán",
+    "yüǎn",
+    "yüàn"
+  ],
+  "yün": [
+    "yün",
+    "yǖn",
+    "yǘn",
+    "yǚn",
+    "yǜn"
+  ],
+  "wa": [
+    "wa",
+    "wā",
+    "wá",
+    "wǎ",
+    "wà"
+  ],
+  "wai": [
+    "wai",
+    "wāi",
+    "wái",
+    "wǎi",
+    "wài"
+  ],
+  "wan": [
+    "wan",
+    "wān",
+    "wán",
+    "wǎn",
+    "wàn"
+  ],
+  "wang": [
+    "wang",
+    "wāng",
+    "wáng",
+    "wǎng",
+    "wàng"
+  ],
+  "wao": [
+    "wao",
+    "wāo",
+    "wáo",
+    "wǎo",
+    "wào"
+  ],
+  "we": [
+    "we",
+    "wē",
+    "wé",
+    "wě",
+    "wè"
+  ],
+  "wei": [
+    "wei",
+    "wēi",
+    "wéi",
+    "wěi",
+    "wèi"
+  ],
+  "wen": [
+    "wen",
+    "wēn",
+    "wén",
+    "wěn",
+    "wèn"
+  ],
+  "weng": [
+    "weng",
+    "wēng",
+    "wéng",
+    "wěng",
+    "wèng"
+  ],
+  "wer": [
+    "wer",
+    "wēr",
+    "wér",
+    "wěr",
+    "wèr"
+  ],
+  "wi": [
+    "wi",
+    "wī",
+    "wí",
+    "wǐ",
+    "wì"
+  ],
+  "wia": [
+    "wia",
+    "wiā",
+    "wiá",
+    "wiǎ",
+    "wià"
+  ],
+  "wian": [
+    "wian",
+    "wiān",
+    "wián",
+    "wiǎn",
+    "wiàn"
+  ],
+  "wiang": [
+    "wiang",
+    "wiāng",
+    "wiáng",
+    "wiǎng",
+    "wiàng"
+  ],
+  "wiao": [
+    "wiao",
+    "wiāo",
+    "wiáo",
+    "wiǎo",
+    "wiào"
+  ],
+  "wie": [
+    "wie",
+    "wiē",
+    "wié",
+    "wiě",
+    "wiè"
+  ],
+  "win": [
+    "win",
+    "wīn",
+    "wín",
+    "wǐn",
+    "wìn"
+  ],
+  "wing": [
+    "wing",
+    "wīng",
+    "wíng",
+    "wǐng",
+    "wìng"
+  ],
+  "wiong": [
+    "wiong",
+    "wiōng",
+    "wióng",
+    "wiǒng",
+    "wiòng"
+  ],
+  "wiu": [
+    "wiu",
+    "wīu",
+    "wíu",
+    "wǐu",
+    "wìu"
+  ],
+  "wo": [
+    "wo",
+    "wō",
+    "wó",
+    "wǒ",
+    "wò"
+  ],
+  "wong": [
+    "wong",
+    "wōng",
+    "wóng",
+    "wǒng",
+    "wòng"
+  ],
+  "wou": [
+    "wou",
+    "wōu",
+    "wóu",
+    "wǒu",
+    "wòu"
+  ],
+  "wu": [
+    "wu",
+    "wū",
+    "wú",
+    "wǔ",
+    "wù"
+  ],
+  "wua": [
+    "wua",
+    "wuā",
+    "wuá",
+    "wuǎ",
+    "wuà"
+  ],
+  "wuai": [
+    "wuai",
+    "wuāi",
+    "wuái",
+    "wuǎi",
+    "wuài"
+  ],
+  "wuan": [
+    "wuan",
+    "wuān",
+    "wuán",
+    "wuǎn",
+    "wuàn"
+  ],
+  "wuang": [
+    "wuang",
+    "wuāng",
+    "wuáng",
+    "wuǎng",
+    "wuàng"
+  ],
+  "wue": [
+    "wue",
+    "wuē",
+    "wué",
+    "wuě",
+    "wuè"
+  ],
+  "wui": [
+    "wui",
+    "wuī",
+    "wuí",
+    "wuǐ",
+    "wuì"
+  ],
+  "wun": [
+    "wun",
+    "wūn",
+    "wún",
+    "wǔn",
+    "wùn"
+  ],
+  "wuo": [
+    "wuo",
+    "wuō",
+    "wuó",
+    "wuǒ",
+    "wuò"
+  ],
+  "wü": [
+    "wü",
+    "wǖ",
+    "wǘ",
+    "wǚ",
+    "wǜ"
+  ],
+  "wüe": [
+    "wüe",
+    "wüē",
+    "wüé",
+    "wüě",
+    "wüè"
+  ],
+  "wüan": [
+    "wüan",
+    "wüān",
+    "wüán",
+    "wüǎn",
+    "wüàn"
+  ],
+  "wün": [
+    "wün",
+    "wǖn",
+    "wǘn",
+    "wǚn",
+    "wǜn"
+  ]
+}

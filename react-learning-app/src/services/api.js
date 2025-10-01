@@ -173,6 +173,33 @@ export const quizAPI = {
     },
 };
 
+// Content APIs (for curriculum and lessons)
+export const contentAPI = {
+    // Get all curriculums
+    getCurriculums: async () => {
+        const response = await apiClient.get("/content/curriculums");
+        return response.data;
+    },
+
+    // Get curriculum by ID with lessons
+    getCurriculumById: async (id) => {
+        const response = await apiClient.get(`/content/curriculums/${id}`);
+        return response.data;
+    },
+
+    // Get lessons of a curriculum
+    getCurriculumLessons: async (curriculumId) => {
+        const response = await apiClient.get(`/content/curriculums/${curriculumId}/lessons`);
+        return response.data;
+    },
+
+    // Get lesson detail with conversations and vocabulary
+    getLessonDetail: async (lessonId) => {
+        const response = await apiClient.get(`/content/lessons/${lessonId}`);
+        return response.data;
+    },
+};
+
 // Audio APIs
 export const audioAPI = {
     getAudioUrl: (filename) => {

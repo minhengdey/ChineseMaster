@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
+import CurriculumPage from "./pages/CurriculumPage";
 import LessonsPage from "./pages/LessonsPage";
 import LessonDetailPage from "./pages/LessonDetailPage";
 import FlashcardsPage from "./pages/FlashcardsPage";
@@ -56,10 +57,20 @@ function App() {
                                 path="/"
                                 element={<HomePage user={user} />}
                             />
-                            <Route path="/lessons" element={<LessonsPage />} />
+                            <Route path="/curriculum" element={<CurriculumPage />} />
+                            <Route 
+                                path="/curriculum/:curriculumId/lessons" 
+                                element={<LessonsPage />} 
+                            />
+                            <Route
+                                path="/curriculum/:curriculumId/lesson/:lessonId"
+                                element={<LessonDetailPage />}
+                            />
+                            {/* Legacy routes */}
+                            <Route path="/lessons" element={<Navigate to="/curriculum" replace />} />
                             <Route
                                 path="/lesson/:id"
-                                element={<LessonDetailPage />}
+                                element={<Navigate to="/curriculum/1/lesson/:id" replace />}
                             />
                             <Route
                                 path="/flashcards"

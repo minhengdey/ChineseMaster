@@ -1,7 +1,6 @@
 package com.bucha.controller;
 
 import com.bucha.entity.Flashcard;
-import com.bucha.pronunciation.PronunciationScorer;
 import com.bucha.repository.FlashcardRepository;
 import com.bucha.security.JwtUserPrincipal;
 import com.bucha.service.FlashcardService;
