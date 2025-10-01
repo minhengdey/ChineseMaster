@@ -13,6 +13,10 @@ spring:
   h2:
     console:
       enabled: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 jwt:
   secret: ${JWT_SECRET}
@@ -27,4 +31,30 @@ logging:
   level:
     root: INFO
     org.springframework: DEBUG
-#    com.example.bucha: DEBUG
+    com.bucha.pronunciation: DEBUG
+
+iflytek:
+  app-id: ${APP_ID}
+  api-key: ${API_KEY}
+  api-secret: ${API_SECRET}
+  host-url: wss://ise-api-sg.xf-yun.com/v2/ise
+  ent: cn_vip
+  category: read_sentence
+  # 16kHz, 16bit PCM per ISE docs; omit channel token
+  auf: audio/L16;rate=16000
+  # Raw PCM frames
+  aue: raw
+  sub: ise
+  # Optional network settings for troubleshooting
+  insecure-ssl: false
+  disable-proxy: true
+  proxy-host: ""
+  proxy-port: 0
+  # Advanced websocket tuning per ISE FAQ (approx 1280 bytes every 40ms)
+  frame-size: 320
+  frame-sleep-ms: 80
+  connect-timeout-seconds: 15
+  read-timeout-seconds: 300
+  write-timeout-seconds: 120
+  single-frame: false
+  binary-frames: false
