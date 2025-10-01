@@ -29,7 +29,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-                                           @Value("${app.cors.allowed-origins:http://localhost:5500}") String allowedOrigins) throws Exception {
+            @Value("${app.cors.allowed-origins:http://localhost:5500}") String allowedOrigins) throws Exception {
 
         // CORS config
         http.cors(cors -> cors.configurationSource(request -> {

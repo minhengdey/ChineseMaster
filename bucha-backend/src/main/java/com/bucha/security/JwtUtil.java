@@ -15,9 +15,9 @@ public class JwtUtil {
     private final long accessTokenValidityMs;
     private final long refreshTokenValidityMs;
 
-    public JwtUtil(@Value("${jwt.secret:ChangeThisSecretToAStrongOne}") String secret,
-                   @Value("${jwt.access-validity-ms:900000}") long accessTokenValidityMs,
-                   @Value("${jwt.refresh-validity-ms:1209600000}") long refreshTokenValidityMs) {
+    public JwtUtil(@Value("${jwt.secret}") String secret,
+            @Value("${jwt.access-validity-ms:900000}") long accessTokenValidityMs,
+            @Value("${jwt.refresh-validity-ms:1209600000}") long refreshTokenValidityMs) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
         this.accessTokenValidityMs = accessTokenValidityMs;
         this.refreshTokenValidityMs = refreshTokenValidityMs;

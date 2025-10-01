@@ -10,22 +10,39 @@ import java.util.List;
 @Setter
 @Getter
 @Entity
-@Table(name = "lessons")
+@Table(name = "lessons", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "curriculum_id", "lesson_order" })
+})
 public class Lesson {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
-    private String level; // e.g. HSK1, HSK2
+    @Column(nullable = false)
+    private String title; // e.g., "Bài 1 你好"
 
-    @Column(length = 2048)
-    private String content; // could be JSON or HTML snippet
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "curriculum_id")
+    private Curriculum curriculum;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "lesson_id")
-    private List<AudioAsset> audioAssets = new ArrayList<>();
+    @Column(name = "lesson_order")
+    private Integer order; // Thứ tự bài học trong giáo trình
 
-    // getters/setters
-    public Lesson() {}
+    @Column()
+    private String level;
 
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Conversation> conversations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Vocabulary> vocabularies = new ArrayList<>();
+
+    public Lesson() {
+    }
+
+    public Lesson(String title, Curriculum curriculum, Integer order) {
+        this.title = title;
+        this.curriculum = curriculum;
+        this.order = order;
+    }
 }

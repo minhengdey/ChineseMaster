@@ -47,10 +47,6 @@ public class LessonController {
         dto.id = l.getId();
         dto.title = l.getTitle();
         dto.level = l.getLevel();
-        dto.content = l.getContent();
-        dto.audioFiles = l.getAudioAssets() != null
-                ? l.getAudioAssets().stream().map(a -> a.getFilename()).collect(Collectors.toList())
-                : List.of();
         return dto;
     }
 }

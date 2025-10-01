@@ -1,15 +1,13 @@
 spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
+   datasource:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: ${DB_URL}
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
+   jpa:
       hibernate:
         format_sql: true
+        ddl-auto: update
   h2:
     console:
       enabled: true
@@ -19,13 +17,18 @@ spring:
       max-request-size: 50MB
 
 jwt:
-  secret: ${JWT_SECRET}
-  access-validity-ms: 900000
-  refresh-validity-ms: 1209600000
+   secret: ${JWT_SECRET}
+   access-validity-ms: 900000
+   refresh-validity-ms: 1209600000
 
 app:
   cors:
     allowed-origins: http://localhost:5500
+  data:
+      initializer:
+         enabled: true
+         # The base path containing all curriculum subdirectories (e.g., HSK-1, HSK-2).
+         base-path: "uploads/curriculumn"
 
 logging:
   level:

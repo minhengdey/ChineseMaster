@@ -1,5 +1,3 @@
-
-
 # Bucha Backend API Documentation (Frontend Integration, Full Details)
 
 ## 1. Authentication
@@ -272,7 +270,113 @@
 
 ---
 
-## 8. Xử lý lỗi
+## 8. Content API
+
+### 8.1. Lấy danh sách tất cả giáo trình
+
+- **Endpoint:** `GET /api/content/curriculums`
+- **Mô tả:** Trả về một danh sách các giáo trình (Curriculum) cơ bản.
+- **Response (200 OK):**
+  ```json
+  [
+    {
+      "id": 1,
+      "name": "HSK 1",
+      "description": "Auto-created curriculum from migration",
+      "level": "Unknown"
+    }
+  ]
+  ```
+
+### 8.2. Lấy chi tiết một giáo trình
+
+- **Endpoint:** `GET /api/content/curriculums/{id}`
+- **Mô tả:** Trả về chi tiết một giáo trình, bao gồm danh sách các bài học (Lesson) thuộc về nó.
+- **Response (200 OK):**
+  ```json
+  {
+    "id": 1,
+    "name": "HSK 1",
+    "description": "Auto-created curriculum from migration",
+    "level": "Unknown",
+    "lessons": [
+      {
+        "id": 1,
+        "title": "Bài 1 你好",
+        "order": 1,
+        "level": null
+      }
+    ]
+  }
+  ```
+
+### 8.3. Lấy danh sách bài học của một giáo trình
+
+- **Endpoint:** `GET /api/content/curriculums/{id}/lessons`
+- **Mô tả:** Trả về danh sách các bài học (Lesson) cơ bản của một giáo trình cụ thể.
+- **Response (200 OK):**
+  ```json
+  [
+    {
+      "id": 1,
+      "title": "Bài 1 你好",
+      "order": 1,
+      "level": null
+    }
+  ]
+  ```
+
+### 8.4. Lấy chi tiết một bài học
+
+- **Endpoint:** `GET /api/content/lessons/{id}`
+- **Mô tả:** Trả về chi tiết một bài học, bao gồm các đoạn hội thoại (Conversation) và từ vựng (Vocabulary).
+- **Response (200 OK):**
+  ```json
+  {
+    "id": 1,
+    "title": "Bài 1 你好",
+    "order": 1,
+    "level": null,
+    "conversations": [
+      {
+        "id": 1,
+        "section": "你好吗",
+        "vnTranslation": "Chào bạn!",
+        "lines": [
+          {
+            "id": 1,
+            "speaker": "大卫",
+            "zhText": "你好！",
+            "pinyin": "Nǐ hǎo!",
+            "vnTranslation": "Xin chào!",
+            "audioAsset": {
+              "id": 1,
+              "filename": "nihao.mp3",
+              "audioPath": "uploads/nihao.mp3",
+              "audioType": "LOCAL_FILE",
+              "mimeType": "audio/mpeg",
+              "duration": 2
+            }
+          }
+        ]
+      }
+    ],
+    "vocabularies": [
+      {
+        "id": 1,
+        "word": "你好",
+        "pinyin": "nǐhǎo",
+        "type": "cụm từ",
+        "meaning": "Xin chào",
+        "audioAsset": null
+      }
+    ]
+  }
+  ```
+
+---
+
+## 9. Xử lý lỗi
 
 - **401 Unauthorized**
   ```json
@@ -293,7 +397,7 @@
 
 ---
 
-## 9. Lưu ý chung
+## 10. Lưu ý chung
 
 - Các endpoint yêu cầu xác thực phải gửi header:  
   `Authorization: Bearer <accessToken>`
