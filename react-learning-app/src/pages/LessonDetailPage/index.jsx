@@ -69,13 +69,13 @@ const LessonDetailPage = () => {
 
       {/* Tabs */}
       <div className="tabs tabs-bordered mb-6">
-        <button 
+        <button
           className={`tab tab-lg ${activeTab === 'conversation' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('conversation')}
         >
           💬 Hội thoại ({lesson.conversations?.length || 0})
         </button>
-        <button 
+        <button
           className={`tab tab-lg ${activeTab === 'vocabulary' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('vocabulary')}
         >
@@ -95,20 +95,26 @@ const LessonDetailPage = () => {
 
       {/* Navigation */}
       <div className="flex justify-between items-center mt-12 pt-8 border-t">
-        <Link 
+        <Link
           to={`/curriculum/${curriculumId}/lessons`}
           className="btn btn-outline"
         >
           ← Danh sách bài học
         </Link>
-        
+
         <div className="flex gap-4">
-          <button className="btn btn-primary">
+          <Link
+            to={`/curriculum/${curriculumId}/lesson/${lessonId}/practice`}
+            className="btn btn-primary"
+          >
             Luyện tập từ vựng
-          </button>
-          <button className="btn btn-secondary">
+          </Link>
+          <Link
+            to={`/curriculum/${curriculumId}/lesson/${lessonId}/speaking`}
+            className="btn btn-secondary"
+          >
             Luyện phát âm
-          </button>
+          </Link>
         </div>
       </div>
     </div>

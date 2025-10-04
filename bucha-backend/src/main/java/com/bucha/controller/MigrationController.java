@@ -92,6 +92,11 @@ public class MigrationController {
       }
    }
 
+   @GetMapping("/conversationLineByLessionId/{lessionId}")
+   public ResponseEntity<?> conversationLineByLessionId(@PathVariable("lessionId") Long lesstionId) {
+      return ResponseEntity.ok(migrationService.getAllConversationLines(lesstionId));
+   }
+
    @GetMapping("/status")
    public ResponseEntity<?> getMigrationStatus() {
       return ResponseEntity.ok(Map.of(
