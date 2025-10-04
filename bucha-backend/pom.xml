@@ -206,6 +206,11 @@
       <artifactId>hutool-all</artifactId>
       <version>5.8.11</version>
     </dependency>
+    <dependency>
+      <groupId>com.cloudinary</groupId>
+      <artifactId>cloudinary-http45</artifactId>
+      <version>1.39.0</version>
+    </dependency>
 
 
 
@@ -233,6 +238,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <release>${java.version}</release>
+            <source>8</source>
+            <target>8</target>
         </configuration>
       </plugin>
     </plugins>
