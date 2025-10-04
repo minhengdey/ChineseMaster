@@ -381,7 +381,7 @@ public class IseWordController {
             phones = doc.getElementsByTagName("phone");
         }
 
-// try to get a fallback phone_score from parent (some XMLs put a phone_score on the word/sentence)
+        // try to get a fallback phone_score from parent (some XMLs put a phone_score on the word/sentence)
         double fallbackPhoneScore = 0.0d;
         if (wordElem != null) {
             fallbackPhoneScore = getAttrDouble(wordElem, "phone_score", "phoneScore", "phone-score");
@@ -412,8 +412,13 @@ public class IseWordController {
             // perr / dp messages (diagnostic codes); keep whatever present
             String perr = safeAttr(ph, "perr_msg", "perr", "perrmsg");
             String dpmsg = safeAttr(ph, "dp_message", "dp_message", "dpmsg", "dp-message");
+            String perrLevel = safeAttr(ph, "perr_level_msg", "perr_level", "perr_level_msg");
+            String isYun = safeAttr(ph, "is_yun", "isyun", "is_yun");
+
             p.put("perr_msg", perr == null ? "" : perr);
             p.put("dp_message", dpmsg == null ? "" : dpmsg);
+            p.put("perr_level_msg", perrLevel == null ? "" : perrLevel);
+            p.put("is_yun", isYun == null ? "" : isYun);
 
             // start/end: try variants (beg_pos, begin, start, start_pos, end_pos, end, time_len)
             double start = getAttrDouble(ph, "beg_pos", "begin", "start", "start_pos");
@@ -421,11 +426,82 @@ public class IseWordController {
             p.put("start", start);
             p.put("end", end);
 
+            // --- compute tone_score for this phone (prefer explicit, else heuristic using perr/dp/is_yun)
+            double toneScore = computeToneScoreForPhone(ph, wordElem);
+            p.put("tone_score", toneScore);
+
             phonemeArr.add(p);
         }
         out.put("phonemes", phonemeArr);
 
         return out;
+    }
+
+    /**
+     * Compute a tone score (0..100) for a phone Element.
+     * Logic:
+     *  - if explicit numeric tone_score / tone present on phone -> use it
+     *  - else if dp_message != 0 -> 0 (missing/inserted/readback)
+     *  - else if perr_msg present:
+     *        if is_yun==1 (rhyme/vowel) -> map perr_msg to base (0:100,1:60,2:20,3:0)
+     *        else (consonant) -> base 100 if perr_msg==0 else 50
+     *     scale by perr_level_msg (small penalty)
+     *  - else fallback to phone/word tone_score if present
+     */
+    private double computeToneScoreForPhone(Element ph, Element wordElem) {
+        // prefer explicit numeric tone
+        double explicitTone = getAttrDouble(ph, "tone_score", "tone", "mono_tone_score", "mono_tone");
+        if (explicitTone > 0.0d) return explicitTone;
+
+        String dpmsg = safeAttr(ph, "dp_message", "dpmsg", "dp-message");
+        int dp = 0;
+        try { dp = Integer.parseInt(dpmsg == null ? "0" : dpmsg); } catch (Exception ignored) {}
+
+        if (dp != 0) {
+            // insertion/missing/readback -> tone meaningless
+            return 0.0d;
+        }
+
+        String perr = safeAttr(ph, "perr_msg", "perr", "perrmsg");
+        int perrInt = -1;
+        try { perrInt = Integer.parseInt(perr == null ? "-1" : perr); } catch (Exception ignored) {}
+
+        String perrLevel = safeAttr(ph, "perr_level_msg", "perr_level", "perr_level_msg");
+        int perrLevelInt = 0;
+        try { perrLevelInt = Integer.parseInt(perrLevel == null ? "0" : perrLevel); } catch (Exception ignored) {}
+
+        String isYun = safeAttr(ph, "is_yun", "isyun", "is_yun");
+        int isYunInt = 0;
+        try { isYunInt = Integer.parseInt(isYun == null ? "0" : isYun); } catch (Exception ignored) {}
+
+        if (perrInt >= 0) {
+            double base;
+            if (isYunInt == 1) {
+                // vowel/rhyme: perr_msg likely encodes tone/rhyme correctness
+                switch (perrInt) {
+                    case 0: base = 100.0; break; // correct
+                    case 1: base = 60.0;  break; // rhyme error
+                    case 2: base = 20.0;  break; // tone error
+                    case 3: base = 0.0;   break; // both wrong
+                    default: base = 50.0; break;
+                }
+            } else {
+                base = (perrInt == 0) ? 100.0 : 50.0;
+            }
+            double factor = 1.0;
+            if (perrLevelInt >= 1) factor = 1.0 - (perrLevelInt - 1) * 0.15; // small penalty for larger level
+            double toneScore = Math.max(0.0, Math.min(100.0, base * factor));
+            return toneScore;
+        }
+
+        // fallback: try phone/word tone_score
+        double fallback = getAttrDouble(ph, "phone_score", "tone_score", "tone");
+        if (fallback > 0.0d) return fallback;
+        if (wordElem != null) {
+            double wfb = getAttrDouble(wordElem, "tone_score", "phone_score", "phoneScore");
+            if (wfb > 0.0d) return wfb;
+        }
+        return 0.0d;
     }
 
     private double getAttrDouble(Element e, String... keys) {
