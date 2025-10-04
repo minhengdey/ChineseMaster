@@ -212,6 +212,39 @@ export const audioAPI = {
     },
 };
 
+// ISE (pronunciation scoring) APIs
+export const iseAPI = {
+    // scoreSentence should post multipart/form-data like the provided curl
+    scoreSentence: async ({ text, audioFile, sub = 'ise', ent = 'cn_vip' }) => {
+        const formData = new FormData();
+        // wrap text value in quotes like the example — backend should handle plain text too
+        formData.append('text', text);
+        formData.append('audio', audioFile);
+        formData.append('sub', sub);
+        formData.append('ent', ent);
+
+        const response = await apiClient.post('/ise/score', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        return response.data;
+    },
+};
+
+// Migration/content helper APIs
+export const migrationAPI = {
+    getConversationLinesByLesson: async (lessonId) => {
+        if (!lessonId) {
+            const response = await apiClient.get('/migration/conversationLineByLessionId');
+            return response.data;
+        }
+        const response = await apiClient.get(`/migration/conversationLineByLessionId/${lessonId}`);
+        return response.data;
+    },
+};
+
 // Helper function to handle API errors
 export const handleApiError = (error) => {
     if (error.response?.data?.error) {

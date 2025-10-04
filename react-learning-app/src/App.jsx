@@ -10,6 +10,8 @@ import HomePage from "./pages/HomePage";
 import CurriculumPage from "./pages/CurriculumPage";
 import LessonsPage from "./pages/LessonsPage";
 import LessonDetailPage from "./pages/LessonDetailPage";
+import VocabularyPracticePage from "./pages/VocabularyPracticePage";
+import SpeakingPracticePage from "./pages/SpeakingPracticePage";
 import FlashcardsPage from "./pages/FlashcardsPage";
 import PronunciationPage from "./pages/PronunciationPage";
 import QuizPage from "./pages/QuizPage";
@@ -58,13 +60,21 @@ function App() {
                                 element={<HomePage user={user} />}
                             />
                             <Route path="/curriculum" element={<CurriculumPage />} />
-                            <Route 
-                                path="/curriculum/:curriculumId/lessons" 
-                                element={<LessonsPage />} 
+                            <Route
+                                path="/curriculum/:curriculumId/lessons"
+                                element={<LessonsPage />}
                             />
                             <Route
                                 path="/curriculum/:curriculumId/lesson/:lessonId"
                                 element={<LessonDetailPage />}
+                            />
+                            <Route
+                                path="/curriculum/:curriculumId/lesson/:lessonId/practice"
+                                element={<VocabularyPracticePage />}
+                            />
+                            <Route
+                                path="/curriculum/:curriculumId/lesson/:lessonId/speaking"
+                                element={<SpeakingPracticePage />}
                             />
                             {/* Legacy routes */}
                             <Route path="/lessons" element={<Navigate to="/curriculum" replace />} />
@@ -80,9 +90,9 @@ function App() {
                                 path="/pronunciation"
                                 element={<PronunciationPage />}
                             />
-                            <Route 
-                                path="/alphabet" 
-                                element={<AlphabetPage />} 
+                            <Route
+                                path="/alphabet"
+                                element={<AlphabetPage />}
                             />
                             <Route path="/quiz" element={<QuizPage />} />
                             <Route
