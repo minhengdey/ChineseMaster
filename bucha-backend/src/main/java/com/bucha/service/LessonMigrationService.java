@@ -17,7 +17,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -482,5 +484,17 @@ public class LessonMigrationService {
          log.error("Failed to read curriculum metadata from: {}", curriculumPath, e);
          return null;
       }
+   }
+
+   public Set<String> getAllConversationLines (Long lessonId) {
+      Set<String>  conversationLines = new HashSet<>();
+      List<Conversation> conversationList = conversationRepository.findByLessonIdOrderByOrder(lessonId);
+      for (Conversation conversation : conversationList) {
+         List<ConversationLine> lines = conversationLineRepository.findByConversationIdOrderByOrder(conversation.getId());
+         for (ConversationLine conversationLine : lines) {
+            conversationLines.add(conversationLine.getZhText());
+         }
+      }
+      return conversationLines;
    }
 }
