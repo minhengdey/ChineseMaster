@@ -59,3 +59,9 @@ iflytek:
   write-timeout-seconds: 120
   single-frame: false
   binary-frames: false
+
+cloudinary:
+  cloud-name: ${CLOUD_NAME}
+  api-key: ${CLOUD_API_KEY}
+  api-secret: ${CLOUD_API_SECRET}
+  upload-folder: chinese-master
