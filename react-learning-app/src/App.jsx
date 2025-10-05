@@ -17,6 +17,7 @@ import PronunciationPage from "./pages/PronunciationPage";
 import QuizPage from "./pages/QuizPage";
 import ProfilePage from "./pages/ProfilePage";
 import AlphabetPage from "./pages/AlphabetPage";
+import TestPage from "./pages/TestPage";
 
 import "./App.css";
 import { authAPI } from "./services/api";
@@ -94,6 +95,7 @@ function App() {
                                 path="/alphabet"
                                 element={<AlphabetPage />}
                             />
+                            <Route path="/test" element={<TestPage />} />
                             <Route path="/quiz" element={<QuizPage />} />
                             <Route
                                 path="/profile"

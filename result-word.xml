@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <xml_result>
+      <read_sentence lan="cn" type="study" version="7,0,0,1024">
+          <rec_paper>
+              <read_sentence accuracy_score="0.000000" beg_pos="0" content="你好。" emotion_score="0.000000" end_pos="412" except_info="0" fluency_score="88.841515" integrity_score="100.000000" is_rejected="false" phone_score="100.000000" time_len="412" tone_score="100.000000" total_score="100.000000">
+                  <sentence beg_pos="0" content="你好" end_pos="412" fluency_score="0.000000" phone_score="100.000000" time_len="412" tone_score="100.000000" total_score="94.293839">
+                      <word beg_pos="0" content="你" end_pos="276" symbol="ni2" time_len="276">
+                          <syll beg_pos="0" content="sil" dp_message="0" end_pos="84" rec_node_type="sil" time_len="84">
+                              <phone beg_pos="0" content="sil" dp_message="0" end_pos="84" rec_node_type="sil" time_len="84"></phone>
+                          </syll>
+                          <syll beg_pos="84" content="fil" dp_message="32" end_pos="104" rec_node_type="fil" time_len="20">
+                              <phone beg_pos="84" content="fil" dp_message="32" end_pos="104" rec_node_type="fil" time_len="20"></phone>
+                          </syll>
+                          <syll beg_pos="104" content="sil" dp_message="0" end_pos="244" rec_node_type="sil" time_len="140">
+                              <phone beg_pos="104" content="sil" dp_message="0" end_pos="244" rec_node_type="sil" time_len="140"></phone>
+                          </syll>
+                          <syll beg_pos="244" content="fil" dp_message="32" end_pos="265" rec_node_type="fil" time_len="21">
+                              <phone beg_pos="244" content="fil" dp_message="32" end_pos="265" rec_node_type="fil" time_len="21"></phone>
+                          </syll>
+                          <syll beg_pos="265" content="你" dp_message="0" end_pos="276" rec_node_type="paper" symbol="ni2" time_len="11">
+                              <phone beg_pos="265" content="n" dp_message="0" end_pos="268" is_yun="0" perr_level_msg="1" perr_msg="0" rec_node_type="paper" time_len="3"></phone>
+                              <phone beg_pos="268" content="i" dp_message="0" end_pos="276" is_yun="1" mono_tone="TONE2" perr_level_msg="1" perr_msg="0" rec_node_type="paper" time_len="8"></phone>
+                          </syll>
+                      </word>
+                      <word beg_pos="276" content="好" end_pos="412" symbol="hao3" time_len="136">
+                          <syll beg_pos="276" content="好" dp_message="0" end_pos="320" rec_node_type="paper" symbol="hao3" time_len="44">
+                              <phone beg_pos="276" content="h" dp_message="0" end_pos="290" is_yun="0" perr_level_msg="1" perr_msg="0" rec_node_type="paper" time_len="14"></phone>
+                              <phone beg_pos="290" content="ao" dp_message="0" end_pos="320" is_yun="1" mono_tone="TONE3" perr_level_msg="1" perr_msg="0" rec_node_type="paper" time_len="30"></phone>
+                          </syll>
+                          <syll beg_pos="320" content="sil" dp_message="0" end_pos="412" rec_node_type="sil" time_len="92">
+                              <phone beg_pos="320" content="sil" end_pos="412" time_len="92"></phone>
+                          </syll>
+                      </word>
+                  </sentence>
+              </read_sentence>
+          </rec_paper>
+      </read_sentence>
+  </xml_result>
