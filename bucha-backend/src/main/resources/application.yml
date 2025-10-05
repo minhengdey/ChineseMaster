@@ -25,13 +25,12 @@ app:
    data:
       initializer:
          enabled: true
-         base-path: "uploads/curriculumn"
-
+         source: CLOUDINARY
 logging:
    level:
-      root: INFO
-      org.springframework: DEBUG
-      com.bucha.pronunciation: DEBUG
+      root: ERROR
+      # org.springframework: DEBUG
+      com.bucha: DEBUG
 
 iflytek:
    app-id: ${APP_ID}

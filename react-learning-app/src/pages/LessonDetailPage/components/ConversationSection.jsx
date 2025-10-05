@@ -65,9 +65,9 @@ const ConversationSection = ({ conversations }) => {
               </button>
             </div>
             
-            {conversation.vnTranslation && (
+            {(conversation.vnTranslation || conversation.vn) && (
               <p className="text-base-content/70 italic">
-                {conversation.vnTranslation}
+                {conversation.vnTranslation || conversation.vn}
               </p>
             )}
 
@@ -80,12 +80,12 @@ const ConversationSection = ({ conversations }) => {
                         {line.speaker}
                       </span>
                       <div className="flex gap-2">
-                        {line.audioAsset && (
-                          <AudioPlayer audioAsset={line.audioAsset} />
+                        {(line.audioUrl || line.audioAsset) && (
+                          <AudioPlayer audioUrl={line.audioUrl} audioAsset={line.audioAsset} />
                         )}
                         <SentenceRecordingButton
                           text={line.pinyin}
-                          hanzi={line.zhText}
+                          hanzi={line.zh || line.zhText}
                           onScore={(result, audioBlob) => handlePronunciationScore(result, audioBlob, line.id)}
                           onStartRecording={() => handleStartRecording(line.id)}
                           size="xs"
@@ -95,13 +95,13 @@ const ConversationSection = ({ conversations }) => {
                     
                     <div className="space-y-2">
                       <div className="text-xl font-medium">
-                        {line.zhText}
+                        {line.zh || line.zhText}
                       </div>
                       <div className="text-base-content/80">
                         {line.pinyin}
                       </div>
                       <div className="text-base-content/70 italic">
-                        {line.vnTranslation}
+                        {line.vn || line.vnTranslation}
                       </div>
                     </div>
 
