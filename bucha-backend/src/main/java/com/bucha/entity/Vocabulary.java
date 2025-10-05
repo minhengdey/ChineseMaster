@@ -32,10 +32,10 @@ public class Vocabulary {
    @Column(name = "word_order")
    private Integer order; // Thứ tự từ vựng trong bài học
 
-   // Audio cho mỗi từ vựng
-   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-   @JoinColumn(name = "audio_asset_id")
-   private AudioAsset audioAsset;
+   // Cloudinary public_id cho audio (flow Cloudinary-only)
+   
+   @Column(name = "audio_public_id")
+   private String audioPublicId;
 
    // Constructors
    public Vocabulary() {

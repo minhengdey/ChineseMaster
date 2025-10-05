@@ -63,8 +63,8 @@ const VocabularySection = ({ vocabularies }) => {
                 {vocabulary.word}
               </div>
               <div className="flex gap-2">
-                {vocabulary.audioAsset && (
-                  <AudioPlayer audioAsset={vocabulary.audioAsset} size="sm" />
+                {(vocabulary.audioUrl || vocabulary.audioAsset) && (
+                  <AudioPlayer audioUrl={vocabulary.audioUrl} audioAsset={vocabulary.audioAsset} size="sm" />
                 )}
                 <WordRecordingButton
                   word={vocabulary.word}

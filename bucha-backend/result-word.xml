@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <xml_result>
+      <read_sentence lan="cn" type="study" version="7,0,0,1024">
+          <rec_paper>
+              <read_sentence accuracy_score="0.000000" beg_pos="0" content="好。" emotion_score="0.000000" end_pos="172" except_info="0" fluency_score="81.842255" integrity_score="100.000000" is_rejected="false" phone_score="50.000000" time_len="172" tone_score="100.000000" total_score="49.214615">
+                  <sentence beg_pos="0" content="好" end_pos="172" fluency_score="0.000000" phone_score="50.000000" time_len="172" tone_score="100.000000" total_score="64.972916">
+                      <word beg_pos="0" content="好" end_pos="172" symbol="hao3" time_len="172">
+                          <syll beg_pos="0" content="sil" dp_message="0" end_pos="66" rec_node_type="sil" time_len="66">
+                              <phone beg_pos="0" content="sil" dp_message="0" end_pos="66" rec_node_type="sil" time_len="66"></phone>
+                          </syll>
+                          <syll beg_pos="66" content="好" dp_message="0" end_pos="95" rec_node_type="paper" symbol="hao3" time_len="29">
+                              <phone beg_pos="66" content="h" dp_message="0" end_pos="70" is_yun="0" perr_level_msg="3" perr_msg="1" rec_node_type="paper" time_len="4"></phone>
+                              <phone beg_pos="70" content="ao" dp_message="0" end_pos="95" is_yun="1" mono_tone="TONE3" perr_level_msg="1" perr_msg="0" rec_node_type="paper" time_len="25"></phone>
+                          </syll>
+                          <syll beg_pos="95" content="sil" dp_message="0" end_pos="172" rec_node_type="sil" time_len="77">
+                              <phone beg_pos="95" content="sil" end_pos="172" time_len="77"></phone>
+                          </syll>
+                      </word>
+                  </sentence>
+              </read_sentence>
+          </rec_paper>
+      </read_sentence>
+  </xml_result>

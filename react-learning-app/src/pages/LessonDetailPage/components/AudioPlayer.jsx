@@ -1,13 +1,16 @@
 import React, { useState, useRef } from 'react';
 import { audioAPI } from '../../../services/api';
 
-const AudioPlayer = ({ audioAsset, size = 'md' }) => {
+// Support either a direct audioUrl or a legacy audioAsset (with filename)
+const AudioPlayer = ({ audioUrl, audioAsset, size = 'md' }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef(null);
 
   const handlePlay = async () => {
-    if (!audioAsset?.filename) return;
+    // Resolve URL from either audioUrl or audioAsset.filename
+    const resolvedUrl = audioUrl || (audioAsset?.filename ? audioAPI.getAudioUrl(audioAsset.filename) : null);
+    if (!resolvedUrl) return;
 
     setIsLoading(true);
     try {
@@ -18,7 +21,7 @@ const AudioPlayer = ({ audioAsset, size = 'md' }) => {
       }
 
       // Create new audio element
-      const audio = new Audio(audioAPI.getAudioUrl(audioAsset.filename));
+      const audio = new Audio(resolvedUrl);
       audioRef.current = audio;
 
       audio.addEventListener('play', () => {
@@ -33,7 +36,7 @@ const AudioPlayer = ({ audioAsset, size = 'md' }) => {
       audio.addEventListener('error', () => {
         setIsPlaying(false);
         setIsLoading(false);
-        console.error('Error playing audio:', audioAsset.filename);
+        console.error('Error playing audio:', resolvedUrl);
       });
 
       await audio.play();
@@ -60,12 +63,17 @@ const AudioPlayer = ({ audioAsset, size = 'md' }) => {
     }
   };
 
+  const disabled = isLoading || (!audioUrl && !audioAsset?.filename);
+  const title = audioUrl
+    ? `Phát âm: ${audioUrl}`
+    : `Phát âm: ${audioAsset?.filename || 'Không có audio'}`;
+
   return (
     <button
       className={`btn btn-circle btn-ghost ${getButtonSize()} ${isPlaying ? 'btn-primary' : ''}`}
       onClick={isPlaying ? handleStop : handlePlay}
-      disabled={isLoading || !audioAsset?.filename}
-      title={`Phát âm: ${audioAsset?.filename || 'Không có audio'}`}
+      disabled={disabled}
+      title={title}
     >
       {isLoading ? (
         <span className="loading loading-spinner loading-xs"></span>
