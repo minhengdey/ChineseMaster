@@ -1,7 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AudioPlayer from './AudioPlayer';
+import WordRecordingButton from './WordRecordingButton';
+import WordPronunciationResult from './WordPronunciationResult';
 
 const VocabularySection = ({ vocabularies }) => {
+  const [pronunciationResult, setPronunciationResult] = useState(null);
+  const [showPronunciationResult, setShowPronunciationResult] = useState(false);
+  const [recordedAudio, setRecordedAudio] = useState(null);
+  const [activeWordId, setActiveWordId] = useState(null);
+
+  const handlePronunciationScore = (result, audioBlob, wordId) => {
+    setPronunciationResult(result);
+    setRecordedAudio(audioBlob);
+    setActiveWordId(wordId);
+    setShowPronunciationResult(true);
+  };
+
+  const handleStartRecording = (wordId) => {
+    // Xóa kết quả cũ khi bắt đầu thu âm mới
+    setShowPronunciationResult(false);
+    setPronunciationResult(null);
+    setRecordedAudio(null);
+    setActiveWordId(wordId);
+  };
+
+  const closePronunciationResult = () => {
+    setShowPronunciationResult(false);
+    setPronunciationResult(null);
+    setRecordedAudio(null);
+    setActiveWordId(null);
+  };
   const getTypeColor = (type) => {
     switch (type?.toLowerCase()) {
       case 'danh từ': return 'badge-primary';
@@ -34,9 +62,18 @@ const VocabularySection = ({ vocabularies }) => {
               <div className="text-2xl font-bold text-primary">
                 {vocabulary.word}
               </div>
-              {vocabulary.audioAsset && (
-                <AudioPlayer audioAsset={vocabulary.audioAsset} size="sm" />
-              )}
+              <div className="flex gap-2">
+                {vocabulary.audioAsset && (
+                  <AudioPlayer audioAsset={vocabulary.audioAsset} size="sm" />
+                )}
+                <WordRecordingButton
+                  word={vocabulary.word}
+                  pinyin={vocabulary.pinyin}
+                  onScore={(result, audioBlob) => handlePronunciationScore(result, audioBlob, vocabulary.id)}
+                  onStartRecording={() => handleStartRecording(vocabulary.id)}
+                  size="xs"
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
@@ -54,6 +91,15 @@ const VocabularySection = ({ vocabularies }) => {
                 {vocabulary.meaning}
               </div>
             </div>
+
+            {/* Hiển thị kết quả đánh giá phát âm cho word này */}
+            {showPronunciationResult && activeWordId === vocabulary.id && (
+              <WordPronunciationResult
+                result={pronunciationResult}
+                recordedAudio={recordedAudio}
+                onClose={closePronunciationResult}
+              />
+            )}
           </div>
         </div>
       ))}
