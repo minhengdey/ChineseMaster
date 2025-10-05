@@ -17,15 +17,41 @@ const SpeakingPracticePage = () => {
         fetchRandomSentence();
         // cleanup
         return () => {
-            if (mediaRecorderRef.current) {
-                try { mediaRecorderRef.current.stream?.getTracks()?.forEach(t => t.stop()); } catch (e) { }
-            }
+            // stop any active recorder and tracks
+            try {
+                if (mediaRecorderRef.current) {
+                    if (mediaRecorderRef.current.state !== 'inactive') {
+                        mediaRecorderRef.current.stop();
+                    }
+                    mediaRecorderRef.current.stream?.getTracks()?.forEach(t => t.stop());
+                    mediaRecorderRef.current = null;
+                }
+            } catch (e) { }
+            // clear chunks
+            chunksRef.current = [];
+            // release audio blob
+            setAudioBlob(null);
+            setRecording(false);
+            setResult(null);
+            setError(null);
         };
     }, [lessonId]);
 
     const fetchRandomSentence = async () => {
-        setLoading(true);
+        // clear any previous data (audio/result/error) before fetching a new sentence
+        try {
+            if (mediaRecorderRef.current) {
+                if (mediaRecorderRef.current.state !== 'inactive') mediaRecorderRef.current.stop();
+                mediaRecorderRef.current.stream?.getTracks()?.forEach(t => t.stop());
+                mediaRecorderRef.current = null;
+            }
+        } catch (e) { }
+        chunksRef.current = [];
+        setAudioBlob(null);
+        setRecording(false);
+        setResult(null);
         setError(null);
+        setLoading(true);
         try {
             // Call migration endpoint to get all conversation lines for a lesson
             const data = await migrationAPI.getConversationLinesByLesson(lessonId);
@@ -128,25 +154,7 @@ const SpeakingPracticePage = () => {
     // Helpers to present results
     const toPercent = (value, type = 'total') => {
         if (value == null) return 0;
-        // heuristics to convert returned metric to 0-100 percent
-        if (type === 'total') {
-            if (value <= 5) return Math.round((value / 5) * 100);
-            if (value <= 10) return Math.round((value / 10) * 100);
-            if (value <= 100) return Math.round(value);
-            return Math.min(100, Math.round(value));
-        }
-        if (type === 'fluency') {
-            if (value <= 5) return Math.round((value / 5) * 100);
-            if (value <= 100) return Math.round(value);
-            return Math.min(100, Math.round(value));
-        }
-        if (type === 'completeness') {
-            // completeness might already be percentage-like (e.g. 15)
-            if (value <= 1) return Math.round(value * 100);
-            if (value <= 100) return Math.round(value);
-            return Math.min(100, Math.round(value));
-        }
-        return 0;
+        return Math.min(100, Math.round(value));
     };
 
     const highlightSentence = (text, wrongWords = []) => {
@@ -199,8 +207,15 @@ const SpeakingPracticePage = () => {
             <div className="mb-6 flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Luyện nói</h1>
                 <div className="flex gap-2">
-                    <Link to={`/curriculum/${curriculumId}/lesson/${lessonId}`} className="btn btn-ghost">Quay lại bài học</Link>
-                    <button className="btn" onClick={fetchRandomSentence}>Lấy câu mới</button>
+                    <Link
+                        to={`/curriculum/${curriculumId}/lesson/${lessonId}`}
+                        className={`btn btn-ghost ${recording ? 'opacity-50 pointer-events-none' : ''}`}
+                    >Quay lại bài học</Link>
+                    <button
+                        className={`btn ${recording ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={fetchRandomSentence}
+                        disabled={recording}
+                    >Lấy câu mới</button>
                 </div>
             </div>
 
@@ -231,7 +246,11 @@ const SpeakingPracticePage = () => {
                         )}
 
                         <div className="flex justify-center gap-4">
-                            <button className="btn btn-primary" onClick={submitScore} disabled={!audioBlob || loading}>Gửi điểm</button>
+                            <button
+                                className={`btn btn-primary ${(!audioBlob || loading || recording) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                onClick={submitScore}
+                                disabled={!audioBlob || loading || recording}
+                            >Gửi điểm</button>
                         </div>
                     </div>
 
