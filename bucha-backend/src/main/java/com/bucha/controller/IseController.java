@@ -27,8 +27,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.Base64;
-import java.util.Collections;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -75,8 +73,6 @@ public class IseController {
         logger.info("Original text: {}", text);
         logger.info("Normalized text: {}", normalizedText);
 
-        // build first frame safely and keep as AtomicReference so inner classes can use
-        // it
         final AtomicReference<JSONObject> firstFrameRef = new AtomicReference<>();
         try {
             JSONObject built = IseGlobalMessageBuilder.buildFirstFrame(
@@ -87,8 +83,6 @@ public class IseController {
                     normalizedText,
                     "utf-8");
 
-            // try to set core=read_sentence and phoneme_output=1 safely only if builder
-            // structure supports it
             if (built.containsKey("parameter")) {
                 try {
                     JSONObject parameter = built.getJSONObject("parameter");
@@ -151,14 +145,12 @@ public class IseController {
         CountDownLatch latch = new CountDownLatch(1);
 
         try {
-            // save upload to temp file
             Path uploadedTemp = Files.createTempFile("ise-upload-", getExtensionSafe(audioFile.getOriginalFilename()));
             try (InputStream in = audioFile.getInputStream()) {
                 Files.copy(in, uploadedTemp, StandardCopyOption.REPLACE_EXISTING);
             }
             uploadedTempRef.set(uploadedTemp);
 
-            // ensure wav
             try {
                 File wavFile = ensureWavFile(uploadedTemp, audioFile.getOriginalFilename(), audioFile.getContentType());
                 wavTempRef.set(wavFile);
@@ -174,7 +166,6 @@ public class IseController {
                         .body(Map.of("error", "audio conversion failed", "detail", convEx.getMessage()));
             }
 
-            // create websocket client for sentence-level scoring
             IseGlobalWebSocketClient client = new IseGlobalWebSocketClient(signedUrl, new WebSocketListener() {
                 @Override
                 public void onOpen(WebSocket webSocket, Response response) {
@@ -188,7 +179,6 @@ public class IseController {
                         return;
                     }
 
-                    // stream audio
                     new Thread(() -> {
                         try {
                             File wavToStream = wavTempRef.get();
@@ -236,6 +226,8 @@ public class IseController {
                             return;
                         }
 
+                        logger.info(resp.toString());
+
                         String sid = resp.getString("sid");
                         if (sid != null && sidRef.get() == null)
                             sidRef.set(sid);
@@ -253,14 +245,13 @@ public class IseController {
                                     try {
                                         byte[] decoded = Base64.getDecoder().decode(base64Data);
                                         String xmlString = new String(decoded, StandardCharsets.UTF_8);
-                                        Files.write(Path.of("result.xml"), decoded); // keep for debug
+                                        Files.write(Path.of("result.xml"), decoded);
 
                                         Document doc = parseXmlSafely(xmlString);
                                         if (doc == null) {
                                             logger.error("Failed to parse XML result (sentence)");
                                         } else {
                                             JSONObject sentenceOut = new JSONObject();
-                                            // extract same fields as before
                                             Element readSentence = null;
                                             NodeList rsList = doc.getElementsByTagName("read_sentence");
                                             if (rsList != null && rsList.getLength() > 0) {
@@ -311,7 +302,6 @@ public class IseController {
                                             }
                                             sentenceOut.put("completeness", completeness);
 
-                                            // collect wrong words as before
                                             java.util.List<String> wrongList = new java.util.ArrayList<>();
                                             if (readSentence != null) {
                                                 NodeList words = readSentence.getElementsByTagName("word");
@@ -346,9 +336,7 @@ public class IseController {
                                                 wrongArr.add(s);
                                             sentenceOut.put("wrong_words", wrongArr);
 
-                                            // add raw_xml so we can parse and score per-word
                                             sentenceOut.put("raw_xml", xmlString);
-
                                             sentenceOut.put("sid", sidRef.get());
                                             sentenceOut.put("status", 2);
 
@@ -388,7 +376,6 @@ public class IseController {
             clientRef.set(client);
             client.connect();
 
-            // wait for sentence result
             latch.await(120, TimeUnit.SECONDS);
             try {
                 client.close();
@@ -401,12 +388,10 @@ public class IseController {
                         .body(Collections.singletonMap("error", "no result from ISE (sentence)"));
             }
 
-            // --- Now extract words from raw_xml and score each one ---
             JSONObject sentenceResult = sentenceJsonRef.get();
             String rawXml = sentenceResult.getString("raw_xml");
             List<JSONObject> wordsResults = new ArrayList<>();
 
-            // parse XML and find <word>
             Document doc = parseXmlSafely(rawXml);
             NodeList words = null;
             if (doc != null) {
@@ -430,8 +415,6 @@ public class IseController {
                         continue;
                     logger.info("Scoring sub-word (from XML): {}", content);
                     try {
-                        // derive per-word scores from sentence-level XML using phoneme/syllable
-                        // heuristics
                         JSONObject wRes = extractWordScoresFromElement(w);
                         wRes.put("word", content);
                         wordsResults.add(wRes);
@@ -444,8 +427,6 @@ public class IseController {
                     }
                 }
             } else {
-                // fallback: split normalizedText by whitespace (useful for your input which had
-                // spaces)
                 String[] toks = normalizedText.split("\\s+");
                 for (String tok : toks) {
                     if (tok == null || tok.isEmpty())
@@ -479,7 +460,6 @@ public class IseController {
             logger.error("Unexpected error in score", ex);
             return ResponseEntity.status(500).body(Map.of("error", ex.getMessage()));
         } finally {
-            // cleanup temp files
             try {
                 File wavToDelete = wavTempRef.get();
                 if (wavToDelete != null && wavToDelete.exists())
@@ -495,20 +475,15 @@ public class IseController {
         }
     }
 
-    // --------------- scoreSingleWord (fixed to avoid 'built' not final error)
-    // ---------------
-
     private JSONObject scoreSingleWord(File wavFile, String word) throws Exception {
         if (wavFile == null || !wavFile.exists())
             throw new IllegalArgumentException("wav file missing");
 
         final AtomicReference<JSONObject> builtRef = new AtomicReference<>();
         try {
-            // try builder first
             JSONObject b = IseGlobalMessageBuilder.buildFirstFrame(appId, sub, defaultEnt, "read_word", word, "utf-8");
             builtRef.set(b);
         } catch (Throwable t) {
-            // fallback
             JSONObject fallback = new JSONObject();
             JSONObject header = new JSONObject();
             header.put("app_id", appId);
@@ -523,7 +498,6 @@ public class IseController {
             builtRef.set(fallback);
         }
 
-        // try to set fields safely if present (mutating same JSONObject; that's fine)
         if (builtRef.get().containsKey("parameter")) {
             try {
                 JSONObject parameter = builtRef.get().getJSONObject("parameter");
@@ -567,7 +541,6 @@ public class IseController {
         final AtomicBoolean streamCancelled = new AtomicBoolean(false);
         CountDownLatch latch = new CountDownLatch(1);
 
-        // clientRefLocal so inner class can reference the client safely
         final AtomicReference<IseGlobalWebSocketClient> clientRefLocal = new AtomicReference<>();
 
         IseGlobalWebSocketClient client = new IseGlobalWebSocketClient(signedUrl, new WebSocketListener() {
@@ -666,7 +639,6 @@ public class IseController {
             }
         });
 
-        // set the clientRefLocal after construction so inner listener can use it
         clientRefLocal.set(client);
 
         client.connect();
@@ -682,8 +654,6 @@ public class IseController {
         err.put("error", "no result");
         return err;
     }
-
-    // -------------------- parsing / extraction helpers --------------------
 
     private Document parseXmlSafely(String xmlString) {
         try {
@@ -705,12 +675,9 @@ public class IseController {
     }
 
     private JSONObject extractWordScores(Document doc) {
-        // Prefer high-level read_sentence (where total_score / phone_score typically
-        // live).
         Element readSentence = null;
         NodeList rsList = doc.getElementsByTagName("read_sentence");
         if (rsList != null && rsList.getLength() > 0) {
-            // pick the last read_sentence that contains scoring attributes if possible
             for (int i = rsList.getLength() - 1; i >= 0; i--) {
                 Element cand = (Element) rsList.item(i);
                 if (cand.hasAttribute("total_score") || cand.hasAttribute("phone_score")
@@ -723,7 +690,6 @@ public class IseController {
                 readSentence = (Element) rsList.item(0);
         }
 
-        // find first <word> element (phonemes are usually under <word>)
         Element wordElem = null;
         NodeList wn = doc.getElementsByTagName("word");
         if (wn != null && wn.getLength() > 0)
@@ -737,7 +703,6 @@ public class IseController {
         out.put("completeness", 0);
         out.put("fluency", 0);
 
-        // If we have a read_sentence with the scores, prefer those
         if (readSentence != null) {
             out.put("overall", getAttrDouble(readSentence, "total_score", "overall_score", "score"));
             out.put("pronunciation",
@@ -747,8 +712,6 @@ public class IseController {
             out.put("completeness", getAttrDouble(readSentence, "integrity_score", "completeness", "accuracy_score"));
             out.put("fluency", getAttrDouble(readSentence, "fluency_score"));
         } else if (wordElem != null) {
-            // fallback: some responses may place sentence-level scores on the parent
-            // <sentence>
             Node parent = wordElem.getParentNode();
             if (parent instanceof Element) {
                 Element par = (Element) parent;
@@ -766,12 +729,9 @@ public class IseController {
         if (wordElem != null)
             phones = wordElem.getElementsByTagName("phone");
         if (phones == null || phones.getLength() == 0) {
-            // try any <phone> in document
             phones = doc.getElementsByTagName("phone");
         }
 
-        // try to get a fallback phone_score from parent (some XMLs put a phone_score on
-        // the word/sentence)
         double fallbackPhoneScore = 0.0d;
         if (wordElem != null) {
             fallbackPhoneScore = getAttrDouble(wordElem, "phone_score", "phoneScore", "phone-score");
@@ -783,56 +743,70 @@ public class IseController {
             }
         }
 
-        // accumulators to compute per-word aggregates if engine doesn't give them
         double accPhoneScore = 0.0d;
         double accToneScore = 0.0d;
         int countPhoneScore = 0;
         int countToneScore = 0;
         int totalPhonesSeen = 0;
-        int goodPhonesCount = 0; // dp_message == 0
+        int goodPhonesCount = 0;
+
+        Set<String> seenPhonemes = new HashSet<>();
 
         for (int i = 0; phones != null && i < phones.getLength(); i++) {
-            // ... trong vòng lặp for (int i = 0; phones != null && i < phones.getLength(); i++) {
             Element ph = (Element) phones.item(i);
-            JSONObject p = new JSONObject();
 
-// phoneme text
             String pContent = safeAttr(ph, "content", "p", "phoneme", "phone");
             if ((pContent == null || pContent.isEmpty()) && ph.getTextContent() != null) {
                 pContent = ph.getTextContent().trim();
             }
-            p.put("phoneme", pContent == null ? "" : pContent);
+            if (pContent == null)
+                pContent = "";
 
-// >>> NEW: mono_tone (TONE0–TONE4) <<<
+            // Skip silence phonemes
+            if ("sil".equalsIgnoreCase(pContent) || "silv".equalsIgnoreCase(pContent)) {
+                continue;
+            }
+
+            // Skip duplicates (based on content + position)
+            double start = getAttrDouble(ph, "beg_pos", "begin", "start", "start_pos");
+            String uniqueKey = pContent + "_" + start;
+            if (seenPhonemes.contains(uniqueKey)) {
+                continue;
+            }
+            seenPhonemes.add(uniqueKey);
+
+            JSONObject p = new JSONObject();
+            p.put("phoneme", pContent);
+            // human-friendly display: collapse repeated letters ("iii" -> "i") and trim
+            // leading underscores
+            String display = pContent == null ? "" : pContent.replaceAll("^_+", "").replaceAll("(.)\\1{1,}", "$1");
+            p.put("phoneme_display", display);
+
             String monoTone = safeAttr(ph, "mono_tone", "mono_tone_msg", "mono-tone");
             p.put("mono_tone", monoTone == null ? "" : monoTone);
 
-// điểm phát âm
-            double phScore = getAttrDouble(ph, "phone_score", "phoneme_score", "pronunciation", "pronunciation_score", "score");
+            double phScore = getAttrDouble(ph, "phone_score", "phoneme_score", "pronunciation", "pronunciation_score",
+                    "score");
             if (phScore == 0.0d) {
                 phScore = computePhoneScoreForPhone(ph, fallbackPhoneScore);
             }
             p.put("score", phScore);
 
-// các trường khác giữ nguyên
             String perr = safeAttr(ph, "perr_msg", "perr", "perrmsg");
             String dpmsg = safeAttr(ph, "dp_message", "dpmsg", "dp-message");
             p.put("perr_msg", perr == null ? "" : perr);
             p.put("dp_message", dpmsg == null ? "" : dpmsg);
 
-            double start = getAttrDouble(ph, "beg_pos", "begin", "start", "start_pos");
             double end = getAttrDouble(ph, "end_pos", "end", "time_len");
             p.put("start", start);
             p.put("end", end);
 
-// tone_score như cũ
             double toneScore = getAttrDouble(ph, "tone_score", "tone");
             if (toneScore == 0.0d) {
-                toneScore = computeToneScoreForPhone(ph, wordElem);
+                toneScore = computeToneScoreForPhone(ph, wordElem, monoTone);
             }
             p.put("tone_score", toneScore);
 
-// is_yun, perr_level_msg như cũ
             String perrLevel = safeAttr(ph, "perr_level_msg", "perr_level", "perr_level_msg");
             String isYun = safeAttr(ph, "is_yun", "isyun", "is_yun");
             p.put("perr_level_msg", perrLevel == null ? "" : perrLevel);
@@ -840,15 +814,13 @@ public class IseController {
 
             phonemeArr.add(p);
 
-            // accumulate for aggregate (ignore pure silence tokens)
             totalPhonesSeen++;
             int dp = 0;
             try {
                 dp = Integer.parseInt(dpmsg == null || dpmsg.isEmpty() ? "0" : dpmsg);
             } catch (Exception ignored) {
             }
-            if (dp == 0 && !"sil".equalsIgnoreCase(pContent) && !"silv".equalsIgnoreCase(pContent)) {
-                // consider this as a valid phone for scoring
+            if (dp == 0) {
                 if (phScore > 0.0d) {
                     accPhoneScore += phScore;
                     countPhoneScore++;
@@ -863,8 +835,6 @@ public class IseController {
 
         out.put("phonemes", phonemeArr);
 
-        // If server did not provide word-level scores (still 0.0), compute reasonable
-        // fallbacks
         double overall = out.getDoubleValue("overall");
         double pron = out.getDoubleValue("pronunciation");
         double tone = out.getDoubleValue("tone");
@@ -872,7 +842,6 @@ public class IseController {
 
         if ((overall == 0.0d || pron == 0.0d) && countPhoneScore > 0) {
             double avgPhone = accPhoneScore / countPhoneScore;
-            // overall/pronunciation -> average phone score (cap 100)
             overall = Math.min(100.0, Math.max(0.0, avgPhone));
             pron = overall;
         } else if ((overall == 0.0d || pron == 0.0d) && fallbackPhoneScore > 0.0d) {
@@ -884,8 +853,6 @@ public class IseController {
             tone = Math.min(100.0, accToneScore / countToneScore);
         }
 
-        // estimate fluency if engine didn't return one: ratio of good phonemes / total
-        // phonemes * 100
         if (fluency == 0.0d) {
             if (totalPhonesSeen > 0) {
                 fluency = ((double) goodPhonesCount / (double) totalPhonesSeen) * 100.0;
@@ -897,24 +864,20 @@ public class IseController {
         out.put("overall", overall);
         out.put("pronunciation", pron);
         out.put("tone", tone);
-        // duration/completeness might already be set earlier; if not estimate from
-        // phonemes
+
         if (out.getDoubleValue("duration") == 0.0d) {
-            // approximate: sum of phone durations if available
             double durMs = 0.0d;
             for (int i = 0; i < phonemeArr.size(); i++) {
                 JSONObject p = phonemeArr.getJSONObject(i);
                 double s = p.getDoubleValue("start");
                 double e = p.getDoubleValue("end");
                 if (e > s)
-                    durMs += (e - s); // note: engine uses frames(10ms) sometimes; leave as-is
+                    durMs += (e - s);
             }
             out.put("duration", durMs);
         }
 
         if (out.getDoubleValue("completeness") == 0.0d) {
-            // try to derive from read_sentence if exist, otherwise use percent of good
-            // phonemes
             double comp = 0.0d;
             if (readSentence != null)
                 comp = getAttrDouble(readSentence, "integrity_score", "completeness", "accuracy_score");
@@ -928,14 +891,11 @@ public class IseController {
         return out;
     }
 
-    private double computeToneScoreForPhone(Element ph, Element wordElem) {
-        // prefer numeric tone_score if provided
+    private double computeToneScoreForPhone(Element ph, Element wordElem, String monoTone) {
         double explicitTone = getAttrDouble(ph, "tone_score", "tone", "mono_tone_score");
         if (explicitTone > 0.0d)
             return explicitTone;
 
-        // if mono_tone present (e.g. "TONE1"), try to derive a score
-        String monoTone = safeAttr(ph, "mono_tone", "mono_tone_msg", "mono-tone");
         if (monoTone != null && !monoTone.isEmpty()) {
             double monoScore = monoToneToScore(monoTone, ph, wordElem);
             if (monoScore > 0.0d)
@@ -1014,14 +974,10 @@ public class IseController {
         return 0.0d;
     }
 
-    /**
-     * Convert mono_tone string (e.g. "TONE1", "TONE3", "TONE0") into a heuristic
-     * numeric tone score.
-     */
     private double monoToneToScore(String monoTone, Element ph, Element wordElem) {
         if (monoTone == null || monoTone.isEmpty())
             return 0.0d;
-        // dp_message non-zero => mismatch -> 0
+
         String dpmsg = safeAttr(ph, "dp_message", "dpmsg", "dp-message");
         int dp = 0;
         try {
@@ -1038,21 +994,16 @@ public class IseController {
         } catch (Exception ignored) {
         }
 
-        // If perr indicates perfect, give full score
         if (perrInt == 0)
             return 100.0d;
         if (perrInt > 0)
-            return 50.0d; // conservative mid score for errors
+            return 50.0d;
 
-        // try to map TONE strings to high score (we don't have target tone here so be
-        // optimistic)
         String t = monoTone.toUpperCase();
         if (t.startsWith("TONE")) {
-            // treat presence of mono_tone as indication engine recognized tone => high
             return 100.0d;
         }
 
-        // fallback to word-level tone_score if present
         if (wordElem != null) {
             double wfb = getAttrDouble(wordElem, "tone_score", "phone_score", "phoneScore");
             if (wfb > 0.0d)
@@ -1076,12 +1027,9 @@ public class IseController {
     private String normalizeText(String text) {
         if (text == null)
             return "";
-        // keep BOM if user already included \uFEFF; trim trailing spaces
         return text.replace("\uFEFF", "").trim().replace("!", "！").replace("?", "？").replace(",", "，")
                 .replace(".", "。").replace(";", "；").replace(":", "：").trim();
     }
-
-    // -------------------- Conversion helpers (unchanged) --------------------
 
     private File convertToWavWithFfmpeg(File inputFile) throws IOException, InterruptedException {
         String ffmpegPath = System.getenv().getOrDefault("FFMPEG_PATH", "ffmpeg");
@@ -1182,18 +1130,7 @@ public class IseController {
         return null;
     }
 
-    /**
-     * Heuristic to compute a phone score when the engine doesn't supply
-     * phone_score.
-     * - If dp_message != 0 => treat as mismatch => score = 0
-     * - If perr_msg present (0=good,1=minor,2=bad,3=none) map to base scores
-     * - perr_level_msg reduces score a bit
-     * - is_yun may slightly alter base mapping for vowels
-     * - fallbackPhoneScore used if available
-     */
     private double computePhoneScoreForPhone(Element ph, double fallbackPhoneScore) {
-        // dp_message check (diagnostic: non-zero usually indicates
-        // deletion/insert/substitution)
         String dpmsg = safeAttr(ph, "dp_message", "dp_message", "dpmsg", "dp-message");
         int dp = 0;
         try {
@@ -1203,7 +1140,6 @@ public class IseController {
         if (dp != 0)
             return 0.0d;
 
-        // perr_msg is often a small integer code indicating phone-level error
         String perr = safeAttr(ph, "perr_msg", "perr", "perrmsg");
         int perrInt = -1;
         try {
@@ -1227,49 +1163,39 @@ public class IseController {
 
         if (perrInt >= 0) {
             double base;
-            // map perr code -> base score (tune these numbers if you want different
-            // sensitivity)
             switch (perrInt) {
                 case 0:
                     base = 100.0;
-                    break; // perfect
+                    break;
                 case 1:
                     base = 60.0;
-                    break; // minor problem
+                    break;
                 case 2:
                     base = 20.0;
-                    break; // big problem
+                    break;
                 case 3:
                     base = 0.0;
-                    break; // absent / severe
+                    break;
                 default:
                     base = 50.0;
                     break;
             }
-            // vowel (is_yun==1) may be slightly more forgiving
             if (isYunInt == 1)
                 base = Math.min(100.0, base + 0.0);
 
-            // perr level reduces score progressively (1 -> small reduction, etc.)
             double factor = 1.0;
             if (perrLevelInt >= 1)
-                factor = 1.0 - (perrLevelInt - 1) * 0.12; // tune factor as needed
+                factor = 1.0 - (perrLevelInt - 1) * 0.12;
             double toneAdjusted = Math.max(0.0, Math.min(100.0, base * factor));
             return toneAdjusted;
         }
 
-        // fallback: if parent/word provided a phone_score, use it
         if (fallbackPhoneScore > 0.0d)
             return fallbackPhoneScore;
 
-        // as last resort, return 0 (unknown)
         return 0.0d;
     }
 
-    /**
-     * Build a per-word score JSONObject from a <word> Element using
-     * phoneme/syllable heuristics.
-     */
     private JSONObject extractWordScoresFromElement(Element wordElem) {
         JSONObject out = new JSONObject();
         out.put("overall", 0);
@@ -1282,10 +1208,8 @@ public class IseController {
         if (wordElem == null)
             return out;
 
-        // gather phones under this word
         NodeList phones = wordElem.getElementsByTagName("phone");
 
-        // fallback phone score from word attributes if present
         double fallbackPhoneScore = getAttrDouble(wordElem, "phone_score", "phoneScore", "phone-score");
 
         double accPhoneScore = 0.0d;
@@ -1297,21 +1221,38 @@ public class IseController {
 
         com.alibaba.fastjson.JSONArray phonemeArr = new com.alibaba.fastjson.JSONArray();
 
+        Set<String> seenPhonemes = new HashSet<>();
+
         for (int i = 0; phones != null && i < phones.getLength(); i++) {
-            // ... trong vòng lặp for (int i = 0; phones != null && i < phones.getLength(); i++) {
             Element ph = (Element) phones.item(i);
-            JSONObject p = new JSONObject();
 
             String pContent = safeAttr(ph, "content", "p", "phoneme", "phone");
             if ((pContent == null || pContent.isEmpty()) && ph.getTextContent() != null)
                 pContent = ph.getTextContent().trim();
-            p.put("phoneme", pContent == null ? "" : pContent);
+            if (pContent == null)
+                pContent = "";
 
-// >>> NEW: mono_tone (TONE0–TONE4) <<<
+            if ("sil".equalsIgnoreCase(pContent) || "silv".equalsIgnoreCase(pContent)) {
+                continue;
+            }
+
+            double start = getAttrDouble(ph, "beg_pos", "begin", "start", "start_pos");
+            String uniqueKey = pContent + "_" + start;
+            if (seenPhonemes.contains(uniqueKey)) {
+                continue;
+            }
+            seenPhonemes.add(uniqueKey);
+
+            JSONObject p = new JSONObject();
+            p.put("phoneme", pContent);
+            String display = pContent == null ? "" : pContent.replaceAll("^_+", "").replaceAll("(.)\\1{1,}", "$1");
+            p.put("phoneme_display", display);
+
             String monoTone = safeAttr(ph, "mono_tone", "mono_tone_msg", "mono-tone");
             p.put("mono_tone", monoTone == null ? "" : monoTone);
 
-            double phScore = getAttrDouble(ph, "phone_score", "phoneme_score", "pronunciation", "pronunciation_score", "score");
+            double phScore = getAttrDouble(ph, "phone_score", "phoneme_score", "pronunciation", "pronunciation_score",
+                    "score");
             if (phScore == 0.0d)
                 phScore = computePhoneScoreForPhone(ph, fallbackPhoneScore);
             p.put("score", phScore);
@@ -1321,14 +1262,13 @@ public class IseController {
             p.put("perr_msg", perr == null ? "" : perr);
             p.put("dp_message", dpmsg == null ? "" : dpmsg);
 
-            double start = getAttrDouble(ph, "beg_pos", "begin", "start", "start_pos");
             double end = getAttrDouble(ph, "end_pos", "end", "time_len");
             p.put("start", start);
             p.put("end", end);
 
             double toneScore = getAttrDouble(ph, "tone_score", "tone", "mono_tone_score", "mono_tone");
             if (toneScore == 0.0d)
-                toneScore = computeToneScoreForPhone(ph, wordElem);
+                toneScore = computeToneScoreForPhone(ph, wordElem, monoTone);
             p.put("tone_score", toneScore);
 
             String perrLevel = safeAttr(ph, "perr_level_msg", "perr_level", "perr_level_msg");
@@ -1344,7 +1284,7 @@ public class IseController {
                 dp = Integer.parseInt(dpmsg == null || dpmsg.isEmpty() ? "0" : dpmsg);
             } catch (Exception ignored) {
             }
-            if (dp == 0 && !"sil".equalsIgnoreCase(pContent) && !"silv".equalsIgnoreCase(pContent)) {
+            if (dp == 0) {
                 if (phScore > 0.0d) {
                     accPhoneScore += phScore;
                     countPhoneScore++;
@@ -1393,7 +1333,6 @@ public class IseController {
         out.put("tone", tone);
         out.put("duration", durMs);
 
-        // completeness: if any syll has dp_message != 0 treat as partial; otherwise 100
         NodeList sylls = wordElem.getElementsByTagName("syll");
         boolean anyBadSyll = false;
         for (int i = 0; i < sylls.getLength(); i++) {
@@ -1415,5 +1354,4 @@ public class IseController {
         out.put("fluency", fluency);
         return out;
     }
-
 }
