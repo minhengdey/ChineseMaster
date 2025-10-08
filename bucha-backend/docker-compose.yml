@@ -1,35 +1,48 @@
-version: '3.8'
+
+# DB_URL=jdbc:mysql://localhost:3306/buchadb
+# DB_NAME=buchadb
+# DB_USERNAME=root
+# DB_PASSWORD=rootroot
+# ROOT_PASSWORD=root
+# JWT_SECRET=7c67d4f9d31472a82f657400e47a0f06f1f9f288d4f09e7899723d0396addaf3
+# APP_ID=ga77b6e9
+# API_KEY=4ff58af50b3e00935b81a464a6375fbd
+# API_SECRET=a947d8a9b2c2f70a3b6267ea3ae3e0d1
+# CLOUD_NAME=dtshwjjbc
+# CLOUD_API_KEY=718686557461874
+# CLOUD_API_SECRET=vjpX6USleb5JHdhCXbHlejXKrgM
 services:
-  mysql:
+  bucha-be:
+    env_file: .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bucha-be
+    environment:
+      - DB_URL=jdbc:mysql://bucha-db:3306/buchadb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - DB_USERNAME=bucha
+      - DB_PASSWORD=buchapass
+    ports:
+      - "8080:8080"
+    depends_on:
+      bucha-db:
+        condition: service_healthy
+  bucha-db:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: rootpwd
-      MYSQL_DATABASE: bucha
-      MYSQL_USER: buchadb
-      MYSQL_PASSWORD: buchapwd
+      - MYSQL_ROOT_PASSWORD=rootroot
+      - MYSQL_DATABASE=buchadb
+      - MYSQL_USER=bucha
+      - MYSQL_PASSWORD=buchapass
     ports:
       - "3306:3306"
+    container_name: bucha-db
     volumes:
-      - mysql-data:/var/lib/mysql
+      - bucha-db-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  backend:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - JWT_SECRET=ReplaceWithStrongSecret
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/bucha?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=buchadb
-      - SPRING_DATASOURCE_PASSWORD=buchapwd
-    depends_on:
-      mysql:
-        condition: service_healthy
-
 volumes:
-  mysql-data:
+  bucha-db-data:
