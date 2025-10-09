@@ -2,8 +2,6 @@
 FROM node:18-alpine AS frontend-build
 WORKDIR /app
 
-ARG VITE_API_BASE_URL
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 # Copy package.json và package-lock.json rồi cài dependencies
 COPY package*.json ./
 RUN npm install
