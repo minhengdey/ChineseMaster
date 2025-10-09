@@ -24,7 +24,7 @@ app:
       allowed-origins: ${ALLOW_ORIGINS}
    data:
       initializer:
-         enabled: true
+         enabled: {{DATA_INITIALIZER_ENABLED}}
          source: CLOUDINARY
 logging:
    level:
