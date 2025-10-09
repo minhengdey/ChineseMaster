@@ -10,6 +10,7 @@ const SpeakingPracticePage = () => {
     const [recording, setRecording] = useState(false);
     const [audioBlob, setAudioBlob] = useState(null);
     const [result, setResult] = useState(null);
+    const [selectedWord, setSelectedWord] = useState(null);
     const mediaRecorderRef = useRef(null);
     const chunksRef = useRef([]);
 
@@ -138,7 +139,20 @@ const SpeakingPracticePage = () => {
             const file = new File([audioBlob], 'recording.webm', { type: audioBlob.type });
 
             const resp = await iseAPI.scoreSentence({ text: sentence, audioFile: file, sub: 'ise', ent: 'cn_vip' });
-            setResult(resp);
+            // Normalize response: move metrics from resp.sentence to top-level for easier UI use
+            const sent = resp?.sentence || {};
+            const normalized = {
+                total_score: sent?.total_score ?? resp?.total_score ?? null,
+                fluency: sent?.fluency ?? resp?.fluency ?? null,
+                completeness: sent?.completeness ?? resp?.completeness ?? null,
+                wrong_words: sent?.wrong_words ?? resp?.wrong_words ?? [],
+                sid: sent?.sid ?? resp?.sid ?? null,
+                status: sent?.status ?? resp?.status ?? null,
+                raw_xml: sent?.raw_xml ?? resp?.raw_xml ?? null,
+                words: resp?.words ?? sent?.words ?? resp?.words ?? [],
+            };
+            setSelectedWord(null);
+            setResult(normalized);
         } catch (err) {
             console.error('submitScore error', err);
             // Try to extract server-provided error message
@@ -260,8 +274,86 @@ const SpeakingPracticePage = () => {
 
                             <div className="mb-4">
                                 <div className="text-sm text-gray-600 mb-1">Câu gốc</div>
-                                <div className="text-lg">{highlightSentence(sentence, result?.wrong_words)}</div>
+                                <div className="text-lg leading-relaxed">{sentence ? (
+                                    // Render sentence as clickable characters/words
+                                    Array.from(sentence).map((ch, i) => {
+                                        const isWrong = result?.wrong_words?.includes(ch);
+                                        const wordData = result?.words?.find(w => w.word === ch);
+                                        return (
+                                            <button
+                                                key={`${ch}-${i}`}
+                                                onClick={() => setSelectedWord(wordData || { word: ch })}
+                                                className={`inline-block mx-0.5 px-1 rounded ${isWrong ? 'text-red-600 bg-red-100' : ''} ${wordData ? 'hover:bg-base-200' : 'opacity-60'}`}
+                                                title={wordData ? `Chi tiết từ: ${ch}` : ch}
+                                            >
+                                                {ch}
+                                            </button>
+                                        );
+                                    })
+                                ) : (
+                                    <span className="text-base-content/70">(không có câu)</span>
+                                )}</div>
                             </div>
+
+                            {/* Selected word details */}
+                            {selectedWord && (
+                                <div className="card mt-4 p-4 bg-base-100">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <div className="text-lg font-semibold">Chi tiết: {selectedWord.word}</div>
+                                            <div className="text-sm text-base-content/70">Duration: {selectedWord.duration ?? selectedWord.time_len ?? '-'} ms</div>
+                                        </div>
+                                        <div>
+                                            <button className="btn btn-xs btn-ghost" onClick={() => setSelectedWord(null)}>Đóng</button>
+                                        </div>
+                                    </div>
+
+                                    {selectedWord.overall != null && (
+                                        <div className="mb-2">
+                                            <div className="text-sm text-gray-600 mb-1">Điểm từ</div>
+                                            <div className="flex items-center gap-2">
+                                                <Stars percent={toPercent(selectedWord.overall, 'total')} />
+                                                <div className="text-sm font-medium text-yellow-700">{toPercent(selectedWord.overall, 'total')}%</div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedWord.phonemes && (
+                                        <div>
+                                            <div className="text-sm text-gray-600 mb-2">Phonemes</div>
+                                            <div className="overflow-x-auto">
+                                                <table className="table w-full">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Phoneme</th>
+                                                            <th>Score</th>
+                                                            <th>Tone</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {selectedWord.phonemes.map((p, idx) => (
+                                                            <tr key={idx}>
+                                                                <td>{
+                                                                    // Prefer phoneme_display provided by backend; fall back to raw phoneme.
+                                                                    (typeof p.phoneme_display === 'string' && p.phoneme_display)
+                                                                    || (Array.isArray(p.phoneme_display) ? p.phoneme_display.join(' ') : p.phoneme)
+                                                                }</td>
+                                                                <td>{p.score != null ? Math.round(p.score) : '-'}</td>
+                                                                <td>{
+                                                                    // format mono_tone like 'TONE3' -> '3'
+                                                                    (p.mono_tone && typeof p.mono_tone === 'string') ? (
+                                                                        (p.mono_tone.match(/\d+/) || [])[0] || p.mono_tone
+                                                                    ) : (p.mono_tone || '-')
+                                                                }</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-center">
                                 <div className="text-center">
@@ -282,7 +374,7 @@ const SpeakingPracticePage = () => {
                                     <div className="text-sm font-medium text-yellow-700">{toPercent(result?.completeness, 'completeness')}%</div>
                                 </div>
                             </div>
-
+                            {/* 
                             {result?.wrong_words && result.wrong_words.length > 0 && (
                                 <div className="mt-2">
                                     <div className="text-sm text-gray-600 mb-1">Từ sai</div>
@@ -292,7 +384,7 @@ const SpeakingPracticePage = () => {
                                         ))}
                                     </div>
                                 </div>
-                            )}
+                            )} */}
                         </div>
                     )}
                 </div>
