@@ -12,6 +12,7 @@ RUN ./mvnw clean package -DskipTests
 # run stage
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
+RUN apk add --no-cache ffmpeg
 COPY --from=backend-build /app/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
