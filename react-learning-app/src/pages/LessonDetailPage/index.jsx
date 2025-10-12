@@ -18,7 +18,20 @@ const LessonDetailPage = () => {
   const fetchLesson = async () => {
     try {
       const data = await contentAPI.getLessonDetail(lessonId);
-      setLesson(data);
+
+      // Normalize vocab example structure from API (example may be an object or null)
+      const normalized = {
+        ...data,
+        vocabularies: (data.vocabularies || []).map((v) => ({
+          ...v,
+          exampleText: v.example ? v.example.zh || null : null,
+          examplePinyin: v.example ? v.example.pinyin || null : null,
+          exampleVn: v.example ? v.example.vn || null : null,
+          exampleAudioUrl: v.example ? v.example.audioUrl || null : null,
+        })),
+      };
+
+      setLesson(normalized);
     } catch (error) {
       console.error('Error fetching lesson:', handleApiError(error));
     } finally {

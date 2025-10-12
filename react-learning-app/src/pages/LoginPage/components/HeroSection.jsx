@@ -19,10 +19,6 @@ const HeroSection = () => {
           <span>Phát âm chuẩn với giọng bản ngữ</span>
         </div>
         <div className="flex items-center">
-          <span className="text-2xl mr-3">💳</span>
-          <span>Flashcard thông minh với thuật toán SRS</span>
-        </div>
-        <div className="flex items-center">
           <span className="text-2xl mr-3">🎯</span>
           <span>Luyện tập theo từng kỹ năng</span>
         </div>
