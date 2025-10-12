@@ -1,6 +1,8 @@
 package com.bucha.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +10,8 @@ import lombok.Setter;
 @Getter
 @Entity
 @Table(name = "conversation_lines")
+@Builder
+@AllArgsConstructor
 public class ConversationLine {
    @Id
    @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,17 +29,15 @@ public class ConversationLine {
    @Column(name = "vn_translation", nullable = false, length = 1000)
    private String vnTranslation; // Vietnamese translation
 
+   @Column()
+   private String audioPublicId;
+
    @ManyToOne(fetch = FetchType.LAZY)
    @JoinColumn(name = "conversation_id")
    private Conversation conversation;
 
    @Column(name = "line_order")
    private Integer order; // Thứ tự câu trong đoạn hội thoại
-
-   // Audio cho mỗi câu hội thoại
-   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-   @JoinColumn(name = "audio_asset_id")
-   private AudioAsset audioAsset;
 
    // Constructors
    public ConversationLine() {

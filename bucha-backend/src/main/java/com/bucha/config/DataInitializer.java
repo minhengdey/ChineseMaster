@@ -2,18 +2,21 @@ package com.bucha.config;
 
 import com.bucha.entity.Curriculum;
 import com.bucha.service.LessonMigrationService;
+import com.bucha.service.CloudinaryService;
+import com.bucha.dto.CurriculumMetadataDto;
+import com.bucha.dto.migration.LessonMigrationDTO;
+
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.stream.Stream;
+// Local filesystem imports removed (Cloudinary-only mode)
 
 @Component
 @RequiredArgsConstructor
@@ -22,12 +25,19 @@ public class DataInitializer implements CommandLineRunner {
    private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
 
    private final LessonMigrationService lessonMigrationService;
+   private final CloudinaryService cloudinaryService;
 
    @Value("${app.data.initializer.enabled:false}")
    private boolean enabled;
 
-   @Value("${app.data.initializer.base-path:uploads}")
-   private String basePath;
+   @Value("${app.data.initializer.source:CLOUDINARY}")
+   private String source;
+
+   @Value("${app.data.initializer.curricula:1}")
+   private String curriculaCsv; // comma separated slugs
+
+   @Value("${app.data.initializer.curriculum-base-path:chinese-master/curriculumn}")
+   private String curriculumBasePath;
 
    @Override
    public void run(String... args) {
@@ -38,44 +48,58 @@ public class DataInitializer implements CommandLineRunner {
          return;
       }
 
-      Path rootPath = Paths.get(basePath);
-      if (!Files.exists(rootPath) || !Files.isDirectory(rootPath)) {
-         logger.warn("Base path for data initialization does not exist or is not a directory: {}. Skipping.", basePath);
-         return;
-      }
-
-      logger.info("Starting automatic data migration for all curricula in base path: '{}'", basePath);
-
-      try (Stream<Path> curriculumPaths = Files.list(rootPath)) {
-         curriculumPaths
-               .filter(Files::isDirectory)
-               .forEach(this::migrateCurriculum);
-      } catch (IOException e) {
-         logger.error("Failed to list curricula directories in base path: {}", basePath, e);
-      }
+      migrateFromCloudinary();
 
       logger.info("Automatic data migration process finished.");
    }
 
-   private void migrateCurriculum(Path curriculumPath) {
-      try {
-         logger.info("Processing curriculum from path: '{}'", curriculumPath);
+   private void migrateFromCloudinary() {
+      logger.info("Starting Cloudinary-based migration...");
+      if (curriculaCsv == null || curriculaCsv.isBlank()) {
+         logger.warn("No curricula provided for Cloudinary migration (app.data.initializer.curricula). Skipping.");
+         return;
+      }
 
-         // Đọc metadata và tạo/cập nhật curriculum
-         Curriculum curriculum = lessonMigrationService.getOrCreateCurriculumFromMetadata(curriculumPath);
+      String[] slugs = curriculaCsv.split(",");
+      for (String raw : slugs) {
+         String slug = raw.trim();
+         if (slug.isEmpty())
+            continue;
 
-         if (curriculum == null) {
-            logger.warn("Skipping curriculum migration for path: '{}' due to missing or invalid metadata",
-                  curriculumPath);
-            return;
+         try {
+            String baseFolder = curriculumBasePath + "/" + slug;
+            CurriculumMetadataDto metadata = cloudinaryService
+                  .fetchCurriculumMetadataDto(baseFolder + "/metadata.json");
+            Curriculum curriculum = lessonMigrationService.getOrCreateCurriculumFromMetadata(metadata);
+            if (curriculum == null) {
+               logger.warn("Skip curriculum '{}' due to invalid metadata", slug);
+               continue;
+            }
+
+            List<String> lessonFiles = metadata != null ? metadata.getLessons() : null;
+            if (lessonFiles == null || lessonFiles.isEmpty()) {
+               logger.warn("No lessonFiles in metadata for curriculumn slug='{}'", slug);
+               continue;
+            }
+
+            for (String lf : lessonFiles) {
+               String file = lf == null ? null : lf.trim();
+               if (file == null || file.isEmpty())
+                  continue;
+               LessonMigrationDTO lesson = cloudinaryService.fetchLessonMigrationDto(baseFolder + "/" + file);
+               if (lesson == null) {
+                  logger.warn("Cannot fetch lesson '{}' for slug='{}'", file, slug);
+                  continue;
+               }
+               String audioRoot = baseFolder + "/audio";
+               lessonMigrationService.migrateLesson(lesson, curriculum, audioRoot);
+            }
+
+            logger.info("Migrated curriculum '{}' from Cloudinary", slug);
+         } catch (Exception ex) {
+            logger.error("Error migrating curriculum '{}' from Cloudinary", slug, ex);
          }
-
-         // Migrate các lesson files trong thư mục này
-         lessonMigrationService.migrateFromJsonFiles(curriculumPath.toString(), curriculum.getName());
-         logger.info("Successfully migrated curriculum: '{}' (order: {})", curriculum.getName(), curriculum.getOrder());
-
-      } catch (Exception e) {
-         logger.error("An error occurred during migration for curriculum path: '{}'", curriculumPath, e);
       }
    }
+
 }

@@ -1,0 +1,102 @@
+{
+  "order": 2,
+  "title": "Bài 2 你是哪国人？",
+  "conversations": [
+    {
+      "section": "你是哪国人？",
+      "vn_translation": "Bạn là người nước nào?",
+      "lines": [
+        {
+          "speaker": "刘老师",
+          "zh": "同学们好！",
+          "pinyin": "Tóngxuémen hǎo!",
+          "vn": "Các bạn học sinh, chào!"
+        },
+        {
+          "speaker": "学生",
+          "zh": "老师好！",
+          "pinyin": "Lǎoshī hǎo!",
+          "vn": "Chào thầy/cô!"
+        },
+        {
+          "speaker": "刘老师",
+          "zh": "我来介绍一下儿。我姓刘，叫刘明，是你们的老师。你叫什么名字？",
+          "pinyin": "Wǒ lái jièshào yíxiàr. Wǒ xìng Liú, jiào Liú Míng, shì nǐmen de lǎoshī. Nǐ jiào shénme míngzi?",
+          "vn": "Tôi xin tự giới thiệu. Tôi họ Lưu, tên Lưu Minh, là giáo viên của các bạn. Bạn tên gì?"
+        },
+        {
+          "speaker": "大卫",
+          "zh": "我叫大卫。",
+          "pinyin": "Wǒ jiào Dàwèi.",
+          "vn": "Tôi tên là David."
+        },
+        {
+          "speaker": "刘老师",
+          "zh": "你是哪国人？",
+          "pinyin": "Nǐ shì nǎ guórén?",
+          "vn": "Bạn là người nước nào?"
+        },
+        {
+          "speaker": "大卫",
+          "zh": "我是美国人。",
+          "pinyin": "Wǒ shì Měiguó rén.",
+          "vn": "Tôi là người Mỹ."
+        }
+      ]
+    },
+    {
+      "section": "自我介绍",
+      "vn_translation": "Tự giới thiệu",
+      "lines": [
+        {
+          "speaker": "大卫",
+          "zh": "我来介绍一下儿。她叫玛丽，他叫李军。我们大家很高兴。",
+          "pinyin": "Wǒ lái jièshào yíxiàr. Tā jiào Mǎlì, tā jiào Lǐ Jūn. Wǒmen dàjiā hěn gāoxìng.",
+          "vn": "Tôi xin tự giới thiệu. Cô ấy tên Mary, anh ấy tên Lý Quân. Chúng tôi đều rất vui."
+        },
+        {
+          "speaker": "玛丽",
+          "zh": "我是美国人，你是美国人吗？",
+          "pinyin": "Wǒ shì Měiguó rén, nǐ shì Měiguó rén ma?",
+          "vn": "Tôi là người Mỹ, bạn cũng là người Mỹ phải không?"
+        },
+        {
+          "speaker": "大卫",
+          "zh": "不是，我不是美国人，我是加拿大人。你呢？",
+          "pinyin": "Bú shì, wǒ bú shì Měiguó rén, wǒ shì Jiānádà rén. Nǐ ne?",
+          "vn": "Không, tôi không phải người Mỹ, tôi là người Canada. Còn bạn?"
+        },
+        {
+          "speaker": "李军",
+          "zh": "我是中国人。",
+          "pinyin": "Wǒ shì Zhōngguó rén.",
+          "vn": "Tôi là người Trung Quốc."
+        }
+      ]
+    }
+  ],
+  "vocabulary": [
+    {"word": "同学", "pinyin": "tóngxué", "type": "danh từ", "meaning": "Bạn cùng học"},
+    {"word": "们", "pinyin": "men", "type": "hậu tố", "meaning": "Hậu tố chỉ người số nhiều"},
+    {"word": "来", "pinyin": "lái", "type": "động từ", "meaning": "Đến, tới"},
+    {"word": "介绍", "pinyin": "jièshào", "type": "động từ", "meaning": "Giới thiệu"},
+    {"word": "一下儿", "pinyin": "yíxiàr", "type": "cụm từ", "meaning": "Một chút"},
+    {"word": "姓", "pinyin": "xìng", "type": "động từ, danh từ", "meaning": "Họ (của tên)"},
+    {"word": "叫", "pinyin": "jiào", "type": "động từ", "meaning": "Trợ từ"},
+    {"word": "哪", "pinyin": "nǎ", "type": "đại từ", "meaning": "Nào"},
+    {"word": "国", "pinyin": "guó", "type": "danh từ", "meaning": "Nước, quốc gia"},
+    {"word": "人", "pinyin": "rén", "type": "danh từ", "meaning": "Người"},
+    {"word": "他", "pinyin": "tā", "type": "đại từ", "meaning": "Anh ấy, ông ấy..."},
+    {"word": "认识", "pinyin": "rènshi", "type": "động từ", "meaning": "Quen biết"},
+    {"word": "很", "pinyin": "hěn", "type": "phó từ", "meaning": "Rất"},
+    {"word": "高兴", "pinyin": "gāoxìng", "type": "tính từ", "meaning": "Vui mừng"},
+    {"word": "也", "pinyin": "yě", "type": "phó từ", "meaning": "Cũng"},
+    {"word": "呢", "pinyin": "ne", "type": "trợ từ", "meaning": "Trợ từ"},
+    {"word": "刘", "pinyin": "Liú", "type": "tên riêng", "meaning": "Lưu (họ người Trung)"},
+    {"word": "刘明", "pinyin": "Liú Míng", "type": "tên riêng", "meaning": "Lưu Minh (tên người)"},
+    {"word": "美国", "pinyin": "Měiguó", "type": "danh từ", "meaning": "Nước Mỹ"},
+    {"word": "玛丽", "pinyin": "Mǎ Lì", "type": "tên riêng", "meaning": "Mary (tên người)"},
+    {"word": "加拿大", "pinyin": "Jiānádà", "type": "danh từ", "meaning": "Canada"},
+    {"word": "中国", "pinyin": "Zhōngguó", "type": "danh từ", "meaning": "Trung Quốc"}
+  ]
+}

@@ -247,15 +247,29 @@ const ProfilePage = ({ user }) => {
                       {saving ? 'Đang lưu...' : 'Lưu'}
                     </button>
                   </div>
-                ) : (
-                  <button className="btn btn-outline" onClick={() => setIsEditing(true)}>
-                    Chỉnh sửa
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+               </aside>
+
+               {/* Right column - details */}
+               <main className="md:w-8/12 p-6">
+                  {isEditing ? (
+                     <div className="space-y-4">
+                        <div>
+                           <label className="text-sm text-base-content/70">
+                              Họ và tên
+                           </label>
+                           <input
+                              type="text"
+                              className="input input-bordered w-full mt-1"
+                              value={profileData.fullName}
+                              onChange={(e) =>
+                                 setProfileData({
+                                    ...profileData,
+                                    fullName: e.target.value,
+                                 })
+                              }
+                              placeholder="Họ và tên"
+                           />
+                        </div>
 
         {/* Stats and Achievements */}
         <div className="lg:col-span-2 space-y-8">
@@ -271,20 +285,47 @@ const ProfilePage = ({ user }) => {
                   <div className="stat-desc text-xs">Đã hoàn thành</div>
                 </div>
 
-                <div className="stat bg-secondary/10 rounded-lg">
-                  <div className="stat-title text-xs">Từ vựng</div>
-                  <div className="stat-value text-secondary text-2xl">{stats.wordsLearned}</div>
-                  <div className="stat-desc text-xs">Đã học</div>
-                </div>
+                        <div className="flex justify-end gap-3">
+                           <button
+                              className="btn btn-ghost"
+                              onClick={() => setIsEditing(false)}
+                           >
+                              Hủy
+                           </button>
+                           <button
+                              className={`btn btn-primary ${
+                                 saving ? "loading" : ""
+                              }`}
+                              onClick={handleSave}
+                              disabled={saving}
+                           >
+                              {saving ? "Đang lưu..." : "Lưu"}
+                           </button>
+                        </div>
+                     </div>
+                  ) : (
+                     <div className="grid grid-cols-1 gap-4">
+                        {profileData.level && (
+                           <div className="flex items-center justify-between px-2 py-3 bg-base-200 rounded">
+                              <span className="text-sm text-base-content/70">
+                                 Cấp độ
+                              </span>
+                              <span className="badge badge-primary">
+                                 {profileData.level}
+                              </span>
+                           </div>
+                        )}
 
-                <div className="stat bg-accent/10 rounded-lg">
-                  <div className="stat-title text-xs">Chuỗi ngày</div>
-                  <div className="stat-value text-accent text-2xl">{stats.studyStreak}</div>
-                  <div className="stat-desc text-xs">Học liên tiếp</div>
-                </div>
-              </div>
-            </div>
-          </div>
+                        {profileData.studyGoal && (
+                           <div className="flex items-center justify-between px-2 py-3 bg-base-200 rounded">
+                              <span className="text-sm text-base-content/70">
+                                 Mục tiêu
+                              </span>
+                              <span className="text-sm">
+                                 {profileData.studyGoal}
+                              </span>
+                           </div>
+                        )}
 
           {/* ISE Pronunciation Stats (Daily / Lessons / Tests) */}
           <div className="card bg-base-100 shadow-xl">
@@ -402,17 +443,13 @@ const ProfilePage = ({ user }) => {
                         {achievement.unlocked && (
                           <div className="badge badge-success badge-sm">Đạt được</div>
                         )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                     </div>
+                  )}
+               </main>
             </div>
-          </div>
-        </div>
+         </div>
       </div>
-    </div>
-  );
+   );
 };
 
 export default ProfilePage;

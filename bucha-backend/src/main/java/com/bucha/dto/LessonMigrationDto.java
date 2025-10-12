@@ -1,48 +1,83 @@
-package com.bucha.dto;
+// package com.bucha.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+// import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.List;
+// import lombok.AllArgsConstructor;
+// import lombok.Builder;
+// import lombok.Data;
 
-@Data
-public class LessonMigrationDto {
+// import java.util.List;
 
-   private Integer order;
-   private String title;
+// @Data
+// @Builder
+// @AllArgsConstructor
+// public class LessonMigrationDto {
 
-   private List<ConversationDto> conversations;
+// private Integer order;
+// private String title;
 
-   private List<VocabularyDto> vocabulary;
+// private List<ConversationDto> conversations;
 
-   @Data
-   public static class ConversationDto {
-      private String section;
+// private List<VocabularyDto> vocabulary;
 
-      @JsonProperty("vn_translation")
-      private String vnTranslation;
+// @Data
+// public static class ConversationDto {
+// private String section;
 
-      private List<LineDto> lines;
+// @JsonProperty("vn_translation")
+// private String vnTranslation;
 
-      @Data
-      public static class LineDto {
-         private String speaker;
+// private List<LineDto> lines;
 
-         @JsonProperty("zh")
-         private String zhText;
+// @Data
+// public static class LineDto {
+// private String speaker;
 
-         private String pinyin;
+// @JsonProperty("zh")
+// private String zhText;
 
-         @JsonProperty("vn")
-         private String vnTranslation;
-      }
-   }
+// private String pinyin;
 
-   @Data
-   public static class VocabularyDto {
-      private String word;
-      private String pinyin;
-      private String type;
-      private String meaning;
-   }
-}
+// @JsonProperty("vn")
+// private String vnTranslation;
+
+// // Optional audio descriptor for this line
+// @JsonProperty("audio")
+// private AudioDto audio;
+// }
+// }
+
+// @Data
+// public static class VocabularyDto {
+// private String word;
+// private String pinyin;
+// private String type;
+// private String meaning;
+
+// // Optional audio descriptor for this vocabulary entry
+// @JsonProperty("audio")
+// private AudioDto audio;
+// }
+
+// @Data
+// public static class AudioDto {
+// // Single enforced flow: use Cloudinary public_id (or alias 'path').
+// // Any 'type' or 'url' fields in existing JSON will be ignored by migration.
+// private String type; // ignored
+// private String url; // ignored
+
+// // Cloudinary identifier; JSON may use either "public_id" or "path"
+// @JsonProperty("public_id")
+// private String publicId;
+
+// @JsonProperty("path")
+// private String path;
+
+// // Optional metadata
+// @JsonProperty("mime_type")
+// private String mimeType;
+
+// // Duration in milliseconds (optional)
+// private Long duration;
+// }
+// }

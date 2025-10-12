@@ -48,6 +48,23 @@ public class JwtUtil {
     }
 
     public Jws<Claims> validateToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+        try {
+            // Cố gắng parse như bình thường
+            return Jwts.parserBuilder()
+                    .setSigningKey(key) // 'key' là SecretKey của bạn
+                    .build()
+                    .parseClaimsJws(token);
+        } catch (ExpiredJwtException ex) {
+            // Nếu token hết hạn, chúng ta sẽ tự tạo lại đối tượng Jws
+            System.out.println("Token expired, but signature is valid. Re-wrapping in a custom Jws object.");
+
+            String[] chunks = token.split("\\.");
+            String signature = (chunks.length == 3) ? chunks[2] : "";
+
+            // Ép kiểu (cast) ex.getHeader() thành JwsHeader
+            // Đây là thay đổi quan trọng
+            return new ExpiredJws((JwsHeader) ex.getHeader(), ex.getClaims(), signature);
+        }
     }
+
 }
