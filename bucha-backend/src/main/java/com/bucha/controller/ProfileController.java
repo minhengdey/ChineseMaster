@@ -4,7 +4,9 @@ import com.bucha.dto.UserProfileDto;
 import com.bucha.security.JwtUserPrincipal;
 import com.bucha.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,6 +27,8 @@ public class ProfileController {
     @PostMapping
     public ResponseEntity<UserProfileDto> updateProfile(@AuthenticationPrincipal JwtUserPrincipal principal,
             @RequestBody UserProfileDto patch) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("auth=" + auth); // hoặc logger
         var u = userService.findById(principal.id()).orElseThrow();
         if (patch.name != null)
             u.setName(patch.name);
@@ -46,4 +50,5 @@ public class ProfileController {
         dto.badges = u.getBadges();
         return dto;
     }
+
 }

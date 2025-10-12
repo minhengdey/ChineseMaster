@@ -38,7 +38,12 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
    }
 );
-
+export const userAPI = {
+   getProfile: async () => {
+      const response = await apiClient.get("/profile");
+      return response.data;
+   },
+};
 // Authentication APIs
 export const authAPI = {
    register: async (userData) => {
@@ -52,30 +57,14 @@ export const authAPI = {
 
    login: async (credentials) => {
       const response = await apiClient.post("/auth/login", {
-         email: credentials.email || credentials.username,
+         email: credentials.email,
          password: credentials.password,
       });
 
       if (response.data.accessToken) {
          localStorage.setItem("accessToken", response.data.accessToken);
-         localStorage.setItem("refreshToken", response.data.refreshToken);
 
-         // Get user profile after login
-         const profileResponse = await apiClient.get("/profile", {
-            headers: {
-               Authorization: `Bearer ${response.data.accessToken}`,
-            },
-         });
-
-         const userData = {
-            id: profileResponse.data.id,
-            username: profileResponse.data.name,
-            email: profileResponse.data.email,
-            ...profileResponse.data,
-         };
-
-         localStorage.setItem("user", JSON.stringify(userData));
-         return { token: response.data.accessToken, user: userData };
+         return { token: response.data.accessToken };
       }
 
       return response.data;
@@ -83,8 +72,15 @@ export const authAPI = {
 
    logout: () => {
       localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
+   },
+
+   verifyToken: async (token) => {
+      // If token is passed explicitly, send it in Authorization header;
+      // otherwise apiClient will add accessToken from localStorage via interceptor
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await apiClient.get("/auth/verify", { headers });
+      return response.data;
    },
 };
 

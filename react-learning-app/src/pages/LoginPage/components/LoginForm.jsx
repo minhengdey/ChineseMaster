@@ -24,8 +24,8 @@ const LoginForm = ({ onLogin }) => {
 
       try {
          const result = await authAPI.login(formData);
-         if (result.user) {
-            onLogin(result.user);
+         if (result.token) {
+            onLogin();
          }
       } catch (error) {
          setError(handleApiError(error));
