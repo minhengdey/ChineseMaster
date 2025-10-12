@@ -1,11 +1,14 @@
 package com.bucha.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Setter
@@ -40,5 +43,9 @@ public class UserEntity {
 
     // getters/setters
     public UserEntity() {}
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<IseScore> iseScores = new ArrayList<>();
 
 }

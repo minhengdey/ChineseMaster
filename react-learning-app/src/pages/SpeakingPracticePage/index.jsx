@@ -1,21 +1,39 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { iseAPI, migrationAPI } from '../../services/api';
+import { useParams, Link, useLocation } from 'react-router-dom';
+import { iseAPI, migrationAPI, contentAPI } from '../../services/api';
+import { iseStatsAPI } from '../../services/api';
+import AudioPlayer from '../LessonDetailPage/components/AudioPlayer';
 
 const SpeakingPracticePage = () => {
     const { curriculumId, lessonId } = useParams();
+    const location = useLocation();
+    const isDailyMode = location.pathname && location.pathname.includes('/speaking/daily');
     const [sentence, setSentence] = useState('');
+    const [queue, setQueue] = useState([]);
+    const [queueIndex, setQueueIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [recording, setRecording] = useState(false);
     const [audioBlob, setAudioBlob] = useState(null);
     const [result, setResult] = useState(null);
+    const [currentScored, setCurrentScored] = useState(false);
+    const [dailyRows, setDailyRows] = useState([]);
+    const [lessonRows, setLessonRows] = useState([]);
+    const [testRows, setTestRows] = useState([]);
     const [selectedWord, setSelectedWord] = useState(null);
     const mediaRecorderRef = useRef(null);
     const chunksRef = useRef([]);
+    const startTimeRef = useRef(null);
 
     useEffect(() => {
-        fetchRandomSentence();
+        // For lesson practice, preload and shuffle the lesson lines; for daily mode, pick random single lines
+        if (lessonId && !isDailyMode) {
+            preloadLessonLines(lessonId);
+        } else {
+            fetchRandomSentence();
+        }
+        // fetch stats for display
+        fetchIseStats();
         // cleanup
         return () => {
             // stop any active recorder and tracks
@@ -34,9 +52,113 @@ const SpeakingPracticePage = () => {
             setAudioBlob(null);
             setRecording(false);
             setResult(null);
+            // reset queue and scoring state so returning to this page reloads cleanly
+            setQueue([]);
+            setQueueIndex(0);
+            setCurrentScored(false);
             setError(null);
         };
-    }, [lessonId]);
+    }, [lessonId, isDailyMode]);
+
+    // small array shuffle helper (immutable)
+    const shuffleArray = (arr) => {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    };
+
+    const preloadLessonLines = async (lessonIdParam) => {
+        setLoading(true);
+        setError(null);
+        try {
+            // Prefer fetching lesson detail to retain audio assets if available
+            try {
+                const lesson = await contentAPI.getLessonDetail(lessonIdParam);
+                const convs = lesson.conversations || [];
+                // flatten conversation lines into objects { text, audioAsset }
+                const items = [];
+                convs.forEach(conv => {
+                    (conv.lines || []).forEach(line => {
+                        items.push({
+                            id: line.id,
+                            text: line.zhText,
+                            pinyin: line.pinyin,
+                            speaker: line.speaker,
+                            audioAsset: line.audioAsset || null,
+                        });
+                    });
+                });
+
+                if (items.length === 0) throw new Error('no lines');
+
+                const shuffled = shuffleArray(items);
+                setQueue(shuffled);
+                setQueueIndex(0);
+                setSentence(shuffled[0]?.text || '');
+                setCurrentScored(false);
+                setAudioBlob(null);
+                setResult(null);
+                return;
+            } catch (e) {
+                // fallback to migration endpoint which returns plain strings
+                const data = await migrationAPI.getConversationLinesByLesson(lessonIdParam);
+                let lines = [];
+                if (Array.isArray(data)) lines = data;
+                else if (Array.isArray(data?.data)) lines = data.data;
+                else if (Array.isArray(data?.items)) lines = data.items;
+
+                if (!lines || lines.length === 0) {
+                    setError('Không tìm thấy câu hội thoại cho bài này');
+                    setQueue([]);
+                    setSentence('');
+                    return;
+                }
+
+                // Normalize to objects { text }
+                const normalized = lines.map(item => ({ text: item?.line || item?.text || item?.content || item?.conversationLine || (typeof item === 'string' ? item : null) })).filter(i => i.text);
+                const shuffled = shuffleArray(normalized);
+                setQueue(shuffled);
+                setQueueIndex(0);
+                setSentence(shuffled[0]?.text || '');
+                setCurrentScored(false);
+                setAudioBlob(null);
+                setResult(null);
+                return;
+            }
+        } catch (err) {
+            console.error(err);
+            setError('Không thể lấy câu từ server');
+            setQueue([]);
+            setSentence('');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchIseStats = async () => {
+        try {
+            const daily = await iseStatsAPI.getDaily();
+            setDailyRows(Array.isArray(daily?.rows) ? daily.rows : []);
+        } catch (e) {
+            // ignore stats errors silently
+            console.debug('daily stats error', e);
+        }
+        try {
+            const lessons = await iseStatsAPI.getLessons();
+            setLessonRows(Array.isArray(lessons?.rows) ? lessons.rows : []);
+        } catch (e) {
+            console.debug('lesson stats error', e);
+        }
+        try {
+            const tests = await iseStatsAPI.getTests();
+            setTestRows(Array.isArray(tests?.rows) ? tests.rows : []);
+        } catch (e) {
+            console.debug('test stats error', e);
+        }
+    };
 
     const fetchRandomSentence = async () => {
         // clear any previous data (audio/result/error) before fetching a new sentence
@@ -54,8 +176,8 @@ const SpeakingPracticePage = () => {
         setError(null);
         setLoading(true);
         try {
-            // Call migration endpoint to get all conversation lines for a lesson
-            const data = await migrationAPI.getConversationLinesByLesson(lessonId);
+            // Call migration endpoint. If daily mode or no lessonId, get all lines across lessons
+            const data = lessonId ? await migrationAPI.getConversationLinesByLesson(lessonId) : await migrationAPI.getConversationLinesByLesson();
 
             // data could be an array or an object containing array
             let lines = [];
@@ -69,19 +191,56 @@ const SpeakingPracticePage = () => {
                 return;
             }
 
-            // Choose a random item
+            // Choose a random item for ad-hoc/daily mode
             const item = lines[Math.floor(Math.random() * lines.length)];
-
-            // Items may have different shapes — try common property names
             const text = item?.line || item?.text || item?.content || item?.conversationLine || (typeof item === 'string' ? item : null) || '';
-
             setSentence(text || '');
+            setCurrentScored(false);
+            setAudioBlob(null);
+            setResult(null);
         } catch (err) {
             console.error(err);
             setError('Không thể lấy câu từ server');
         } finally {
             setLoading(false);
         }
+    };
+
+    const playNextInQueue = () => {
+        if (!currentScored) return; // require scoring before advancing
+        setQueueIndex(i => {
+            const next = Math.min(i + 1, queue.length - 1);
+            setSentence((queue[next] && queue[next].text) || '');
+            setCurrentScored(false);
+            setAudioBlob(null);
+            setResult(null);
+            return next;
+        });
+    };
+
+    const playPrevInQueue = () => {
+        if (!currentScored) return; // require scoring before moving
+        setQueueIndex(i => {
+            const prev = Math.max(i - 1, 0);
+            setSentence((queue[prev] && queue[prev].text) || '');
+            setCurrentScored(false);
+            setAudioBlob(null);
+            setResult(null);
+            return prev;
+        });
+    };
+
+    const shuffleQueue = () => {
+        if (!currentScored) return; // require scoring before reshuffle
+        setQueue(prev => {
+            const shuffled = shuffleArray(prev || []);
+            setQueueIndex(0);
+            setSentence((shuffled[0] && shuffled[0].text) || '');
+            setCurrentScored(false);
+            setAudioBlob(null);
+            setResult(null);
+            return shuffled;
+        });
     };
 
     const startRecording = async () => {
@@ -98,6 +257,7 @@ const SpeakingPracticePage = () => {
             const mediaRecorder = new MediaRecorder(stream, options);
             mediaRecorderRef.current = mediaRecorder;
             chunksRef.current = [];
+            startTimeRef.current = Date.now();
 
             mediaRecorder.addEventListener('dataavailable', (e) => {
                 if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
@@ -138,7 +298,22 @@ const SpeakingPracticePage = () => {
             // Convert blob to File with .wav name — backend may accept other formats
             const file = new File([audioBlob], 'recording.webm', { type: audioBlob.type });
 
-            const resp = await iseAPI.scoreSentence({ text: sentence, audioFile: file, sub: 'ise', ent: 'cn_vip' });
+            const sessionDate = new Date().toISOString();
+
+            console.log('Submitting score for', { text: sentence, file, lessonId, isDailyMode, sessionDate });
+
+            const resp = await iseAPI.scoreSentence({
+                text: sentence,
+                audioFile: file,
+                sub: 'ise',
+                ent: 'cn_vip',
+                // send current lessonId so backend can associate the score
+                lessonId: lessonId,
+                // if in daily mode, mark includeInDaily true so daily aggregates include it
+                includeInDaily: isDailyMode ? true : false,
+                // session timestamp
+                sessionDate: sessionDate,
+            });
             // Normalize response: move metrics from resp.sentence to top-level for easier UI use
             const sent = resp?.sentence || {};
             const normalized = {
@@ -153,13 +328,24 @@ const SpeakingPracticePage = () => {
             };
             setSelectedWord(null);
             setResult(normalized);
+            setCurrentScored(true);
+            // notify other pages (Profile) to refresh stats for today's data
+            try {
+                window.dispatchEvent(new CustomEvent('ise:score:submitted', { detail: { score: normalized, lessonId: lessonId, includeInDaily: isDailyMode ? true : false } }));
+            } catch (e) { }
         } catch (err) {
             console.error('submitScore error', err);
+            // log full response for debugging
+            if (err?.response) {
+                console.error('Response status', err.response.status);
+                console.error('Response headers', err.response.headers);
+                console.error('Response data', err.response.data);
+            }
             // Try to extract server-provided error message
             const serverMsg = err?.response?.data?.error || err?.response?.data || err?.message || 'Gửi file bị lỗi';
             // If server responded with an object, stringify it for display
             const displayMsg = typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg);
-            setError(displayMsg);
+            setError(`Lỗi server: ${displayMsg}`);
         } finally {
             setLoading(false);
         }
@@ -220,16 +406,30 @@ const SpeakingPracticePage = () => {
         <div className="container mx-auto px-4 py-8">
             <div className="mb-6 flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Luyện nói</h1>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                     <Link
                         to={`/curriculum/${curriculumId}/lesson/${lessonId}`}
                         className={`btn btn-ghost ${recording ? 'opacity-50 pointer-events-none' : ''}`}
                     >Quay lại bài học</Link>
+
                     <button
-                        className={`btn ${recording ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={fetchRandomSentence}
-                        disabled={recording}
+                        className={`btn ${recording || !currentScored ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={() => {
+                            if (lessonId && !isDailyMode) {
+                                playNextInQueue();
+                            } else {
+                                fetchRandomSentence();
+                            }
+                        }}
+                        disabled={recording || !currentScored}
+                        title={recording ? 'Đang ghi âm' : (!currentScored ? 'Phải ghi âm và gửi điểm trước khi lấy câu mới' : 'Lấy câu mới')}
                     >Lấy câu mới</button>
+
+                    {queue && queue.length > 0 && lessonId && !isDailyMode && (
+                        <div className="inline-flex items-center gap-2 bg-base-100 border rounded px-3 py-1">
+                            <div className="text-sm text-base-content/70">{queueIndex + 1} / {queue.length}</div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -387,6 +587,8 @@ const SpeakingPracticePage = () => {
                             )} */}
                         </div>
                     )}
+
+                    {/* stats moved to Profile page */}
                 </div>
             )}
         </div>

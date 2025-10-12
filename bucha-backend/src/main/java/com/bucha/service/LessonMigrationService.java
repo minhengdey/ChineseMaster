@@ -191,4 +191,22 @@ public class LessonMigrationService {
       }
       return conversationLines;
    }
+
+   /**
+    * Collects all conversation lines across all lessons/conversations.
+    * Used to support "daily mixed" practice which pulls sentences from the whole
+    * curriculum.
+    */
+   public Set<String> getAllConversationLines() {
+      Set<String> conversationLines = new HashSet<>();
+      List<Conversation> allConversations = conversationRepository.findAll();
+      for (Conversation conversation : allConversations) {
+         List<ConversationLine> lines = conversationLineRepository
+               .findByConversationIdOrderByOrder(conversation.getId());
+         for (ConversationLine conversationLine : lines) {
+            conversationLines.add(conversationLine.getZhText());
+         }
+      }
+      return conversationLines;
+   }
 }

@@ -79,6 +79,15 @@ function App() {
                   <Route path="pronunciation" element={<PronunciationPage />} />
                   <Route path="alphabet" element={<AlphabetPage />} />
                   <Route path="profile" element={<ProfilePage user={user} />} />
+                  <Route
+                     path="/curriculum/:curriculumId/lesson/:lessonId/speaking"
+                     element={<SpeakingPracticePage />}
+                  />
+                  {/* Daily mixed speaking practice (from Pronunciation tab) */}
+                  <Route
+                     path="/speaking/daily"
+                     element={<SpeakingPracticePage />}
+                  />
                </Route>
 
                <Route path="/login" element={<Login />} />
