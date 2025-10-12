@@ -1,6 +1,7 @@
 package com.bucha.dto;
 
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class CurriculumMetadataDto {
@@ -8,4 +9,7 @@ public class CurriculumMetadataDto {
    private String description;
    private String level;
    private Integer order;
+
+   // Optional list of lesson JSON filenames under this curriculum
+   private List<String> lessons;
 }

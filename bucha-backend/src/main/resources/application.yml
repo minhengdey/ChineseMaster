@@ -5,14 +5,14 @@ spring:
       username: ${DB_USERNAME}
       password: ${DB_PASSWORD}
    jpa:
-     hibernate:
-       ddl-auto: update
-     properties:
-       hibernate:
-         format_sql: true
+      hibernate:
+         ddl-auto: update
+      properties:
+         hibernate:
+            format_sql: true
    h2:
-     console:
-       enabled: true
+      console:
+         enabled: true
 
 jwt:
    secret: ${JWT_SECRET}
@@ -20,48 +20,46 @@ jwt:
    refresh-validity-ms: 1209600000
 
 app:
-  cors:
-    allowed-origins: http://localhost:5500
-  data:
+   cors:
+      allowed-origins: ${ALLOW_ORIGINS}
+   data:
       initializer:
-         enabled: true
-         # The base path containing all curriculum subdirectories (e.g., HSK-1, HSK-2).
-         base-path: "uploads/curriculumn"
-
+         enabled: ${DATA_INITIALIZER_ENABLED}
+         source: CLOUDINARY
 logging:
-  level:
-    root: INFO
-    org.springframework: DEBUG
-    com.bucha.pronunciation: DEBUG
+   level:
+      root: ERROR
+      # org.springframework: DEBUG
+      com.bucha: DEBUG
 
 iflytek:
-  app-id: ${APP_ID}
-  api-key: ${API_KEY}
-  api-secret: ${API_SECRET}
-  host-url: wss://ise-api-sg.xf-yun.com/v2/ise
-  ent: cn_vip
-  category: read_sentence
-  # 16kHz, 16bit PCM per ISE docs; omit channel token
-  auf: audio/L16;rate=16000
-  # Raw PCM frames
-  aue: raw
-  sub: ise
-  # Optional network settings for troubleshooting
-  insecure-ssl: false
-  disable-proxy: true
-  proxy-host: ""
-  proxy-port: 0
-  # Advanced websocket tuning per ISE FAQ (approx 1280 bytes every 40ms)
-  frame-size: 320
-  frame-sleep-ms: 80
-  connect-timeout-seconds: 15
-  read-timeout-seconds: 300
-  write-timeout-seconds: 120
-  single-frame: false
-  binary-frames: false
+   app-id: ${APP_ID}
+   api-key: ${API_KEY}
+   api-secret: ${API_SECRET}
+   host-url: wss://ise-api-sg.xf-yun.com/v2/ise
+   ent: cn_vip
+   category: read_sentence
+   # 16kHz, 16bit PCM per ISE docs; omit channel token
+   auf: audio/L16;rate=16000
+   # Raw PCM frames
+   aue: raw
+   sub: ise
+   # Optional network settings for troubleshooting
+   insecure-ssl: false
+   disable-proxy: true
+   proxy-host: ""
+   proxy-port: 0
+   # Advanced websocket tuning per ISE FAQ (approx 1280 bytes every 40ms)
+   frame-size: 320
+   frame-sleep-ms: 80
+   connect-timeout-seconds: 15
+   read-timeout-seconds: 300
+   write-timeout-seconds: 120
+   single-frame: false
+   binary-frames: false
 
 cloudinary:
-  cloud-name: ${CLOUD_NAME}
-  api-key: ${CLOUD_API_KEY}
-  api-secret: ${CLOUD_API_SECRET}
-  upload-folder: chinese-master
+   cloud-name: ${CLOUD_NAME}
+   api-key: ${CLOUD_API_KEY}
+   api-secret: ${CLOUD_API_SECRET}
+   upload-folder: chinese-master

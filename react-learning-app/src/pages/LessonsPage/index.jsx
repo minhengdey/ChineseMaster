@@ -66,7 +66,7 @@ const LessonsPage = () => {
             key={lesson.id} 
             lesson={lesson} 
             curriculumId={curriculumId}
-            isLocked={index > 0 && lessons[index - 1].completed !== true}
+            isLocked={false}
           />
         ))}
       </div>

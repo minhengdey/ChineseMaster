@@ -1,11 +1,39 @@
 import React, { useState } from 'react';
 import AudioPlayer from './AudioPlayer';
+import SentenceRecordingButton from './SentenceRecordingButton';
+import SentencePronunciationResult from './SentencePronunciationResult';
 
 const ConversationSection = ({ conversations }) => {
   const [expandedSection, setExpandedSection] = useState(null);
+  const [pronunciationResult, setPronunciationResult] = useState(null);
+  const [showPronunciationResult, setShowPronunciationResult] = useState(false);
+  const [recordedAudio, setRecordedAudio] = useState(null);
+  const [activeLineId, setActiveLineId] = useState(null);
 
   const toggleSection = (index) => {
     setExpandedSection(expandedSection === index ? null : index);
+  };
+
+  const handlePronunciationScore = (result, audioBlob, lineId) => {
+    setPronunciationResult(result);
+    setRecordedAudio(audioBlob);
+    setActiveLineId(lineId);
+    setShowPronunciationResult(true);
+  };
+
+  const handleStartRecording = (lineId) => {
+    // Xóa kết quả cũ khi bắt đầu thu âm mới
+    setShowPronunciationResult(false);
+    setPronunciationResult(null);
+    setRecordedAudio(null);
+    setActiveLineId(lineId);
+  };
+
+  const closePronunciationResult = () => {
+    setShowPronunciationResult(false);
+    setPronunciationResult(null);
+    setRecordedAudio(null);
+    setActiveLineId(null);
   };
 
   if (!conversations || conversations.length === 0) {
@@ -37,9 +65,9 @@ const ConversationSection = ({ conversations }) => {
               </button>
             </div>
             
-            {conversation.vnTranslation && (
+            {(conversation.vnTranslation || conversation.vn) && (
               <p className="text-base-content/70 italic">
-                {conversation.vnTranslation}
+                {conversation.vnTranslation || conversation.vn}
               </p>
             )}
 
@@ -51,22 +79,42 @@ const ConversationSection = ({ conversations }) => {
                       <span className="font-semibold text-primary">
                         {line.speaker}
                       </span>
-                      {line.audioAsset && (
-                        <AudioPlayer audioAsset={line.audioAsset} />
-                      )}
+                      <div className="flex gap-2">
+                        {(line.audioUrl || line.audioAsset) && (
+                          <AudioPlayer audioUrl={line.audioUrl} audioAsset={line.audioAsset} />
+                        )}
+                        <SentenceRecordingButton
+                          text={line.pinyin}
+                          hanzi={line.zh || line.zhText}
+                          onScore={(result, audioBlob) => handlePronunciationScore(result, audioBlob, line.id)}
+                          onStartRecording={() => handleStartRecording(line.id)}
+                          size="xs"
+                        />
+                      </div>
                     </div>
                     
                     <div className="space-y-2">
                       <div className="text-xl font-medium">
-                        {line.zhText}
+                        {line.zh || line.zhText}
                       </div>
                       <div className="text-base-content/80">
                         {line.pinyin}
                       </div>
                       <div className="text-base-content/70 italic">
-                        {line.vnTranslation}
+                        {line.vn || line.vnTranslation}
                       </div>
                     </div>
+
+                    {/* Hiển thị kết quả đánh giá phát âm cho line này */}
+                    {showPronunciationResult && activeLineId === line.id && (
+                      <div className="mt-4">
+                        <SentencePronunciationResult
+                          result={pronunciationResult}
+                          recordedAudio={recordedAudio}
+                          onClose={closePronunciationResult}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

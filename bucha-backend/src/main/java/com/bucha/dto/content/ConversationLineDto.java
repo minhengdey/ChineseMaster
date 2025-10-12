@@ -5,9 +5,11 @@ import lombok.Data;
 @Data
 public class ConversationLineDto {
     private Long id;
+    private Integer order;
     private String speaker;
-    private String zhText;
+    private String zh;
     private String pinyin;
-    private String vnTranslation;
-    private AudioAssetDto audioAsset;
+    private String vn;
+    private String audioPublicId;
+    private String audioUrl;
 }

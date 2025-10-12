@@ -22,6 +22,9 @@ public class Conversation {
    @Column(name = "vn_translation", length = 500)
    private String vnTranslation; // Vietnamese translation of the section
 
+   @Column
+   private String audioPublicId;
+
    @ManyToOne(fetch = FetchType.LAZY)
    @JoinColumn(name = "lesson_id")
    private Lesson lesson;

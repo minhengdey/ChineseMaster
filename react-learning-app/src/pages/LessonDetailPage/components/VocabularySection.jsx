@@ -1,7 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AudioPlayer from './AudioPlayer';
+import WordRecordingButton from './WordRecordingButton';
+import WordPronunciationResult from './WordPronunciationResult';
 
 const VocabularySection = ({ vocabularies }) => {
+  const [pronunciationResult, setPronunciationResult] = useState(null);
+  const [showPronunciationResult, setShowPronunciationResult] = useState(false);
+  const [recordedAudio, setRecordedAudio] = useState(null);
+  // activeItemKey is a string like 'word-<id>' or 'example-<id>' to support both word and example recordings
+  const [activeItemKey, setActiveItemKey] = useState(null);
+
+  const handlePronunciationScore = (result, audioBlob, itemKey) => {
+    setPronunciationResult(result);
+    setRecordedAudio(audioBlob);
+    setActiveItemKey(itemKey);
+    setShowPronunciationResult(true);
+  };
+
+  const handleStartRecording = (itemKey) => {
+    // Xóa kết quả cũ khi bắt đầu thu âm mới
+    setShowPronunciationResult(false);
+    setPronunciationResult(null);
+    setRecordedAudio(null);
+    setActiveItemKey(itemKey);
+  };
+
+  const closePronunciationResult = () => {
+    setShowPronunciationResult(false);
+    setPronunciationResult(null);
+    setRecordedAudio(null);
+    setActiveItemKey(null);
+  };
   const getTypeColor = (type) => {
     switch (type?.toLowerCase()) {
       case 'danh từ': return 'badge-primary';
@@ -34,9 +63,18 @@ const VocabularySection = ({ vocabularies }) => {
               <div className="text-2xl font-bold text-primary">
                 {vocabulary.word}
               </div>
-              {vocabulary.audioAsset && (
-                <AudioPlayer audioAsset={vocabulary.audioAsset} size="sm" />
-              )}
+              <div className="flex gap-2">
+                {(vocabulary.audioUrl || vocabulary.audioAsset) && (
+                  <AudioPlayer audioUrl={vocabulary.audioUrl} audioAsset={vocabulary.audioAsset} size="sm" />
+                )}
+                <WordRecordingButton
+                  word={vocabulary.word}
+                  pinyin={vocabulary.pinyin}
+                  onScore={(result, audioBlob) => handlePronunciationScore(result, audioBlob, `word-${vocabulary.id}`)}
+                  onStartRecording={() => handleStartRecording(`word-${vocabulary.id}`)}
+                  size="xs"
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
@@ -54,6 +92,52 @@ const VocabularySection = ({ vocabularies }) => {
                 {vocabulary.meaning}
               </div>
             </div>
+
+            {/* Example sentence for this vocabulary (normalized fields or legacy example) */}
+            {(() => {
+              const exampleText = vocabulary.exampleText ?? vocabulary.example?.zh ?? null;
+              const examplePinyin = vocabulary.examplePinyin ?? vocabulary.example?.pinyin ?? null;
+              const exampleVn = vocabulary.exampleVn ?? vocabulary.example?.vn ?? null;
+              const exampleAudio = vocabulary.exampleAudioUrl ?? vocabulary.example?.audioUrl ?? null;
+              const hasExample = exampleText || examplePinyin || exampleVn || exampleAudio;
+              if (!hasExample) return null;
+
+              return (
+                <div className="mt-3 pt-3 border-t">
+                  <div className="text-sm text-base-content/70 mb-1">Ví dụ</div>
+                  <div className="text-base font-medium">{exampleText}</div>
+                  {examplePinyin && (
+                    <div className="text-sm text-base-content/70">{examplePinyin}</div>
+                  )}
+                  {exampleVn && (
+                    <div className="text-sm text-base-content/70">{exampleVn}</div>
+                  )}
+                  {exampleAudio && (
+                    <div className="mt-2">
+                      <AudioPlayer audioUrl={exampleAudio} size="sm" />
+                    </div>
+                  )}
+                  {/* Recording/check pronunciation for example sentence */}
+                  <div className="mt-2 flex items-center gap-2">
+                    <WordRecordingButton
+                      word={exampleText || vocabulary.word}
+                      pinyin={examplePinyin || vocabulary.pinyin}
+                      onScore={(result, audioBlob) => handlePronunciationScore(result, audioBlob, `example-${vocabulary.id}`)}
+                      onStartRecording={() => handleStartRecording(`example-${vocabulary.id}`)}
+                      size="xs"
+                    />
+                  </div>
+                </div>
+              );
+            })()}
+            {/* Hiển thị kết quả đánh giá phát âm cho word này */}
+            {showPronunciationResult && (activeItemKey === `word-${vocabulary.id}` || activeItemKey === `example-${vocabulary.id}`) && (
+              <WordPronunciationResult
+                result={pronunciationResult}
+                recordedAudio={recordedAudio}
+                onClose={closePronunciationResult}
+              />
+            )}
           </div>
         </div>
       ))}
