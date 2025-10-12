@@ -1,5 +1,8 @@
 package com.bucha.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,9 +36,13 @@ public class Vocabulary {
    private Integer order; // Thứ tự từ vựng trong bài học
 
    // Cloudinary public_id cho audio (flow Cloudinary-only)
-   
+
    @Column(name = "audio_public_id")
    private String audioPublicId;
+
+   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true) // <--- THÊM DÒNG NÀY
+   @JoinColumn(name = "example_line_id", referencedColumnName = "id")
+   private Line example;
 
    // Constructors
    public Vocabulary() {
