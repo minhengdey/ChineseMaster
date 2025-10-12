@@ -76,6 +76,11 @@ function App() {
                                 path="/curriculum/:curriculumId/lesson/:lessonId/speaking"
                                 element={<SpeakingPracticePage />}
                             />
+                            {/* Daily mixed speaking practice (from Pronunciation tab) */}
+                            <Route
+                                path="/speaking/daily"
+                                element={<SpeakingPracticePage />}
+                            />
                             {/* Legacy routes */}
                             <Route path="/lessons" element={<Navigate to="/curriculum" replace />} />
                             <Route

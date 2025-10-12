@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { practiceAPI, handleApiError } from '../../services/api';
+import { Link } from 'react-router-dom';
 
 const PronunciationPage = () => {
   const [alphabetData, setAlphabetData] = useState([]);
@@ -49,7 +50,7 @@ const PronunciationPage = () => {
   const filteredData = alphabetData.filter(item => {
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     const matchesSearch = item.base_sound.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
@@ -71,21 +72,26 @@ const PronunciationPage = () => {
         </p>
       </div>
 
+      <div className="mt-6 mb-8">
+        <Link to="/speaking/daily" className="btn btn-accent">Luyện phát âm (Hôm nay)</Link>
+        <div className="text-sm text-base-content/60 mt-2">Bắt đầu luyện các câu trộn lẫn từ tất cả các bài</div>
+      </div>
+
       {/* Search and Filter */}
       <div className="bg-base-200 p-6 rounded-lg mb-8">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="form-control flex-1">
-            <input 
-              type="text" 
-              placeholder="Tìm kiếm âm thanh..." 
+            <input
+              type="text"
+              placeholder="Tìm kiếm âm thanh..."
               className="input input-bordered w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
+
           <div className="form-control">
-            <select 
+            <select
               className="select select-bordered"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
@@ -109,35 +115,33 @@ const PronunciationPage = () => {
               <h2 className="card-title text-2xl font-bold justify-center mb-2">
                 {item.base_sound}
               </h2>
-              
+
               {item.description && (
                 <p className="text-sm text-base-content/70 mb-3">
                   {item.description}
                 </p>
               )}
-              
-              <button 
-                className={`btn btn-circle btn-primary mb-3 ${
-                  playingAudio === item.base_sound ? 'loading' : ''
-                }`}
+
+              <button
+                className={`btn btn-circle btn-primary mb-3 ${playingAudio === item.base_sound ? 'loading' : ''
+                  }`}
                 onClick={() => playAudio(item.base_sound)}
                 disabled={playingAudio === item.base_sound}
               >
                 {playingAudio === item.base_sound ? '' : '🔊'}
               </button>
-              
+
               {/* Tone variants */}
               {item.variants && item.variants.length > 0 && (
                 <div className="divider divider-primary text-xs">Thanh điệu</div>
               )}
-              
+
               <div className="flex flex-wrap gap-1 justify-center">
                 {item.variants?.map((variant, vIndex) => (
                   <button
                     key={vIndex}
-                    className={`btn btn-xs btn-outline ${
-                      playingAudio === variant.pinyin ? 'loading' : ''
-                    }`}
+                    className={`btn btn-xs btn-outline ${playingAudio === variant.pinyin ? 'loading' : ''
+                      }`}
                     onClick={() => playAudio(variant.pinyin)}
                     disabled={playingAudio === variant.pinyin}
                     title={`Thanh ${variant.tone}: ${variant.description || ''}`}
@@ -170,7 +174,7 @@ const PronunciationPage = () => {
             <p className="text-sm">Thanh cơ bản</p>
           </div>
         </div>
-        
+
         <div className="card bg-secondary text-secondary-content">
           <div className="card-body text-center">
             <h3 className="card-title justify-center">Âm mẫu</h3>
@@ -178,7 +182,7 @@ const PronunciationPage = () => {
             <p className="text-sm">Âm thanh cơ bản</p>
           </div>
         </div>
-        
+
         <div className="card bg-accent text-accent-content">
           <div className="card-body text-center">
             <h3 className="card-title justify-center">Biến thể</h3>
@@ -188,7 +192,7 @@ const PronunciationPage = () => {
             <p className="text-sm">Thanh điệu</p>
           </div>
         </div>
-        
+
         <div className="card bg-neutral text-neutral-content">
           <div className="card-body text-center">
             <h3 className="card-title justify-center">Đã học</h3>
@@ -202,7 +206,7 @@ const PronunciationPage = () => {
       <div className="mt-12 card bg-base-100 shadow-xl">
         <div className="card-body">
           <h2 className="card-title mb-4">💡 Mẹo phát âm</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="font-bold mb-2">Thanh điệu cơ bản:</h3>
@@ -225,7 +229,7 @@ const PronunciationPage = () => {
                 </li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-bold mb-2">Lời khuyên:</h3>
               <ul className="space-y-2 text-sm">

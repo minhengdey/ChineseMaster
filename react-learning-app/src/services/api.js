@@ -5,9 +5,6 @@ const API_BASE_URL = "http://localhost:8080/api";
 
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
-    headers: {
-        "Content-Type": "application/json",
-    },
 });
 
 // Request interceptor to add auth token
@@ -153,11 +150,13 @@ export const practiceAPI = {
             formData.append("lessonId", lessonId.toString());
         }
 
-        const response = await apiClient.post("/practice/score", formData, {
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
-        });
+        // Do not set Content-Type so the browser can add the multipart boundary automatically.
+        // Only pass Authorization header when available.
+        const token = localStorage.getItem('accessToken');
+        const headers = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const response = await apiClient.post("/practice/score", formData, { headers });
         return response.data;
     },
 };
@@ -214,23 +213,83 @@ export const audioAPI = {
 
 // ISE (pronunciation scoring) APIs
 export const iseAPI = {
-    // scoreSentence should post multipart/form-data like the provided curl
-    scoreSentence: async ({ text, audioFile, sub = 'ise', ent = 'cn_vip' }) => {
+    // scoreSentence should post multipart/form-data matching backend signature
+    // Supports optional parts: scoreCategory, lessonId, testId, includeInDaily, sessionDate, durationSeconds, numSentences
+    scoreSentence: async ({
+        text,
+        audioFile,
+        sub = 'ise',
+        ent = 'cn_vip',
+        scoreCategory,
+        lessonId,
+        testId,
+        includeInDaily,
+        sessionDate,
+        durationSeconds,
+        numSentences,
+    }) => {
         const formData = new FormData();
-        // wrap text value in quotes like the example — backend should handle plain text too
-        formData.append('text', text);
+        // required parts
+        // Append text parts as Blobs with explicit text/plain content type so Spring's @RequestPart can convert them
+        formData.append('text', new Blob([text ?? ''], { type: 'text/plain;charset=UTF-8' }));
         formData.append('audio', audioFile);
-        formData.append('sub', sub);
-        formData.append('ent', ent);
+        formData.append('sub', new Blob([sub ?? ''], { type: 'text/plain;charset=UTF-8' }));
+        formData.append('ent', new Blob([ent ?? ''], { type: 'text/plain;charset=UTF-8' }));
 
-        const response = await apiClient.post('/ise/score', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
+        // optional parts - only append when provided (not null/undefined)
+        if (scoreCategory != null) formData.append('scoreCategory', new Blob([String(scoreCategory)], { type: 'text/plain;charset=UTF-8' }));
+        if (lessonId != null) formData.append('lessonId', new Blob([String(lessonId)], { type: 'text/plain;charset=UTF-8' }));
+        if (testId != null) formData.append('testId', new Blob([String(testId)], { type: 'text/plain;charset=UTF-8' }));
+        if (includeInDaily != null) formData.append('includeInDaily', new Blob([String(includeInDaily)], { type: 'text/plain;charset=UTF-8' }));
+        if (sessionDate != null) formData.append('sessionDate', new Blob([String(sessionDate)], { type: 'text/plain;charset=UTF-8' }));
+        if (durationSeconds != null) formData.append('durationSeconds', new Blob([String(durationSeconds)], { type: 'text/plain;charset=UTF-8' }));
+        if (numSentences != null) formData.append('numSentences', new Blob([String(numSentences)], { type: 'text/plain;charset=UTF-8' }));
+
+        // Debug: log FormData parts (key and type) to help server-side troubleshooting
+        try {
+            for (const entry of formData.entries()) {
+                const [k, v] = entry;
+                if (v instanceof File) {
+                    console.debug('[iseAPI] formData entry:', k, 'File', v.name, v.type, v.size);
+                } else if (v instanceof Blob) {
+                    console.debug('[iseAPI] formData entry:', k, 'Blob', v.type);
+                } else {
+                    console.debug('[iseAPI] formData entry:', k, typeof v, v);
+                }
+            }
+        } catch (e) {
+            console.debug('[iseAPI] formData debug failed', e);
+        }
+
+        // Do not set Content-Type so the browser can add the multipart boundary automatically.
+        // Only pass Authorization header when available.
+        const token = localStorage.getItem('accessToken');
+        const headers = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const response = await apiClient.post('/ise/score', formData, { headers });
 
         return response.data;
     },
+};
+
+// ISE stats for frontend displays (daily/lesson/test summaries)
+export const iseStatsAPI = {
+    getDaily: async (fromIsoDate, toIsoDate) => {
+        const params = {};
+        if (fromIsoDate) params.from = fromIsoDate;
+        if (toIsoDate) params.to = toIsoDate;
+        const response = await apiClient.get('/ise/stats/daily', { params });
+        return response.data;
+    },
+    getLessons: async () => {
+        const response = await apiClient.get('/ise/stats/lessons');
+        return response.data;
+    },
+    getTests: async () => {
+        const response = await apiClient.get('/ise/stats/tests');
+        return response.data;
+    }
 };
 
 // Migration/content helper APIs

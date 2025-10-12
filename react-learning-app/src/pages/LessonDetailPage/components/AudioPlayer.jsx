@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { audioAPI } from '../../../services/api';
 
-const AudioPlayer = ({ audioAsset, size = 'md' }) => {
+const AudioPlayer = ({ audioAsset, size = 'md', onEnded }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef(null);
@@ -28,6 +28,9 @@ const AudioPlayer = ({ audioAsset, size = 'md' }) => {
 
       audio.addEventListener('ended', () => {
         setIsPlaying(false);
+        if (typeof onEnded === 'function') {
+          try { onEnded(); } catch (e) { console.debug('onEnded callback failed', e); }
+        }
       });
 
       audio.addEventListener('error', () => {

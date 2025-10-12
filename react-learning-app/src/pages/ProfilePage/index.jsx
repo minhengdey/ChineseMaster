@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { profileAPI, handleApiError } from '../../services/api';
+import { iseStatsAPI } from '../../services/api';
 
 const ProfilePage = ({ user }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -13,10 +14,101 @@ const ProfilePage = ({ user }) => {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [dailyRows, setDailyRows] = useState([]);
+  const [lessonRows, setLessonRows] = useState([]);
+  const [testRows, setTestRows] = useState([]);
 
   useEffect(() => {
     fetchProfile();
+    fetchIseStatsToday();
+
+    const handler = (e) => {
+      // Optimistically update UI with submitted score data to make profile feel responsive
+      try {
+        const detail = e?.detail || {};
+        const score = detail.score;
+        const lessonId = detail.lessonId;
+        const includeInDaily = detail.includeInDaily;
+
+        if (includeInDaily && score) {
+          const todayStr = new Date().toISOString().split('T')[0];
+          // increase or add today's row
+          setDailyRows(prev => {
+            const copy = Array.isArray(prev) ? [...prev] : [];
+            if (copy.length === 0 || copy[0]?.date !== todayStr) {
+              // insert today's row at start
+              copy.unshift({ date: todayStr, avgScore: Math.round(score.total_score ?? 0), count: 1 });
+            } else {
+              // update average and count (simple incremental average)
+              const existing = copy[0];
+              const prevAvg = Number(existing.avgScore || 0);
+              const prevCount = Number(existing.count || 0);
+              const newCount = prevCount + 1;
+              const newAvg = Math.round(((prevAvg * prevCount) + (score.total_score ?? 0)) / newCount);
+              copy[0] = { ...existing, avgScore: newAvg, count: newCount };
+            }
+            return copy;
+          });
+        }
+
+        // update lesson rows if lessonId present
+        if (lessonId && score) {
+          setLessonRows(prev => {
+            const copy = Array.isArray(prev) ? [...prev] : [];
+            const idx = copy.findIndex(r => String(r.lessonId) === String(lessonId));
+            if (idx === -1) {
+              copy.push({ lessonId, avgScore: Math.round(score.total_score ?? 0), completedFull: false, lessonScore: Math.round(score.total_score ?? 0) });
+            } else {
+              const existing = copy[idx];
+              const prevAvg = Number(existing.avgScore || 0);
+              const prevCount = Number(existing.attempts || 1); // attempts may not be present; fallback to 1
+              const newCount = prevCount + 1;
+              const newAvg = Math.round(((prevAvg * prevCount) + (score.total_score ?? 0)) / newCount);
+              copy[idx] = { ...existing, avgScore: newAvg };
+            }
+            return copy;
+          });
+        }
+
+      } catch (err) {
+        console.debug('optimistic stats update failed', err);
+      }
+
+      // finally schedule a background refresh to reconcile with server state
+      setTimeout(() => fetchIseStatsToday(), 1000);
+    };
+
+    window.addEventListener('ise:score:submitted', handler);
+    return () => window.removeEventListener('ise:score:submitted', handler);
   }, []);
+
+  const fetchIseStatsToday = async () => {
+    setStatsLoading(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const daily = await iseStatsAPI.getDaily(today, today);
+      setDailyRows(Array.isArray(daily?.rows) ? daily.rows : []);
+    } catch (e) {
+      console.debug('failed daily stats', e);
+      setDailyRows([]);
+    }
+    try {
+      const lessons = await iseStatsAPI.getLessons();
+      setLessonRows(Array.isArray(lessons?.rows) ? lessons.rows : []);
+    } catch (e) {
+      console.debug('failed lesson stats', e);
+      setLessonRows([]);
+    }
+    try {
+      const tests = await iseStatsAPI.getTests();
+      setTestRows(Array.isArray(tests?.rows) ? tests.rows : []);
+    } catch (e) {
+      console.debug('failed test stats', e);
+      setTestRows([]);
+    }
+    setStatsLoading(false);
+  };
 
   const fetchProfile = async () => {
     try {
@@ -98,21 +190,21 @@ const ProfilePage = ({ user }) => {
                     </div>
                   </div>
                 </div>
-                
+
                 {isEditing ? (
                   <div className="space-y-3">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       className="input input-bordered w-full"
                       value={profileData.fullName}
-                      onChange={(e) => setProfileData({...profileData, fullName: e.target.value})}
+                      onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
                       placeholder="Họ và tên"
                     />
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       className="input input-bordered w-full"
                       value={profileData.email}
-                      onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                      onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                       placeholder="Email"
                     />
                   </div>
@@ -129,12 +221,12 @@ const ProfilePage = ({ user }) => {
                   <span className="font-semibold">Cấp độ:</span>
                   <span className="badge badge-primary">{profileData.level}</span>
                 </div>
-                
+
                 <div className="flex justify-between">
                   <span className="font-semibold">Mục tiêu:</span>
                   <span>{profileData.studyGoal}</span>
                 </div>
-                
+
                 <div className="flex justify-between">
                   <span className="font-semibold">Tham gia:</span>
                   <span>{new Date(profileData.joinDate).toLocaleDateString('vi-VN')}</span>
@@ -147,8 +239,8 @@ const ProfilePage = ({ user }) => {
                     <button className="btn btn-outline" onClick={() => setIsEditing(false)}>
                       Hủy
                     </button>
-                    <button 
-                      className={`btn btn-primary ${saving ? 'loading' : ''}`} 
+                    <button
+                      className={`btn btn-primary ${saving ? 'loading' : ''}`}
                       onClick={handleSave}
                       disabled={saving}
                     >
@@ -171,7 +263,7 @@ const ProfilePage = ({ user }) => {
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
               <h2 className="card-title mb-4">📊 Thống kê học tập</h2>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="stat bg-primary/10 rounded-lg">
                   <div className="stat-title text-xs">Bài học</div>
@@ -194,20 +286,111 @@ const ProfilePage = ({ user }) => {
             </div>
           </div>
 
+          {/* ISE Pronunciation Stats (Daily / Lessons / Tests) */}
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <div className="flex items-start justify-between">
+                <h2 className="card-title mb-2">🔊 Đánh giá phát âm</h2>
+                <div className="space-x-2">
+                  <button className={`btn btn-sm btn-ghost ${statsLoading ? 'loading' : ''}`} onClick={fetchIseStatsToday}>Refresh</button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="col-span-1">
+                  <div className="card p-3">
+                    <div className="font-semibold mb-2">Điểm ngày (Hôm nay)</div>
+                    {statsLoading ? (
+                      <div className="text-sm text-gray-500">Đang tải...</div>
+                    ) : dailyRows.length === 0 ? (
+                      <div className="text-sm text-gray-500">Chưa có lượt hôm nay</div>
+                    ) : (
+                      <div>
+                        {dailyRows.map(r => (
+                          <div key={r.date} className="flex justify-between text-sm py-1">
+                            <div>{r.date}</div>
+                            <div className="font-medium">{r.avgScore}%</div>
+                          </div>
+                        ))}
+                        <div className="text-xs text-base-content/60 mt-2">Số lượt: {dailyRows[0]?.count ?? 0}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="col-span-2">
+                  <div className="overflow-x-auto">
+                    <table className="table w-full">
+                      <thead>
+                        <tr>
+                          <th>Bài</th>
+                          <th>Điểm trung bình</th>
+                          <th>Hoàn thành</th>
+                          <th>Điểm bài</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {statsLoading ? (
+                          <tr><td colSpan={5} className="text-sm text-gray-500">Đang tải...</td></tr>
+                        ) : lessonRows.length === 0 ? (
+                          <tr><td colSpan={4} className="text-sm text-gray-500">Không có dữ liệu</td></tr>
+                        ) : lessonRows.map(r => (
+                          <tr key={r.lessonId}>
+                            <td>{r.lessonId}</td>
+                            <td>{r.avgScore}</td>
+                            <td>{r.completedFull ? '✔' : '✘'}</td>
+                            <td>{r.lessonScore}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="mt-4">
+                    <div className="font-semibold mb-2">Điểm test (Tổng quan)</div>
+                    <div className="overflow-x-auto">
+                      <table className="table w-full">
+                        <thead>
+                          <tr>
+                            <th>Test ID</th>
+                            <th>Trung bình</th>
+                            <th>Số lần</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {statsLoading ? (
+                            <tr><td colSpan={3} className="text-sm text-gray-500">Đang tải...</td></tr>
+                          ) : testRows.length === 0 ? (
+                            <tr><td colSpan={3} className="text-sm text-gray-500">Không có dữ liệu</td></tr>
+                          ) : testRows.map(r => (
+                            <tr key={r.testId}>
+                              <td>{r.testId}</td>
+                              <td>{r.avgTotal}</td>
+                              <td>{r.attempts}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Achievements */}
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
               <h2 className="card-title mb-4">🏆 Thành tích</h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {achievements.map((achievement) => (
-                  <div 
+                  <div
                     key={achievement.id}
-                    className={`card shadow ${
-                      achievement.unlocked 
-                        ? 'bg-success/10 border border-success/20' 
-                        : 'bg-base-200 opacity-60'
-                    }`}
+                    className={`card shadow ${achievement.unlocked
+                      ? 'bg-success/10 border border-success/20'
+                      : 'bg-base-200 opacity-60'
+                      }`}
                   >
                     <div className="card-body py-4">
                       <div className="flex items-center space-x-3">
