@@ -8,7 +8,10 @@ import com.bucha.dto.migration.VocabularyMigrationDTO;
 import com.bucha.entity.*;
 import com.bucha.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -28,6 +31,7 @@ public class LessonMigrationService {
    private final ConversationRepository conversationRepository;
    private final ConversationLineRepository conversationLineRepository;
    private final VocabularyRepository vocabularyRepository;
+   private final LineRepository lineRepository;
 
    // Local file migration removed (Cloudinary-only mode)
 
@@ -106,7 +110,22 @@ public class LessonMigrationService {
       // Vocabulary
       AtomicInteger vocabOrdinal = new AtomicInteger(1);
       if (lessonDto.getVocabulary() != null) {
+
          for (VocabularyMigrationDTO vDto : lessonDto.getVocabulary()) {
+            Line exampleLine = null;
+            if (vDto.getExample() != null) {
+               exampleLine = new Line();
+               exampleLine.setZhText(vDto.getExample().getZh());
+               exampleLine.setPinyin(vDto.getExample().getPinyin());
+               exampleLine.setVnTranslation(vDto.getExample().getVn());
+               if (audioRootPublicId != null && lessonDto.getOrder() != null) {
+                  String pid = String.format("%s/lesson-%d_vocab-%d_example", audioRootPublicId,
+                        lessonDto.getOrder(), vocabOrdinal.get());
+                  exampleLine.setAudioPublicId(pid);
+               }
+               exampleLine = lineRepository.save(exampleLine);
+            }
+
             int vocabOrder = vocabOrdinal.getAndIncrement();
             Vocabulary vocab = new Vocabulary();
             vocab.setLesson(lesson);
@@ -115,12 +134,14 @@ public class LessonMigrationService {
             vocab.setPinyin(vDto.getPinyin());
             vocab.setType(vDto.getType());
             vocab.setMeaning(vDto.getMeaning());
+            vocab.setExample(exampleLine);
             if (audioRootPublicId != null && lessonDto.getOrder() != null) {
                String pid = String.format("%s/lesson-%d_vocab-%d", audioRootPublicId,
                      lessonDto.getOrder(), vocabOrder);
                vocab.setAudioPublicId(pid);
             }
             vocabularyRepository.save(vocab);
+
          }
       }
 
