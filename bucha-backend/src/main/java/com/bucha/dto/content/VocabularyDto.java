@@ -12,4 +12,5 @@ public class VocabularyDto {
     private String meaning;
     private String audioPublicId;
     private String audioUrl;
+    private LineDto example;
 }

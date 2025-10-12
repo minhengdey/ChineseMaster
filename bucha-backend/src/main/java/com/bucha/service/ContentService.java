@@ -96,12 +96,12 @@ public class ContentService {
          dto.setAudioUrl(cloudinaryService.getAudioUrl(c.getAudioPublicId()));
       }
       List<ConversationLineDto> lines = conversationLineRepository.findByConversationIdOrderByOrder(c.getId())
-            .stream().map(this::mapLine).collect(Collectors.toList());
+            .stream().map(this::mapConversationLine).collect(Collectors.toList());
       dto.setLines(lines);
       return dto;
    }
 
-   private ConversationLineDto mapLine(ConversationLine line) {
+   private ConversationLineDto mapConversationLine(ConversationLine line) {
       ConversationLineDto dto = new ConversationLineDto();
       dto.setId(line.getId());
       dto.setOrder(line.getOrder());
@@ -127,6 +127,22 @@ public class ContentService {
       dto.setAudioPublicId(v.getAudioPublicId());
       if (v.getAudioPublicId() != null) {
          dto.setAudioUrl(cloudinaryService.getAudioUrl(v.getAudioPublicId()));
+      }
+      dto.setExample(mapLine(v.getExample()));
+      return dto;
+   }
+
+   private LineDto mapLine(Line line) {
+      if (line == null)
+         return null;
+      LineDto dto = new LineDto();
+      dto.setId(line.getId());
+      dto.setZh(line.getZhText());
+      dto.setPinyin(line.getPinyin());
+      dto.setVn(line.getVnTranslation());
+      dto.setAudioPublicId(line.getAudioPublicId());
+      if (line.getAudioPublicId() != null) {
+         dto.setAudioUrl(cloudinaryService.getAudioUrl(line.getAudioPublicId()));
       }
       return dto;
    }
