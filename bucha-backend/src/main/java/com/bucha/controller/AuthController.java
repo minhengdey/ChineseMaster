@@ -7,6 +7,9 @@ import com.bucha.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpHeaders;
+import io.jsonwebtoken.Claims;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -31,13 +34,31 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         var opt = userService.findByEmail(req.email());
-        if (opt.isEmpty()) return ResponseEntity.status(401).body("Invalid credentials");
+        if (opt.isEmpty())
+            return ResponseEntity.status(401).body("Invalid credentials");
         var user = opt.get();
         if (!passwordEncoder.matches(req.password(), user.getPassword())) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
         String access = jwtUtil.generateAccessToken(user.getEmail(), user.getId());
-        String refresh = jwtUtil.generateRefreshToken(user.getEmail(), user.getId());
-        return ResponseEntity.ok(new AuthResponse(access, refresh, 900000));
+        return ResponseEntity.ok(new AuthResponse(access, 900000));
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<?> verify(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body(Map.of("error", "Missing Authorization header"));
+        }
+        String token = authHeader.substring(7);
+        try {
+            // parse claims but ignore expiration check so callers can validate older tokens
+            Claims body = jwtUtil.parseClaims(token, true);
+            String username = body.getSubject();
+            Long uid = body.get("uid", Long.class);
+            return ResponseEntity.ok(Map.of("username", username, "uid", uid));
+        } catch (Exception ex) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
+        }
     }
 }

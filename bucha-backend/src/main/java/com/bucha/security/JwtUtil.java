@@ -50,4 +50,24 @@ public class JwtUtil {
     public Jws<Claims> validateToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
     }
+
+    /**
+     * Parse claims from token. If ignoreExpiration is true, expired tokens will
+     * return
+     * their claims instead of throwing ExpiredJwtException (signature is still
+     * validated).
+     */
+    public Claims parseClaims(String token, boolean ignoreExpiration) {
+        try {
+            Jws<Claims> jws = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return jws.getBody();
+        } catch (ExpiredJwtException ex) {
+            if (ignoreExpiration) {
+                // Signature has already been validated by the parser before throwing
+                // ExpiredJwtException, so it's safe to return the claims here.
+                return ex.getClaims();
+            }
+            throw ex;
+        }
+    }
 }
