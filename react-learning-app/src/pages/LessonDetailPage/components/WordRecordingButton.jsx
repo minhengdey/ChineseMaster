@@ -14,7 +14,7 @@ const WordRecordingButton = ({ word, pinyin, onScore, onStartRecording, size = '
     setError(null);
     setAudioBlob(null);
     setIsAnalyzing(false);
-    
+
     // Notify parent component
     if (onStartRecording) {
       onStartRecording();
@@ -28,7 +28,7 @@ const WordRecordingButton = ({ word, pinyin, onScore, onStartRecording, size = '
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
+
       // Setup MediaRecorder with WebM format
       const options = { mimeType: 'audio/webm' };
       const mediaRecorder = new MediaRecorder(stream, options);
@@ -46,10 +46,10 @@ const WordRecordingButton = ({ word, pinyin, onScore, onStartRecording, size = '
       mediaRecorder.addEventListener('stop', () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         setAudioBlob(blob);
-        
+
         // Stop all tracks
         stream.getTracks().forEach(track => track.stop());
-        
+
         // Tự động đánh giá phát âm ngay sau khi ghi xong
         setTimeout(() => {
           submitForAnalysisWithBlob(blob);
@@ -102,7 +102,7 @@ const WordRecordingButton = ({ word, pinyin, onScore, onStartRecording, size = '
     try {
       // Use word (hanzi) for vocabulary scoring
       const textToAnalyze = word;
-      
+
       console.log('Analyzing vocabulary with ISE Word API:', {
         word: textToAnalyze,
         pinyin: pinyin,
@@ -110,23 +110,55 @@ const WordRecordingButton = ({ word, pinyin, onScore, onStartRecording, size = '
         audioType: blob.type,
         audioSize: blob.size
       });
-      
+
       // Use the new scoreWord API
       const result = await iseAPI.scoreWord({
         text: textToAnalyze,
         audioFile: blob
       });
-      
-      console.log('Word analysis result:', result);
-      
-      // Validate result structure from IseWordController
-      if (result && (result.overall !== undefined || result.pronunciation !== undefined)) {
-        onScore && onScore(result, blob);
-      } else {
-        console.warn('Unexpected result format from ISE Word API:', result);
-        setError('Kết quả đánh giá không rõ ràng. Vui lòng thử lại.');
+
+      console.log('Word analysis result (raw):', result);
+
+      // If iseAPI returned an explicit raw_response, keep it available for debugging
+      const raw = result?.raw_response ?? result;
+
+      // Normalizer: attempt to produce a consistent shape the UI expects.
+      const normalize = (r) => {
+        if (!r || typeof r !== 'object') return { raw_response: r };
+
+        // If already normalized (has total_score or words), return as-is
+        if (r.total_score != null || Array.isArray(r.words)) return r;
+
+        const normalized = {};
+
+        // Map common possible keys to total_score
+        normalized.total_score = (r.total_score ?? r.totalScore ?? r.overall ?? r.score ?? r.accuracy ?? null);
+        normalized.fluency = (r.fluency ?? r.fluencyScore ?? null);
+        normalized.completeness = (r.completeness ?? r.completenessScore ?? null);
+        normalized.wrong_words = (r.wrong_words ?? r.wrongWords ?? r.wrong ?? []);
+        normalized.sid = (r.sid ?? r.id ?? null);
+        normalized.status = (r.status ?? null);
+        normalized.raw_xml = (r.raw_xml ?? r.rawXml ?? r.rawXML ?? null);
+        normalized.words = Array.isArray(r.words) ? r.words : (Array.isArray(r.phonemes) ? r.phonemes : []);
+
+        // If nothing useful found, include the original as raw_response
+        if (normalized.total_score == null && normalized.words.length === 0) {
+          normalized.raw_response = r;
+        }
+
+        return normalized;
+      };
+
+      const normalizedResult = normalize(raw);
+
+      // Log for diagnostics when we had to fallback
+      if (normalizedResult.raw_response) {
+        try { console.warn('Normalized result contains raw_response (unexpected original shape):', JSON.stringify(normalizedResult.raw_response)); } catch (e) { console.warn('Normalized result contains raw_response (non-serializable)'); }
       }
-      
+
+      // Always call onScore with the normalized result so parent UI can display something
+      onScore && onScore(normalizedResult, blob);
+
     } catch (error) {
       console.error('Error analyzing vocabulary with ISE Word API:', error);
       setError(error.message || 'Không thể đánh giá phát âm. Vui lòng thử lại.');
@@ -157,7 +189,7 @@ const WordRecordingButton = ({ word, pinyin, onScore, onStartRecording, size = '
         <div className="alert alert-error alert-sm">
           <span className="text-xs">{error}</span>
         </div>
-        <button 
+        <button
           className={`btn btn-outline btn-warning ${getSizeClasses()}`}
           onClick={retry}
         >
@@ -178,7 +210,7 @@ const WordRecordingButton = ({ word, pinyin, onScore, onStartRecording, size = '
 
   if (isRecording) {
     return (
-      <button 
+      <button
         className={`btn btn-error ${getSizeClasses()}`}
         onClick={stopRecording}
       >
@@ -188,7 +220,7 @@ const WordRecordingButton = ({ word, pinyin, onScore, onStartRecording, size = '
   }
 
   return (
-    <button 
+    <button
       className={`btn btn-outline btn-success ${getSizeClasses()}`}
       onClick={startRecording}
       title="Bắt đầu ghi âm để luyện phát âm từ vựng"

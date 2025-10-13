@@ -1,7 +1,10 @@
 import axios from "axios";
 // import "window._env_";
-// Base API configuration
-const API_BASE_URL = window._env_.VITE_API_BASE_URL;
+// Base API configuration (fallback-safe)
+const API_BASE_URL =
+   (typeof window !== 'undefined' && window._env_ && window._env_.VITE_API_BASE_URL)
+      ? window._env_.VITE_API_BASE_URL
+      : (import.meta?.env?.VITE_API_BASE_URL || "http://localhost:8080/api");
 
 const apiClient = axios.create({
    baseURL: API_BASE_URL,
@@ -194,6 +197,10 @@ export const contentAPI = {
 
    // Get lesson detail with conversations and vocabulary
    getLessonDetail: async (lessonId) => {
+      if (lessonId == null || lessonId === '') {
+         // Defensive: avoid sending requests like /content/lessons/undefined to the server
+         throw new Error('getLessonDetail requires a valid lessonId');
+      }
       const response = await apiClient.get(`/content/lessons/${lessonId}`);
       return response.data;
    },
@@ -201,12 +208,26 @@ export const contentAPI = {
 
 // Audio APIs
 export const audioAPI = {
+   // Resolve an audio URL from either a full URL or a backend filename.
+   // If `filename` is already an absolute URL, return it (after normalizing known typos).
+   // Otherwise, build a URL using the API base path.
    getAudioUrl: (filename) => {
+      if (!filename) return null;
+      try {
+         if (typeof filename === 'string' && (filename.startsWith('http://') || filename.startsWith('https://'))) {
+            // Fix a common path typo observed in some cloudinary assets
+            return filename.replace('/curriculumn/', '/curriculum/');
+         }
+      } catch (e) {
+         // fallthrough to default behavior
+      }
       return `${API_BASE_URL}/audio/${filename}`;
    },
 
    playAudio: (filename) => {
-      const audio = new Audio(`${API_BASE_URL}/audio/${filename}`);
+      const url = audioAPI.getAudioUrl(filename);
+      if (!url) return Promise.reject(new Error('no audio filename/url provided'));
+      const audio = new Audio(url);
       return audio.play();
    },
 };
@@ -328,19 +349,21 @@ export const iseAPI = {
             headers,
          });
 
+         console.log("ISE sentence analysis result (raw):", response.data);
+
          return response.data;
       } catch (error) {
          console.error("ISE API Error:", error);
          throw new Error(
             error.response?.data?.message ||
-               error.message ||
-               "Không thể đánh giá phát âm. Vui lòng kiểm tra kết nối mạng và thử lại."
+            error.message ||
+            "Không thể đánh giá phát âm. Vui lòng kiểm tra kết nối mạng và thử lại."
          );
       }
    },
 
-   // NEW: scoreWord for vocabulary using the new IseWordController
-   scoreWord: async ({ text, audioFile }) => {
+  // NEW: scoreWord for vocabulary using the new IseWordController
+  scoreWord: async ({ text, audioFile }) => {
       try {
          const formData = new FormData();
          formData.append("text", text);
@@ -356,31 +379,60 @@ export const iseAPI = {
             audioFileName: audioFileWithName.name,
             audioSize: audioFileWithName.size,
             audioType: audioFileWithName.type,
-            endpoint: "/ise/score/word",
+            endpoint: "/ise/score",
          });
 
-         const response = await apiClient.post("/ise/score/word", formData, {
-            headers: {
-               "Content-Type": "multipart/form-data",
-            },
-         });
+        const response = await apiClient.post("/ise/score", formData);
 
-         // IseWordController returns JSON string, parse it
+         // IseWordController may return different shapes:
+         // - a JSON string
+         // - an object like { result: { ... } } or { data: { ... } }
+         // - an array [ {...} ]
+         // Normalize into a consistent scoring object when possible.
          let result = response.data;
+
+         // If it's a string, try to parse it as JSON
          if (typeof result === "string") {
             try {
                result = JSON.parse(result);
             } catch (parseError) {
-               console.warn(
-                  "Failed to parse ISE Word response as JSON:",
-                  parseError
-               );
+               console.warn("Failed to parse ISE Word response as JSON:", parseError);
                return { raw_response: result };
             }
          }
 
-         console.log("ISE Word API result:", result);
-         return result;
+         // If wrapped in { result: ... } or { data: ... }, unwrap it
+         if (result && typeof result === "object") {
+            if (result.result && typeof result.result === "object") {
+               result = result.result;
+            } else if (result.data && typeof result.data === "object") {
+               result = result.data;
+            }
+         }
+
+         // If it's an array, take the first element
+         if (Array.isArray(result)) {
+            result = result.length > 0 ? result[0] : { raw_response: [] };
+         }
+
+        // Build a normalized object exactly like scoreSentence normalization
+        if (result && typeof result === "object") {
+          const sent = result.sentence || {};
+          const normalized = {
+            total_score: (sent.total_score ?? result.total_score ?? result.totalScore ?? result.overall ?? null),
+            fluency: (sent.fluency ?? result.fluency ?? result.fluencyScore ?? null),
+            completeness: (sent.completeness ?? result.completeness ?? result.completenessScore ?? null),
+            wrong_words: (sent.wrong_words ?? result.wrong_words ?? result.wrongWords ?? result.wrong ?? []),
+            sid: (sent.sid ?? result.sid ?? null),
+            status: (sent.status ?? result.status ?? null),
+            raw_xml: (sent.raw_xml ?? result.raw_xml ?? result.rawXml ?? result.rawXML ?? null),
+            words: (result.words ?? sent.words ?? []),
+          };
+          return normalized;
+        }
+
+        // Fallback: return as-is if structure unknown
+        return { raw_response: result };
       } catch (error) {
          console.error("ISE Word API Error:", error);
 
@@ -428,16 +480,28 @@ export const iseStatsAPI = {
 // Migration/content helper APIs
 export const migrationAPI = {
    getConversationLinesByLesson: async (lessonId) => {
-      if (!lessonId) {
-         const response = await apiClient.get(
-            "/migration/conversationLineByLessionId"
-         );
-         return response.data;
+      // Some deployments use a misspelled path "Lession". Try both gracefully.
+      const paths = !lessonId
+         ? [
+            "/migration/conversationLineByLessonId",
+            "/migration/conversationLineByLessionId",
+         ]
+         : [
+            `/migration/conversationLineByLessonId/${lessonId}`,
+            `/migration/conversationLineByLessionId/${lessonId}`,
+         ];
+
+      let lastError;
+      for (const p of paths) {
+         try {
+            const response = await apiClient.get(p);
+            return response.data;
+         } catch (e) {
+            lastError = e;
+            // try next path
+         }
       }
-      const response = await apiClient.get(
-         `/migration/conversationLineByLessionId/${lessonId}`
-      );
-      return response.data;
+      throw lastError || new Error("Không thể lấy dữ liệu hội thoại từ server");
    },
 };
 
