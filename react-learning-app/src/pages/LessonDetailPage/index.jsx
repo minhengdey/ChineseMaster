@@ -12,6 +12,11 @@ const LessonDetailPage = () => {
   const [activeTab, setActiveTab] = useState('conversation');
 
   useEffect(() => {
+    if (!lessonId) {
+      // Defensive: if route param missing, don't call backend with undefined id
+      setLoading(false);
+      return;
+    }
     fetchLesson();
   }, [lessonId]);
 

@@ -313,32 +313,53 @@ public class IseService {
                                             }
                                             sentenceOut.put("completeness", completeness);
 
+                                            // Build wrong_words based solely on the word-level "overall" score.
+                                            // Assumption: consider a word wrong when its overall <
+                                            // WRONG_WORD_THRESHOLD.
                                             java.util.List<String> wrongList = new java.util.ArrayList<>();
+                                            final double WRONG_WORD_THRESHOLD = 60.0d;
                                             if (readSentence != null) {
                                                 NodeList words = readSentence.getElementsByTagName("word");
                                                 for (int wi = 0; words != null && wi < words.getLength(); wi++) {
                                                     Element w = (Element) words.item(wi);
-                                                    boolean hasError = false;
-                                                    NodeList phones = w.getElementsByTagName("phone");
-                                                    for (int pi = 0; phones != null && pi < phones.getLength(); pi++) {
-                                                        Element ph = (Element) phones.item(pi);
-                                                        String perr = ph.getAttribute("perr_msg");
-                                                        String dpmsg = ph.getAttribute("dp_message");
-                                                        if ((perr != null && !perr.isEmpty() && !"0".equals(perr))
-                                                                || (dpmsg != null && !dpmsg.isEmpty()
-                                                                        && !"0".equals(dpmsg))) {
-                                                            hasError = true;
-                                                            break;
+                                                    String content = w.getAttribute("content");
+                                                    if (content == null || content.isEmpty()) {
+                                                        content = w.getTextContent() == null ? ""
+                                                                : w.getTextContent().trim();
+                                                    }
+                                                    if (content == null || content.isEmpty())
+                                                        continue;
+
+                                                    double overall = 0.0d;
+                                                    try {
+                                                        JSONObject wordScores = extractWordScoresFromElement(w);
+                                                        if (wordScores != null && wordScores.containsKey("overall"))
+                                                            overall = wordScores.getDoubleValue("overall");
+                                                    } catch (Throwable t) {
+                                                        logger.warn("Failed to extract word score for '{}': {}",
+                                                                content, t.getMessage());
+                                                    }
+
+                                                    // Fallback: if extractor didn't return an overall, try attributes
+                                                    // on the element or parent
+                                                    if (overall == 0.0d) {
+                                                        String s = w.getAttribute("total_score");
+                                                        if (s == null || s.isEmpty()) {
+                                                            Node parent = w.getParentNode();
+                                                            if (parent instanceof Element) {
+                                                                s = ((Element) parent).getAttribute("total_score");
+                                                            }
+                                                        }
+                                                        if (s != null && !s.isEmpty()) {
+                                                            try {
+                                                                overall = Double.parseDouble(s);
+                                                            } catch (Exception ignored) {
+                                                            }
                                                         }
                                                     }
-                                                    if (hasError) {
-                                                        String content = w.getAttribute("content");
-                                                        if (content == null || content.isEmpty()) {
-                                                            content = w.getTextContent() == null ? ""
-                                                                    : w.getTextContent().trim();
-                                                        }
-                                                        if (content != null && !content.isEmpty())
-                                                            wrongList.add(content);
+
+                                                    if (overall < WRONG_WORD_THRESHOLD) {
+                                                        wrongList.add(content);
                                                     }
                                                 }
                                             }

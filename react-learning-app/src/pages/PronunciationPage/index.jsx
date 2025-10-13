@@ -1,247 +1,216 @@
 import React, { useState, useEffect } from 'react';
-import { practiceAPI, handleApiError } from '../../services/api';
+import { lessonsAPI, contentAPI } from '../../services/api';
+import AudioPlayer from '../LessonDetailPage/components/AudioPlayer';
+import WordRecordingButton from '../LessonDetailPage/components/WordRecordingButton';
+import WordPronunciationResult from '../LessonDetailPage/components/WordPronunciationResult';
 import { Link } from 'react-router-dom';
 
 const PronunciationPage = () => {
-  const [alphabetData, setAlphabetData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  // (alphabet/pinyin removed — this page now focuses on vocabulary)
+  // Vocabulary states (single mode only)
+  const [vocabList, setVocabList] = useState([]);
+  const [vocabLoading, setVocabLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(24);
+  // category selection removed
   const [searchTerm, setSearchTerm] = useState('');
-  const [playingAudio, setPlayingAudio] = useState(null);
+  const [pronunciationResult, setPronunciationResult] = useState(null);
+  const [recordedAudio, setRecordedAudio] = useState(null);
+  const [showPronunciationResult, setShowPronunciationResult] = useState(false);
+  const [activeItemKey, setActiveItemKey] = useState(null);
+  useEffect(() => { setPage(1); }, [searchTerm, pageSize]);
 
+  // load vocabularies when the page mounts so users don't need to press "Tìm kiếm"
   useEffect(() => {
-    fetchAlphabetData();
+    fetchAllVocabularies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchAlphabetData = async () => {
-    try {
-      // Load the Chinese alphabet data
-      const response = await fetch('/data/chinese_alphabet.json');
-      const data = await response.json();
-      setAlphabetData(data.alphabet || []);
-    } catch (error) {
-      console.error('Error fetching alphabet data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const playAudio = async (pinyin) => {
-    try {
-      setPlayingAudio(pinyin);
-      await audioAPI.playAudio(`${pinyin}.mp3`);
-      setPlayingAudio(null);
-    } catch (error) {
-      setPlayingAudio(null);
-      console.error('Error playing audio for:', pinyin);
-    }
-  };
-
-  const getCategories = () => {
-    const categories = new Set();
-    alphabetData.forEach(item => {
-      if (item.category) {
-        categories.add(item.category);
+  // debounce searchTerm changes so UI updates while typing and auto-refreshes if no results
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      setPage(1);
+      // if we have no vocab loaded yet, ensure we fetch
+      if (vocabList.length === 0) {
+        await fetchAllVocabularies();
+        return;
       }
-    });
-    return Array.from(categories);
+      // otherwise, nothing else required; filtering happens client-side
+    }, 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
+
+  // audio play handled by AudioPlayer component; playAudio removed
+
+  // --- Vocabulary fetching & helpers ---
+  const fetchAllVocabularies = async () => {
+    setVocabLoading(true);
+    try {
+      const lessons = await lessonsAPI.getAll();
+      // fetch lesson details in parallel
+      const lessonDetails = await Promise.all(
+        lessons.map((l) => contentAPI.getLessonDetail(l.id).catch((e) => null))
+      );
+
+      const allVocab = [];
+      lessonDetails.forEach((detail, idx) => {
+        if (!detail) return;
+        const lesson = lessons[idx];
+        (detail.vocabularies || []).forEach((v) => {
+          allVocab.push({ ...v, lessonId: lesson.id, lessonTitle: lesson.title || lesson.name, curriculumId: lesson.curriculumId || null });
+        });
+      });
+
+      setVocabList(allVocab);
+    } catch (error) {
+      console.error('Error fetching vocabularies:', error);
+    } finally {
+      setVocabLoading(false);
+    }
   };
 
-  const filteredData = alphabetData.filter(item => {
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-    const matchesSearch = item.base_sound.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
+  const getFilteredVocab = () => {
+    const q = (searchTerm || '').toLowerCase().trim();
+    if (!q) return vocabList;
+    return vocabList.filter((item) => {
+      return [item.word, item.pinyin, item.meaning, item.example?.zh, item.example?.vn]
+        .filter(Boolean)
+        .some((f) => f.toLowerCase().includes(q));
+    });
+  };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
+  const totalPages = Math.max(1, Math.ceil(getFilteredVocab().length / pageSize));
+  const paginatedVocab = getFilteredVocab().slice((page - 1) * pageSize, page * pageSize);
+
+  // alphabet filtering removed
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">🔊 Phát âm</h1>
-        <p className="text-lg text-base-content/70">
-          Học phát âm tiếng Trung với hệ thống Pinyin hoàn chỉnh
-        </p>
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-bold mb-1">🔊 Phát âm</h1>
+          <p className="text-base text-base-content/70">Học phát âm tiếng Trung với hệ thống Pinyin — nghe, lặp lại và luyện nói.</p>
+        </div>
+
+        <div className="flex gap-2">
+          <Link to="/speaking/daily" className="btn btn-accent">Luyện nói hôm nay</Link>
+          <Link to="/curriculum" className="btn btn-outline">Giáo trình & Bài học</Link>
+        </div>
       </div>
 
-      <div className="mt-6 mb-8">
-        <Link to="/speaking/daily" className="btn btn-accent">Luyện phát âm (Hôm nay)</Link>
-        <div className="text-sm text-base-content/60 mt-2">Bắt đầu luyện các câu trộn lẫn từ tất cả các bài</div>
-      </div>
+      {/* Controls */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+        <div className="col-span-1 md:col-span-2 flex gap-2">
+          <input
+            type="text"
+            placeholder="Tìm kiếm"
+            className="input input-bordered w-full"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
-      {/* Search and Filter */}
-      <div className="bg-base-200 p-6 rounded-lg mb-8">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="form-control flex-1">
-            <input
-              type="text"
-              placeholder="Tìm kiếm âm thanh..."
-              className="input input-bordered w-full"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <div className="form-control">
-            <select
-              className="select select-bordered"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+        <div className="col-span-1 flex gap-2 items-center">
+          <div className="w-full">
+            <button
+              className="btn btn-primary w-full"
+              onClick={async () => {
+                // always refresh the vocab list and reset to first page
+                setPage(1);
+                await fetchAllVocabularies();
+              }}
             >
-              <option value="all">Tất cả loại âm</option>
-              {getCategories().map(category => (
-                <option key={category} value={category}>
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </option>
-              ))}
-            </select>
+              Tìm kiếm
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Pronunciation Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {filteredData.map((item, index) => (
-          <div key={index} className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all">
-            <div className="card-body p-4 text-center">
-              <h2 className="card-title text-2xl font-bold justify-center mb-2">
-                {item.base_sound}
-              </h2>
+      {/* Vocabulary grid */}
+      <div>
+        {vocabLoading ? (
+          <div className="min-h-40 flex items-center justify-center"><span className="loading loading-spinner loading-lg"></span></div>
+        ) : vocabList.length === 0 ? (
+          <div className="text-center text-base-content/60">Không tìm thấy từ vựng.</div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {paginatedVocab.map((item) => (
+                <div key={item.id || (item.word + item.pinyin)} className="card bg-base-100 shadow-sm p-3 flex flex-col items-start gap-2">
+                  <div className="w-full flex items-center justify-between">
+                    <div>
+                      <div className="text-lg font-bold">{item.word}</div>
+                      {item.pinyin && <div className="text-sm text-base-content/70">{item.pinyin}</div>}
+                    </div>
+                    <div className="ml-2 flex items-center gap-2">
+                      {(item.audioUrl || item.audioAsset) && (
+                        <AudioPlayer audioUrl={item.audioUrl} audioAsset={item.audioAsset} size="sm" />
+                      )}
+                      <WordRecordingButton
+                        word={item.word}
+                        pinyin={item.pinyin}
+                        onStartRecording={() => {
+                          // clear previous result for this item
+                          setShowPronunciationResult(false);
+                          setPronunciationResult(null);
+                          setRecordedAudio(null);
+                          setActiveItemKey(`word-${item.id}`);
+                        }}
+                        onScore={(result, audioBlob) => {
+                          setPronunciationResult(result);
+                          setRecordedAudio(audioBlob);
+                          setActiveItemKey(`word-${item.id}`);
+                          setShowPronunciationResult(true);
+                        }}
+                        size="xs"
+                      />
+                    </div>
+                  </div>
 
-              {item.description && (
-                <p className="text-sm text-base-content/70 mb-3">
-                  {item.description}
-                </p>
-              )}
+                  {item.meaning && <div className="text-xs text-base-content/60">{item.meaning}</div>}
 
-              <button
-                className={`btn btn-circle btn-primary mb-3 ${playingAudio === item.base_sound ? 'loading' : ''
-                  }`}
-                onClick={() => playAudio(item.base_sound)}
-                disabled={playingAudio === item.base_sound}
-              >
-                {playingAudio === item.base_sound ? '' : '🔊'}
-              </button>
+                  <div className="w-full mt-auto flex justify-between items-center pt-2">
+                    <div className="text-xs text-base-content/50">{item.lessonTitle || item.lessonId || ''}</div>
+                    <Link to={`/curriculum/${item.curriculumId || 1}/lesson/${item.lessonId}/practice`} className="btn btn-xs btn-outline">Luyện</Link>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-              {/* Tone variants */}
-              {item.variants && item.variants.length > 0 && (
-                <div className="divider divider-primary text-xs">Thanh điệu</div>
-              )}
-
-              <div className="flex flex-wrap gap-1 justify-center">
-                {item.variants?.map((variant, vIndex) => (
-                  <button
-                    key={vIndex}
-                    className={`btn btn-xs btn-outline ${playingAudio === variant.pinyin ? 'loading' : ''
-                      }`}
-                    onClick={() => playAudio(variant.pinyin)}
-                    disabled={playingAudio === variant.pinyin}
-                    title={`Thanh ${variant.tone}: ${variant.description || ''}`}
-                  >
-                    {variant.pinyin}
-                  </button>
-                ))}
+            <div className="mt-4 flex items-center justify-between">
+              <div className="text-sm text-base-content/60">{getFilteredVocab().length} kết quả</div>
+              <div className="flex items-center gap-2">
+                <button className="btn btn-xs" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>Prev</button>
+                <div className="px-2">{page} / {totalPages}</div>
+                <button className="btn btn-xs" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>Next</button>
               </div>
             </div>
-          </div>
-        ))}
+          </>
+        )}
       </div>
-
-      {filteredData.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🔊</div>
-          <h3 className="text-2xl font-bold mb-2">Không tìm thấy âm thanh</h3>
-          <p className="text-base-content/70">
-            Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc
-          </p>
+      {/* Pronunciation result modal for word recordings */}
+      {showPronunciationResult && pronunciationResult && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="max-w-2xl w-full">
+            <div className="card bg-base-100 shadow-xl p-4">
+              <WordPronunciationResult
+                result={pronunciationResult}
+                recordedAudio={recordedAudio}
+                word={(activeItemKey && activeItemKey.startsWith('word-')) ? (paginatedVocab.find(v => `word-${v.id}` === activeItemKey || `word-${v.id}` === activeItemKey) ? (paginatedVocab.find(v => `word-${v.id}` === activeItemKey || `word-${v.id}` === activeItemKey).word) : null) : null}
+                pinyin={(activeItemKey && activeItemKey.startsWith('word-')) ? (paginatedVocab.find(v => `word-${v.id}` === activeItemKey || `word-${v.id}` === activeItemKey) ? (paginatedVocab.find(v => `word-${v.id}` === activeItemKey || `word-${v.id}` === activeItemKey).pinyin) : null) : null}
+                onClose={() => {
+                  setShowPronunciationResult(false);
+                  setPronunciationResult(null);
+                  setRecordedAudio(null);
+                  setActiveItemKey(null);
+                }}
+              />
+            </div>
+          </div>
         </div>
       )}
-
-      {/* Info Cards */}
-      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card bg-primary text-primary-content">
-          <div className="card-body text-center">
-            <h3 className="card-title justify-center">Thanh điệu</h3>
-            <div className="text-3xl font-bold">4</div>
-            <p className="text-sm">Thanh cơ bản</p>
-          </div>
-        </div>
-
-        <div className="card bg-secondary text-secondary-content">
-          <div className="card-body text-center">
-            <h3 className="card-title justify-center">Âm mẫu</h3>
-            <div className="text-3xl font-bold">{alphabetData.length}</div>
-            <p className="text-sm">Âm thanh cơ bản</p>
-          </div>
-        </div>
-
-        <div className="card bg-accent text-accent-content">
-          <div className="card-body text-center">
-            <h3 className="card-title justify-center">Biến thể</h3>
-            <div className="text-3xl font-bold">
-              {alphabetData.reduce((total, item) => total + (item.variants?.length || 0), 0)}
-            </div>
-            <p className="text-sm">Thanh điệu</p>
-          </div>
-        </div>
-
-        <div className="card bg-neutral text-neutral-content">
-          <div className="card-body text-center">
-            <h3 className="card-title justify-center">Đã học</h3>
-            <div className="text-3xl font-bold">0</div>
-            <p className="text-sm">Âm thanh</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Pronunciation Tips */}
-      <div className="mt-12 card bg-base-100 shadow-xl">
-        <div className="card-body">
-          <h2 className="card-title mb-4">💡 Mẹo phát âm</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-bold mb-2">Thanh điệu cơ bản:</h3>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center">
-                  <span className="badge badge-primary mr-2">1</span>
-                  Thanh bằng: giọng cao, đều
-                </li>
-                <li className="flex items-center">
-                  <span className="badge badge-secondary mr-2">2</span>
-                  Thanh huyền: từ thấp lên cao
-                </li>
-                <li className="flex items-center">
-                  <span className="badge badge-accent mr-2">3</span>
-                  Thanh ngã: xuống rồi lên
-                </li>
-                <li className="flex items-center">
-                  <span className="badge badge-warning mr-2">4</span>
-                  Thanh sắc: từ cao xuống thấp
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-bold mb-2">Lời khuyên:</h3>
-              <ul className="space-y-2 text-sm">
-                <li>• Nghe và lặp lại nhiều lần</li>
-                <li>• Chú ý đến hình dạng miệng</li>
-                <li>• Luyện tập thanh điệu riêng biệt</li>
-                <li>• Ghi âm để so sánh</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

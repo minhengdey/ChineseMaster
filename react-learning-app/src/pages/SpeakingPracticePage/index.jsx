@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { iseAPI, migrationAPI, contentAPI } from '../../services/api';
 import { iseStatsAPI } from '../../services/api';
 import AudioPlayer from '../LessonDetailPage/components/AudioPlayer';
@@ -8,6 +8,7 @@ const SpeakingPracticePage = () => {
     const { curriculumId, lessonId } = useParams();
     const location = useLocation();
     const isDailyMode = location.pathname && location.pathname.includes('/speaking/daily');
+    const navigate = useNavigate();
     const [sentence, setSentence] = useState('');
     const [queue, setQueue] = useState([]);
     const [queueIndex, setQueueIndex] = useState(0);
@@ -82,9 +83,12 @@ const SpeakingPracticePage = () => {
                 const items = [];
                 convs.forEach(conv => {
                     (conv.lines || []).forEach(line => {
+                        // Be tolerant to different backend field names
+                        const text = line?.zhText || line?.zh || line?.text || line?.content || line?.sentence || null;
+                        if (!text) return; // only keep lines that actually have Chinese text
                         items.push({
                             id: line.id,
-                            text: line.zhText,
+                            text: text,
                             pinyin: line.pinyin,
                             speaker: line.speaker,
                             audioAsset: line.audioAsset || null,
@@ -407,10 +411,17 @@ const SpeakingPracticePage = () => {
             <div className="mb-6 flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Luyện nói</h1>
                 <div className="flex gap-2 items-center">
-                    <Link
-                        to={`/curriculum/${curriculumId}/lesson/${lessonId}`}
-                        className={`btn btn-ghost ${recording ? 'opacity-50 pointer-events-none' : ''}`}
-                    >Quay lại bài học</Link>
+                    {isDailyMode ? (
+                        <button
+                            className={`btn btn-ghost ${recording ? 'opacity-50 pointer-events-none' : ''}`}
+                            onClick={() => navigate(-1)}
+                        >Quay lại</button>
+                    ) : (
+                        <Link
+                            to={`/curriculum/${curriculumId}/lesson/${lessonId}`}
+                            className={`btn btn-ghost ${recording ? 'opacity-50 pointer-events-none' : ''}`}
+                        >Quay lại bài học</Link>
+                    )}
 
                     <button
                         className={`btn ${recording || !currentScored ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -475,21 +486,51 @@ const SpeakingPracticePage = () => {
                             <div className="mb-4">
                                 <div className="text-sm text-gray-600 mb-1">Câu gốc</div>
                                 <div className="text-lg leading-relaxed">{sentence ? (
-                                    // Render sentence as clickable characters/words
-                                    Array.from(sentence).map((ch, i) => {
-                                        const isWrong = result?.wrong_words?.includes(ch);
-                                        const wordData = result?.words?.find(w => w.word === ch);
-                                        return (
-                                            <button
-                                                key={`${ch}-${i}`}
-                                                onClick={() => setSelectedWord(wordData || { word: ch })}
-                                                className={`inline-block mx-0.5 px-1 rounded ${isWrong ? 'text-red-600 bg-red-100' : ''} ${wordData ? 'hover:bg-base-200' : 'opacity-60'}`}
-                                                title={wordData ? `Chi tiết từ: ${ch}` : ch}
-                                            >
-                                                {ch}
-                                            </button>
-                                        );
-                                    })
+                                    // Build a mapping from sentence character positions to result.words indices.
+                                    // We skip punctuation characters (commas, periods, spaces) when mapping so that
+                                    // result.words (which typically are per-character or per-syllable) align correctly.
+                                    (() => {
+                                        const chars = Array.from(sentence);
+                                        // include both ASCII and fullwidth (Chinese) punctuation so they don't consume word indices
+                                        const isPunct = (ch) => /[\s,，。.?!、!！?？;；:：]/.test(ch);
+                                        const mapping = []; // maps char index -> word index or null
+                                        let wi = 0;
+                                        for (let ci = 0; ci < chars.length; ci++) {
+                                            const ch = chars[ci];
+                                            if (isPunct(ch)) {
+                                                mapping.push(null);
+                                            } else {
+                                                mapping.push(wi);
+                                                wi += 1;
+                                            }
+                                        }
+
+                                        return chars.map((ch, i) => {
+                                            const wordIndex = mapping[i];
+                                            const isWrong = Array.isArray(result?.wrong_words) ? result.wrong_words.includes(ch) : false;
+                                            const details = (typeof wordIndex === 'number' && Array.isArray(result?.words)) ? result.words[wordIndex] : null;
+                                            const normalized = {
+                                                word: ch,
+                                                index: wordIndex,
+                                                duration: details?.duration ?? details?.time_len ?? null,
+                                                overall: details?.overall ?? details?.pronunciation ?? null,
+                                                fluency: details?.fluency ?? null,
+                                                phonemes: details?.phonemes ?? details?.phones ?? details?.phoneme_list ?? null,
+                                                details: details || null,
+                                            };
+
+                                            return (
+                                                <button
+                                                    key={`${ch}-${i}`}
+                                                    onClick={() => setSelectedWord(normalized)}
+                                                    className={`inline-block mx-0.5 px-1 rounded ${isWrong ? 'text-red-600 bg-red-100' : ''} ${details ? 'hover:bg-base-200' : 'opacity-60'}`}
+                                                    title={details ? `Chi tiết từ: ${ch}` : ch}
+                                                >
+                                                    {ch}
+                                                </button>
+                                            );
+                                        });
+                                    })()
                                 ) : (
                                     <span className="text-base-content/70">(không có câu)</span>
                                 )}</div>
@@ -501,24 +542,25 @@ const SpeakingPracticePage = () => {
                                     <div className="flex justify-between items-start mb-2">
                                         <div>
                                             <div className="text-lg font-semibold">Chi tiết: {selectedWord.word}</div>
-                                            <div className="text-sm text-base-content/70">Duration: {selectedWord.duration ?? selectedWord.time_len ?? '-'} ms</div>
                                         </div>
                                         <div>
                                             <button className="btn btn-xs btn-ghost" onClick={() => setSelectedWord(null)}>Đóng</button>
                                         </div>
                                     </div>
 
-                                    {selectedWord.overall != null && (
+                                    {/* overall score - prefer normalized.overall, fallback to details.overall or details.pronunciation */}
+                                    {(selectedWord.overall != null) || (selectedWord.details && (selectedWord.details.overall != null || selectedWord.details.pronunciation != null)) ? (
                                         <div className="mb-2">
                                             <div className="text-sm text-gray-600 mb-1">Điểm từ</div>
                                             <div className="flex items-center gap-2">
-                                                <Stars percent={toPercent(selectedWord.overall, 'total')} />
-                                                <div className="text-sm font-medium text-yellow-700">{toPercent(selectedWord.overall, 'total')}%</div>
+                                                <Stars percent={toPercent(selectedWord.overall ?? selectedWord.details?.overall ?? selectedWord.details?.pronunciation ?? 0, 'total')} />
+                                                <div className="text-sm font-medium text-yellow-700">{toPercent(selectedWord.overall ?? selectedWord.details?.overall ?? selectedWord.details?.pronunciation ?? 0, 'total')}%</div>
                                             </div>
                                         </div>
-                                    )}
+                                    ) : null}
 
-                                    {selectedWord.phonemes && (
+                                    {/* phonemes - prefer selectedWord.phonemes, then selectedWord.details.phonemes or details.phones */}
+                                    {(selectedWord.phonemes && selectedWord.phonemes.length > 0) || (selectedWord.details && (selectedWord.details.phonemes || selectedWord.details.phones)) ? (
                                         <div>
                                             <div className="text-sm text-gray-600 mb-2">Phonemes</div>
                                             <div className="overflow-x-auto">
@@ -531,19 +573,19 @@ const SpeakingPracticePage = () => {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {selectedWord.phonemes.map((p, idx) => (
+                                                        {(selectedWord.phonemes || selectedWord.details?.phonemes || selectedWord.details?.phones || []).map((p, idx) => (
                                                             <tr key={idx}>
                                                                 <td>{
                                                                     // Prefer phoneme_display provided by backend; fall back to raw phoneme.
-                                                                    (typeof p.phoneme_display === 'string' && p.phoneme_display)
-                                                                    || (Array.isArray(p.phoneme_display) ? p.phoneme_display.join(' ') : p.phoneme)
+                                                                    (typeof p?.phoneme_display === 'string' && p.phoneme_display)
+                                                                    || (Array.isArray(p?.phoneme_display) ? p.phoneme_display.join(' ') : p?.phoneme || p?.phone || '-')
                                                                 }</td>
-                                                                <td>{p.score != null ? Math.round(p.score) : '-'}</td>
+                                                                <td>{p?.score != null ? Math.round(p.score) : (p?.pronunciation != null ? Math.round(p.pronunciation) : '-')}</td>
                                                                 <td>{
                                                                     // format mono_tone like 'TONE3' -> '3'
-                                                                    (p.mono_tone && typeof p.mono_tone === 'string') ? (
+                                                                    (p?.mono_tone && typeof p.mono_tone === 'string') ? (
                                                                         (p.mono_tone.match(/\d+/) || [])[0] || p.mono_tone
-                                                                    ) : (p.mono_tone || '-')
+                                                                    ) : (p?.mono_tone || '-')
                                                                 }</td>
                                                             </tr>
                                                         ))}
@@ -551,7 +593,7 @@ const SpeakingPracticePage = () => {
                                                 </table>
                                             </div>
                                         </div>
-                                    )}
+                                    ) : null}
                                 </div>
                             )}
 

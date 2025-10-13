@@ -39,8 +39,12 @@ const VocabularyPracticePage = () => {
                 setLoading(false);
             }
         };
-
         if (lessonId) fetchVocab();
+        else {
+            // No lessonId: nothing to load
+            setLoading(false);
+            setVocabularies([]);
+        }
     }, [lessonId]);
 
     const current = vocabularies[index];

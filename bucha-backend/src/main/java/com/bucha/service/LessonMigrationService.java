@@ -185,7 +185,6 @@ public class LessonMigrationService {
       for (Conversation conversation : conversationList) {
          List<ConversationLine> lines = conversationLineRepository
                .findByConversationIdOrderByOrder(conversation.getId());
-<<<<<<< HEAD
          for (ConversationLine conversationLine : lines) {
             conversationLines.add(conversationLine.getZhText());
          }
@@ -204,8 +203,6 @@ public class LessonMigrationService {
       for (Conversation conversation : allConversations) {
          List<ConversationLine> lines = conversationLineRepository
                .findByConversationIdOrderByOrder(conversation.getId());
-=======
->>>>>>> 6d3368445264c454470026d920943b1688da5942
          for (ConversationLine conversationLine : lines) {
             conversationLines.add(conversationLine.getZhText());
          }
