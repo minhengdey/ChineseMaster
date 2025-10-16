@@ -45,10 +45,6 @@ public class IseScore {
     // practice-only plays)
     Boolean includeInDaily = true;
 
-    @Lob
-    @Column(columnDefinition = "TEXT")
-    String rawXml;
-
     LocalDateTime createdAt = LocalDateTime.now();
     // date of the practice session (useful to compute daily aggregates)
     LocalDateTime sessionDate = LocalDateTime.now();

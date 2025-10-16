@@ -65,6 +65,15 @@ public class IseService {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    com.bucha.repository.IseDailyEntryRepository iseDailyEntryRepository;
+
+    @Autowired
+    com.bucha.repository.IseLessonEntryRepository iseLessonEntryRepository;
+
+    @Autowired
+    com.bucha.repository.IseTestEntryRepository iseTestEntryRepository;
+
     public ResponseEntity<?> score(JwtUserPrincipal principal, String text, MultipartFile audioFile, String reqSub,
             String reqEnt, String scoreCategory, Long lessonId, Long testId, Boolean includeInDaily,
             String sessionDate, Double durationSeconds, Integer numSentences) throws Exception {
@@ -485,7 +494,6 @@ public class IseService {
             // Persist attempt to DB if user present
             try {
                 IseScore score = new IseScore();
-                score.setRawXml(sentenceResult.getString("raw_xml"));
                 score.setTotalScore(sentenceResult.getDoubleValue("total_score"));
                 // map fields: fluency/completeness if available
                 if (sentenceResult.containsKey("fluency"))
@@ -530,7 +538,49 @@ public class IseService {
                     userRepository.findById(principal.id()).ifPresent(score::setUser);
                 }
 
-                iseRepository.save(score);
+                IseScore saved = iseRepository.save(score);
+                // also persist into new summary tables as appropriate
+                try {
+                    // persist daily entry when included in daily
+                    if (Boolean.TRUE.equals(saved.getIncludeInDaily())) {
+                        com.bucha.entity.IseDailyEntry d = new com.bucha.entity.IseDailyEntry();
+                        d.setAttemptId(saved.getId());
+                        d.setTotalScore(saved.getTotalScore());
+                        d.setDurationSeconds(saved.getDurationSeconds());
+                        d.setSessionDate(saved.getSessionDate());
+                        if (saved.getUser() != null)
+                            d.setUser(saved.getUser());
+                        iseDailyEntryRepository.save(d);
+                    }
+
+                    // persist lesson entry when lessonId present
+                    if (saved.getLessonId() != null) {
+                        com.bucha.entity.IseLessonEntry le = new com.bucha.entity.IseLessonEntry();
+                        le.setAttemptId(saved.getId());
+                        le.setLessonId(saved.getLessonId());
+                        le.setTotalScore(saved.getTotalScore());
+                        le.setDurationSeconds(saved.getDurationSeconds());
+                        le.setSessionDate(saved.getSessionDate());
+                        if (saved.getUser() != null)
+                            le.setUser(saved.getUser());
+                        iseLessonEntryRepository.save(le);
+                    }
+
+                    // persist test entry when testId present
+                    if (saved.getTestId() != null) {
+                        com.bucha.entity.IseTestEntry te = new com.bucha.entity.IseTestEntry();
+                        te.setAttemptId(saved.getId());
+                        te.setTestId(saved.getTestId());
+                        te.setTotalScore(saved.getTotalScore());
+                        te.setDurationSeconds(saved.getDurationSeconds());
+                        te.setSessionDate(saved.getSessionDate());
+                        if (saved.getUser() != null)
+                            te.setUser(saved.getUser());
+                        iseTestEntryRepository.save(te);
+                    }
+                } catch (Throwable t) {
+                    logger.warn("Failed to persist ISE summary entries: {}", t.getMessage());
+                }
             } catch (Throwable t) {
                 logger.warn("Failed to persist ISE score: {}", t.getMessage());
             }
@@ -757,223 +807,6 @@ public class IseService {
             logger.error("XML parse error: {}", e.getMessage(), e);
             return null;
         }
-    }
-
-    private JSONObject extractWordScores(Document doc) {
-        Element readSentence = null;
-        NodeList rsList = doc.getElementsByTagName("read_sentence");
-        if (rsList != null && rsList.getLength() > 0) {
-            for (int i = rsList.getLength() - 1; i >= 0; i--) {
-                Element cand = (Element) rsList.item(i);
-                if (cand.hasAttribute("total_score") || cand.hasAttribute("phone_score")
-                        || cand.hasAttribute("fluency_score")) {
-                    readSentence = cand;
-                    break;
-                }
-            }
-            if (readSentence == null)
-                readSentence = (Element) rsList.item(0);
-        }
-
-        Element wordElem = null;
-        NodeList wn = doc.getElementsByTagName("word");
-        if (wn != null && wn.getLength() > 0)
-            wordElem = (Element) wn.item(0);
-
-        JSONObject out = new JSONObject();
-        out.put("overall", 0);
-        out.put("pronunciation", 0);
-        out.put("tone", 0);
-        out.put("duration", 0);
-        out.put("completeness", 0);
-        out.put("fluency", 0);
-
-        if (readSentence != null) {
-            out.put("overall", getAttrDouble(readSentence, "total_score", "overall_score", "score"));
-            out.put("pronunciation",
-                    getAttrDouble(readSentence, "phone_score", "pronunciation_score", "pronunciation"));
-            out.put("tone", getAttrDouble(readSentence, "tone_score", "tone"));
-            out.put("duration", getAttrDouble(readSentence, "time_len", "duration"));
-            out.put("completeness", getAttrDouble(readSentence, "integrity_score", "completeness", "accuracy_score"));
-            out.put("fluency", getAttrDouble(readSentence, "fluency_score"));
-        } else if (wordElem != null) {
-            Node parent = wordElem.getParentNode();
-            if (parent instanceof Element) {
-                Element par = (Element) parent;
-                out.put("overall", getAttrDouble(par, "total_score", "overall_score", "score"));
-                out.put("pronunciation", getAttrDouble(par, "phone_score", "pronunciation_score", "pronunciation"));
-                out.put("tone", getAttrDouble(par, "tone_score", "tone"));
-                out.put("duration", getAttrDouble(par, "time_len", "duration"));
-                out.put("completeness", getAttrDouble(par, "integrity_score", "completeness", "accuracy_score"));
-                out.put("fluency", getAttrDouble(par, "fluency_score"));
-            }
-        }
-
-        com.alibaba.fastjson.JSONArray phonemeArr = new com.alibaba.fastjson.JSONArray();
-        NodeList phones = null;
-        if (wordElem != null)
-            phones = wordElem.getElementsByTagName("phone");
-        if (phones == null || phones.getLength() == 0) {
-            phones = doc.getElementsByTagName("phone");
-        }
-
-        double fallbackPhoneScore = 0.0d;
-        if (wordElem != null) {
-            fallbackPhoneScore = getAttrDouble(wordElem, "phone_score", "phoneScore", "phone-score");
-            if (fallbackPhoneScore == 0.0d) {
-                Node parent = wordElem.getParentNode();
-                if (parent instanceof Element) {
-                    fallbackPhoneScore = getAttrDouble((Element) parent, "phone_score", "phoneScore", "phone-score");
-                }
-            }
-        }
-
-        double accPhoneScore = 0.0d;
-        double accToneScore = 0.0d;
-        int countPhoneScore = 0;
-        int countToneScore = 0;
-        int totalPhonesSeen = 0;
-        int goodPhonesCount = 0;
-
-        Set<String> seenPhonemes = new HashSet<>();
-
-        for (int i = 0; phones != null && i < phones.getLength(); i++) {
-            Element ph = (Element) phones.item(i);
-
-            String pContent = safeAttr(ph, "content", "p", "phoneme", "phone");
-            if ((pContent == null || pContent.isEmpty()) && ph.getTextContent() != null) {
-                pContent = ph.getTextContent().trim();
-            }
-            if (pContent == null)
-                pContent = "";
-
-            // Skip silence phonemes
-            if ("sil".equalsIgnoreCase(pContent) || "silv".equalsIgnoreCase(pContent)) {
-                continue;
-            }
-
-            // Skip duplicates (based on content + position)
-            double start = getAttrDouble(ph, "beg_pos", "begin", "start", "start_pos");
-            String uniqueKey = pContent + "_" + start;
-            if (seenPhonemes.contains(uniqueKey)) {
-                continue;
-            }
-            seenPhonemes.add(uniqueKey);
-
-            JSONObject p = new JSONObject();
-            p.put("phoneme", pContent);
-            // human-friendly display: collapse repeated letters ("iii" -> "i") and trim
-            // leading underscores
-            String display = pContent == null ? "" : pContent.replaceAll("^_+", "").replaceAll("(.)\\1{1,}", "$1");
-            p.put("phoneme_display", display);
-
-            String monoTone = safeAttr(ph, "mono_tone", "mono_tone_msg", "mono-tone");
-            p.put("mono_tone", monoTone == null ? "" : monoTone);
-
-            double phScore = getAttrDouble(ph, "phone_score", "phoneme_score", "pronunciation", "pronunciation_score",
-                    "score");
-            if (phScore == 0.0d) {
-                phScore = computePhoneScoreForPhone(ph, fallbackPhoneScore);
-            }
-            p.put("score", phScore);
-
-            String perr = safeAttr(ph, "perr_msg", "perr", "perrmsg");
-            String dpmsg = safeAttr(ph, "dp_message", "dpmsg", "dp-message");
-            p.put("perr_msg", perr == null ? "" : perr);
-            p.put("dp_message", dpmsg == null ? "" : dpmsg);
-
-            double end = getAttrDouble(ph, "end_pos", "end", "time_len");
-            p.put("start", start);
-            p.put("end", end);
-
-            double toneScore = getAttrDouble(ph, "tone_score", "tone");
-            if (toneScore == 0.0d) {
-                toneScore = computeToneScoreForPhone(ph, wordElem, monoTone);
-            }
-            p.put("tone_score", toneScore);
-
-            String perrLevel = safeAttr(ph, "perr_level_msg", "perr_level", "perr_level_msg");
-            String isYun = safeAttr(ph, "is_yun", "isyun", "is_yun");
-            p.put("perr_level_msg", perrLevel == null ? "" : perrLevel);
-            p.put("is_yun", isYun == null ? "" : isYun);
-
-            phonemeArr.add(p);
-
-            totalPhonesSeen++;
-            int dp = 0;
-            try {
-                dp = Integer.parseInt(dpmsg == null || dpmsg.isEmpty() ? "0" : dpmsg);
-            } catch (Exception ignored) {
-            }
-            if (dp == 0) {
-                if (phScore > 0.0d) {
-                    accPhoneScore += phScore;
-                    countPhoneScore++;
-                }
-                if (toneScore > 0.0d) {
-                    accToneScore += toneScore;
-                    countToneScore++;
-                }
-                goodPhonesCount++;
-            }
-        }
-
-        out.put("phonemes", phonemeArr);
-
-        double overall = out.getDoubleValue("overall");
-        double pron = out.getDoubleValue("pronunciation");
-        double tone = out.getDoubleValue("tone");
-        double fluency = out.getDoubleValue("fluency");
-
-        if ((overall == 0.0d || pron == 0.0d) && countPhoneScore > 0) {
-            double avgPhone = accPhoneScore / countPhoneScore;
-            overall = Math.min(100.0, Math.max(0.0, avgPhone));
-            pron = overall;
-        } else if ((overall == 0.0d || pron == 0.0d) && fallbackPhoneScore > 0.0d) {
-            overall = Math.min(100.0, fallbackPhoneScore);
-            pron = overall;
-        }
-
-        if (tone == 0.0d && countToneScore > 0) {
-            tone = Math.min(100.0, accToneScore / countToneScore);
-        }
-
-        if (fluency == 0.0d) {
-            if (totalPhonesSeen > 0) {
-                fluency = ((double) goodPhonesCount / (double) totalPhonesSeen) * 100.0;
-            } else {
-                fluency = 0.0d;
-            }
-        }
-
-        out.put("overall", overall);
-        out.put("pronunciation", pron);
-        out.put("tone", tone);
-
-        if (out.getDoubleValue("duration") == 0.0d) {
-            double durMs = 0.0d;
-            for (int i = 0; i < phonemeArr.size(); i++) {
-                JSONObject p = phonemeArr.getJSONObject(i);
-                double s = p.getDoubleValue("start");
-                double e = p.getDoubleValue("end");
-                if (e > s)
-                    durMs += (e - s);
-            }
-            out.put("duration", durMs);
-        }
-
-        if (out.getDoubleValue("completeness") == 0.0d) {
-            double comp = 0.0d;
-            if (readSentence != null)
-                comp = getAttrDouble(readSentence, "integrity_score", "completeness", "accuracy_score");
-            if (comp == 0.0d && totalPhonesSeen > 0)
-                comp = ((double) goodPhonesCount / (double) totalPhonesSeen) * 100.0;
-            out.put("completeness", comp);
-        }
-
-        out.put("fluency", fluency);
-
-        return out;
     }
 
     private double computeToneScoreForPhone(Element ph, Element wordElem, String monoTone) {
@@ -1281,6 +1114,8 @@ public class IseService {
         return 0.0d;
     }
 
+
+    // Sửa lại phương thức extractWordScoresFromElement - HOÀN TOÀN MỚI
     private JSONObject extractWordScoresFromElement(Element wordElem) {
         JSONObject out = new JSONObject();
         out.put("overall", 0);
@@ -1293,22 +1128,231 @@ public class IseService {
         if (wordElem == null)
             return out;
 
-        NodeList phones = wordElem.getElementsByTagName("phone");
+        // Bước 1: Tìm tất cả các syllable trong word
+        NodeList sylls = wordElem.getElementsByTagName("syll");
 
-        double fallbackPhoneScore = getAttrDouble(wordElem, "phone_score", "phoneScore", "phone-score");
+        if (sylls == null || sylls.getLength() == 0) {
+            // Không có syllable, thử lấy điểm trực tiếp từ word element
+            out.put("overall", getAttrDouble(wordElem, "total_score", "overall_score", "score"));
+            out.put("pronunciation", getAttrDouble(wordElem, "phone_score", "pronunciation_score"));
+            out.put("tone", getAttrDouble(wordElem, "tone_score", "tone"));
+            out.put("fluency", getAttrDouble(wordElem, "fluency_score"));
+            out.put("completeness", getAttrDouble(wordElem, "integrity_score", "completeness", "accuracy_score"));
+
+            // Nếu vẫn = 0, thử tính từ phone
+            if (out.getDoubleValue("overall") == 0.0d) {
+                return extractWordScoresFromPhones(wordElem);
+            }
+            return out;
+        }
+
+        // Bước 2: Tính điểm từ syllable (chính xác nhất)
+        double totalSyllScore = 0.0d;
+        double totalPhoneScore = 0.0d;
+        double totalToneScore = 0.0d;
+        int syllCount = 0;
+        int phoneCount = 0;
+        int toneCount = 0;
+        int goodSyllCount = 0;
+        int totalSyllsSeen = 0;
+
+        com.alibaba.fastjson.JSONArray phonemeArr = new com.alibaba.fastjson.JSONArray();
+        Set<String> seenPhonemes = new HashSet<>();
+        double totalDuration = 0.0d;
+
+        for (int si = 0; si < sylls.getLength(); si++) {
+            Element syll = (Element) sylls.item(si);
+            totalSyllsSeen++;
+
+            // Kiểm tra syllable có bị lỗi không
+            String syllDp = safeAttr(syll, "dp_message", "dpmsg", "dp-message");
+            int syllDpInt = 0;
+            try {
+                syllDpInt = Integer.parseInt(syllDp == null || syllDp.isEmpty() ? "0" : syllDp);
+            } catch (Exception ignored) {
+            }
+
+            if (syllDpInt == 0) {
+                goodSyllCount++;
+            }
+
+            // Lấy điểm tổng của syllable
+            double syllScore = getAttrDouble(syll, "total_score", "score", "overall_score");
+            if (syllScore > 0.0d) {
+                totalSyllScore += syllScore;
+                syllCount++;
+            }
+
+            // Lấy tất cả phone trong syllable
+            NodeList phones = syll.getElementsByTagName("phone");
+            for (int pi = 0; phones != null && pi < phones.getLength(); pi++) {
+                Element ph = (Element) phones.item(pi);
+
+                String pContent = safeAttr(ph, "content", "p", "phoneme", "phone");
+                if ((pContent == null || pContent.isEmpty()) && ph.getTextContent() != null)
+                    pContent = ph.getTextContent().trim();
+                if (pContent == null)
+                    pContent = "";
+
+                // Bỏ qua silence
+                if ("sil".equalsIgnoreCase(pContent) || "silv".equalsIgnoreCase(pContent)) {
+                    continue;
+                }
+
+                // Tránh duplicate
+                double start = getAttrDouble(ph, "beg_pos", "begin", "start", "start_pos");
+                String uniqueKey = pContent + "_" + start;
+                if (seenPhonemes.contains(uniqueKey)) {
+                    continue;
+                }
+                seenPhonemes.add(uniqueKey);
+
+                // Tạo phoneme object
+                JSONObject p = new JSONObject();
+                p.put("phoneme", pContent);
+                String display = pContent == null ? "" : pContent.replaceAll("^_+", "").replaceAll("(.)\\1{1,}", "$1");
+                p.put("phoneme_display", display);
+
+                String monoTone = safeAttr(ph, "mono_tone", "mono_tone_msg", "mono-tone");
+                p.put("mono_tone", monoTone == null ? "" : monoTone);
+
+                // Lấy phone score
+                double phScore = getAttrDouble(ph, "phone_score", "phoneme_score", "pronunciation", "pronunciation_score", "score");
+                if (phScore == 0.0d) {
+                    phScore = computePhoneScoreForPhone(ph, 0.0d);
+                }
+                p.put("score", phScore);
+
+                String perr = safeAttr(ph, "perr_msg", "perr", "perrmsg");
+                String dpmsg = safeAttr(ph, "dp_message", "dpmsg", "dp-message");
+                p.put("perr_msg", perr == null ? "" : perr);
+                p.put("dp_message", dpmsg == null ? "" : dpmsg);
+
+                double end = getAttrDouble(ph, "end_pos", "end", "time_len");
+                p.put("start", start);
+                p.put("end", end);
+
+                if (end > start) {
+                    totalDuration += (end - start);
+                }
+
+                // Lấy tone score
+                double phoneToneScore = getAttrDouble(ph, "tone_score", "tone", "mono_tone_score");
+                if (phoneToneScore == 0.0d) {
+                    phoneToneScore = computeToneScoreForPhone(ph, wordElem, monoTone);
+                }
+                p.put("tone_score", phoneToneScore);
+
+                String perrLevel = safeAttr(ph, "perr_level_msg", "perr_level", "perr_level_msg");
+                String isYun = safeAttr(ph, "is_yun", "isyun", "is_yun");
+                p.put("perr_level_msg", perrLevel == null ? "" : perrLevel);
+                p.put("is_yun", isYun == null ? "" : isYun);
+
+                phonemeArr.add(p);
+
+                // Chỉ tính điểm cho phone không lỗi
+                int dp = 0;
+                try {
+                    dp = Integer.parseInt(dpmsg == null || dpmsg.isEmpty() ? "0" : dpmsg);
+                } catch (Exception ignored) {
+                }
+
+                if (dp == 0) {
+                    if (phScore > 0.0d) {
+                        totalPhoneScore += phScore;
+                        phoneCount++;
+                    }
+                    if (phoneToneScore > 0.0d) {
+                        totalToneScore += phoneToneScore;
+                        toneCount++;
+                    }
+                }
+            }
+        }
+
+        out.put("phonemes", phonemeArr);
+        out.put("duration", totalDuration);
+
+        // Bước 3: Tính điểm tổng
+        double overall = 0.0d;
+        double pronunciation = 0.0d;
+        double tone = 0.0d;
+
+        // Ưu tiên: syllable score > phone score average
+        if (syllCount > 0) {
+            overall = totalSyllScore / syllCount;
+            pronunciation = overall; // Syllable score thường là tổng hợp pronunciation
+        } else if (phoneCount > 0) {
+            pronunciation = totalPhoneScore / phoneCount;
+            overall = pronunciation;
+        }
+
+        // Tone score
+        if (toneCount > 0) {
+            tone = totalToneScore / toneCount;
+        }
+
+        // Completeness dựa trên số syllable đúng
+        double completeness = 0.0d;
+        if (totalSyllsSeen > 0) {
+            completeness = ((double) goodSyllCount / (double) totalSyllsSeen) * 100.0;
+        }
+
+        // Fluency dựa trên số phone đúng trong số phone đã thấy
+        double fluency = 0.0d;
+        if (phonemeArr.size() > 0) {
+            int goodPhones = 0;
+            for (int i = 0; i < phonemeArr.size(); i++) {
+                JSONObject p = phonemeArr.getJSONObject(i);
+                String dp = p.getString("dp_message");
+                int dpi = 0;
+                try {
+                    dpi = Integer.parseInt(dp == null || dp.isEmpty() ? "0" : dp);
+                } catch (Exception ignored) {
+                }
+                if (dpi == 0) {
+                    goodPhones++;
+                }
+            }
+            fluency = ((double) goodPhones / (double) phonemeArr.size()) * 100.0;
+        }
+
+        out.put("overall", Math.min(100.0, Math.max(0.0, overall)));
+        out.put("pronunciation", Math.min(100.0, Math.max(0.0, pronunciation)));
+        out.put("tone", Math.min(100.0, Math.max(0.0, tone)));
+        out.put("completeness", Math.min(100.0, Math.max(0.0, completeness)));
+        out.put("fluency", Math.min(100.0, Math.max(0.0, fluency)));
+
+        return out;
+    }
+
+    // Helper method: Tính điểm từ phone khi không có syllable
+    private JSONObject extractWordScoresFromPhones(Element wordElem) {
+        JSONObject out = new JSONObject();
+        out.put("overall", 0);
+        out.put("pronunciation", 0);
+        out.put("tone", 0);
+        out.put("duration", 0);
+        out.put("completeness", 0);
+        out.put("fluency", 0);
+
+        NodeList phones = wordElem.getElementsByTagName("phone");
+        if (phones == null || phones.getLength() == 0) {
+            return out;
+        }
 
         double accPhoneScore = 0.0d;
         double accToneScore = 0.0d;
-        int countPhoneScore = 0;
-        int countToneScore = 0;
-        int totalPhonesSeen = 0;
-        int goodPhonesCount = 0;
+        int countPhone = 0;
+        int countTone = 0;
+        int totalPhones = 0;
+        int goodPhones = 0;
+        double totalDur = 0.0d;
 
         com.alibaba.fastjson.JSONArray phonemeArr = new com.alibaba.fastjson.JSONArray();
-
         Set<String> seenPhonemes = new HashSet<>();
 
-        for (int i = 0; phones != null && i < phones.getLength(); i++) {
+        for (int i = 0; i < phones.getLength(); i++) {
             Element ph = (Element) phones.item(i);
 
             String pContent = safeAttr(ph, "content", "p", "phoneme", "phone");
@@ -1336,10 +1380,9 @@ public class IseService {
             String monoTone = safeAttr(ph, "mono_tone", "mono_tone_msg", "mono-tone");
             p.put("mono_tone", monoTone == null ? "" : monoTone);
 
-            double phScore = getAttrDouble(ph, "phone_score", "phoneme_score", "pronunciation", "pronunciation_score",
-                    "score");
+            double phScore = getAttrDouble(ph, "phone_score", "phoneme_score", "pronunciation", "pronunciation_score", "score");
             if (phScore == 0.0d)
-                phScore = computePhoneScoreForPhone(ph, fallbackPhoneScore);
+                phScore = computePhoneScoreForPhone(ph, 0.0d);
             p.put("score", phScore);
 
             String perr = safeAttr(ph, "perr_msg", "perr", "perrmsg");
@@ -1351,9 +1394,203 @@ public class IseService {
             p.put("start", start);
             p.put("end", end);
 
-            double toneScore = getAttrDouble(ph, "tone_score", "tone", "mono_tone_score", "mono_tone");
-            if (toneScore == 0.0d)
+            if (end > start) {
+                totalDur += (end - start);
+            }
+
+            double phoneToneScore = getAttrDouble(ph, "tone_score", "tone", "mono_tone_score");
+            if (phoneToneScore == 0.0d)
+                phoneToneScore = computeToneScoreForPhone(ph, wordElem, monoTone);
+            p.put("tone_score", phoneToneScore);
+
+            String perrLevel = safeAttr(ph, "perr_level_msg", "perr_level", "perr_level_msg");
+            String isYun = safeAttr(ph, "is_yun", "isyun", "is_yun");
+            p.put("perr_level_msg", perrLevel == null ? "" : perrLevel);
+            p.put("is_yun", isYun == null ? "" : isYun);
+
+            phonemeArr.add(p);
+            totalPhones++;
+
+            int dp = 0;
+            try {
+                dp = Integer.parseInt(dpmsg == null || dpmsg.isEmpty() ? "0" : dpmsg);
+            } catch (Exception ignored) {
+            }
+
+            if (dp == 0) {
+                goodPhones++;
+                if (phScore > 0.0d) {
+                    accPhoneScore += phScore;
+                    countPhone++;
+                }
+                if (phoneToneScore > 0.0d) {
+                    accToneScore += phoneToneScore;
+                    countTone++;
+                }
+            }
+        }
+
+        out.put("phonemes", phonemeArr);
+        out.put("duration", totalDur);
+
+        double overall = 0.0d;
+        double pron = 0.0d;
+        double tone = 0.0d;
+
+        if (countPhone > 0) {
+            pron = accPhoneScore / countPhone;
+            overall = pron;
+        }
+
+        if (countTone > 0) {
+            tone = accToneScore / countTone;
+        }
+
+        double completeness = totalPhones > 0 ? ((double) goodPhones / totalPhones * 100.0) : 0.0d;
+        double fluency = totalPhones > 0 ? ((double) goodPhones / totalPhones * 100.0) : 0.0d;
+
+        out.put("overall", Math.min(100.0, Math.max(0.0, overall)));
+        out.put("pronunciation", Math.min(100.0, Math.max(0.0, pron)));
+        out.put("tone", Math.min(100.0, Math.max(0.0, tone)));
+        out.put("completeness", Math.min(100.0, Math.max(0.0, completeness)));
+        out.put("fluency", Math.min(100.0, Math.max(0.0, fluency)));
+
+        return out;
+    }
+
+    // GIỮ NGUYÊN phương thức extractWordScores cho sentence-level
+    private JSONObject extractWordScores(Document doc) {
+        Element readSentence = null;
+        NodeList rsList = doc.getElementsByTagName("read_sentence");
+        if (rsList != null && rsList.getLength() > 0) {
+            for (int i = rsList.getLength() - 1; i >= 0; i--) {
+                Element cand = (Element) rsList.item(i);
+                if (cand.hasAttribute("total_score") || cand.hasAttribute("phone_score")
+                        || cand.hasAttribute("fluency_score")) {
+                    readSentence = cand;
+                    break;
+                }
+            }
+            if (readSentence == null)
+                readSentence = (Element) rsList.item(0);
+        }
+
+        JSONObject out = new JSONObject();
+
+        // ƯU TIÊN lấy điểm từ read_sentence element
+        if (readSentence != null) {
+            out.put("overall", getAttrDouble(readSentence, "total_score", "overall_score", "score"));
+            out.put("pronunciation",
+                    getAttrDouble(readSentence, "phone_score", "pronunciation_score", "pronunciation"));
+            out.put("tone", getAttrDouble(readSentence, "tone_score", "tone"));
+            out.put("duration", getAttrDouble(readSentence, "time_len", "duration"));
+            out.put("completeness", getAttrDouble(readSentence, "integrity_score", "completeness", "accuracy_score"));
+            out.put("fluency", getAttrDouble(readSentence, "fluency_score"));
+        } else {
+            out.put("overall", 0);
+            out.put("pronunciation", 0);
+            out.put("tone", 0);
+            out.put("duration", 0);
+            out.put("completeness", 0);
+            out.put("fluency", 0);
+        }
+
+        // Chỉ tính từ phoneme nếu các điểm chính = 0
+        double overall = out.getDoubleValue("overall");
+        double pron = out.getDoubleValue("pronunciation");
+        double tone = out.getDoubleValue("tone");
+        double fluency = out.getDoubleValue("fluency");
+
+        // Nếu đã có đủ điểm từ read_sentence, return luôn
+        if (overall > 0.0d && pron > 0.0d) {
+            com.alibaba.fastjson.JSONArray emptyArr = new com.alibaba.fastjson.JSONArray();
+            out.put("phonemes", emptyArr);
+            return out;
+        }
+
+        // Nếu chưa có điểm, tính từ phoneme
+        Element wordElem = null;
+        NodeList wn = doc.getElementsByTagName("word");
+        if (wn != null && wn.getLength() > 0)
+            wordElem = (Element) wn.item(0);
+
+        com.alibaba.fastjson.JSONArray phonemeArr = new com.alibaba.fastjson.JSONArray();
+        NodeList phones = null;
+        if (wordElem != null)
+            phones = wordElem.getElementsByTagName("phone");
+        if (phones == null || phones.getLength() == 0) {
+            phones = doc.getElementsByTagName("phone");
+        }
+
+        double fallbackPhoneScore = 0.0d;
+        if (wordElem != null) {
+            fallbackPhoneScore = getAttrDouble(wordElem, "phone_score", "phoneScore", "phone-score");
+            if (fallbackPhoneScore == 0.0d) {
+                Node parent = wordElem.getParentNode();
+                if (parent instanceof Element) {
+                    fallbackPhoneScore = getAttrDouble((Element) parent, "phone_score", "phoneScore", "phone-score");
+                }
+            }
+        }
+
+        double accPhoneScore = 0.0d;
+        double accToneScore = 0.0d;
+        int countPhoneScore = 0;
+        int countToneScore = 0;
+        int totalPhonesSeen = 0;
+        int goodPhonesCount = 0;
+
+        Set<String> seenPhonemes = new HashSet<>();
+
+        for (int i = 0; phones != null && i < phones.getLength(); i++) {
+            Element ph = (Element) phones.item(i);
+
+            String pContent = safeAttr(ph, "content", "p", "phoneme", "phone");
+            if ((pContent == null || pContent.isEmpty()) && ph.getTextContent() != null) {
+                pContent = ph.getTextContent().trim();
+            }
+            if (pContent == null)
+                pContent = "";
+
+            if ("sil".equalsIgnoreCase(pContent) || "silv".equalsIgnoreCase(pContent)) {
+                continue;
+            }
+
+            double start = getAttrDouble(ph, "beg_pos", "begin", "start", "start_pos");
+            String uniqueKey = pContent + "_" + start;
+            if (seenPhonemes.contains(uniqueKey)) {
+                continue;
+            }
+            seenPhonemes.add(uniqueKey);
+
+            JSONObject p = new JSONObject();
+            p.put("phoneme", pContent);
+            String display = pContent == null ? "" : pContent.replaceAll("^_+", "").replaceAll("(.)\\1{1,}", "$1");
+            p.put("phoneme_display", display);
+
+            String monoTone = safeAttr(ph, "mono_tone", "mono_tone_msg", "mono-tone");
+            p.put("mono_tone", monoTone == null ? "" : monoTone);
+
+            double phScore = getAttrDouble(ph, "phone_score", "phoneme_score", "pronunciation", "pronunciation_score",
+                    "score");
+            if (phScore == 0.0d) {
+                phScore = computePhoneScoreForPhone(ph, fallbackPhoneScore);
+            }
+            p.put("score", phScore);
+
+            String perr = safeAttr(ph, "perr_msg", "perr", "perrmsg");
+            String dpmsg = safeAttr(ph, "dp_message", "dpmsg", "dp-message");
+            p.put("perr_msg", perr == null ? "" : perr);
+            p.put("dp_message", dpmsg == null ? "" : dpmsg);
+
+            double end = getAttrDouble(ph, "end_pos", "end", "time_len");
+            p.put("start", start);
+            p.put("end", end);
+
+            double toneScore = getAttrDouble(ph, "tone_score", "tone");
+            if (toneScore == 0.0d) {
                 toneScore = computeToneScoreForPhone(ph, wordElem, monoTone);
+            }
             p.put("tone_score", toneScore);
 
             String perrLevel = safeAttr(ph, "perr_level_msg", "perr_level", "perr_level_msg");
@@ -1384,59 +1621,51 @@ public class IseService {
 
         out.put("phonemes", phonemeArr);
 
-        double overall = 0.0d;
-        double pron = 0.0d;
-        double tone = 0.0d;
-        double fluency = 0.0d;
-
-        if (countPhoneScore > 0) {
-            pron = Math.min(100.0, Math.max(0.0, accPhoneScore / countPhoneScore));
-            overall = pron;
-        } else if (fallbackPhoneScore > 0.0d) {
-            pron = Math.min(100.0, fallbackPhoneScore);
-            overall = pron;
+        // Chỉ override điểm nếu điểm gốc = 0
+        if ((overall == 0.0d || pron == 0.0d) && countPhoneScore > 0) {
+            double avgPhone = accPhoneScore / countPhoneScore;
+            if (overall == 0.0d) overall = Math.min(100.0, Math.max(0.0, avgPhone));
+            if (pron == 0.0d) pron = overall;
+        } else if ((overall == 0.0d || pron == 0.0d) && fallbackPhoneScore > 0.0d) {
+            if (overall == 0.0d) overall = Math.min(100.0, fallbackPhoneScore);
+            if (pron == 0.0d) pron = overall;
         }
 
-        if (countToneScore > 0)
+        if (tone == 0.0d && countToneScore > 0) {
             tone = Math.min(100.0, accToneScore / countToneScore);
-
-        if (totalPhonesSeen > 0) {
-            fluency = ((double) goodPhonesCount / (double) totalPhonesSeen) * 100.0;
         }
 
-        double durMs = 0.0d;
-        for (int i = 0; i < phonemeArr.size(); i++) {
-            JSONObject p = phonemeArr.getJSONObject(i);
-            double s = p.getDoubleValue("start");
-            double e = p.getDoubleValue("end");
-            if (e > s)
-                durMs += (e - s);
+        if (fluency == 0.0d && totalPhonesSeen > 0) {
+            fluency = ((double) goodPhonesCount / (double) totalPhonesSeen) * 100.0;
         }
 
         out.put("overall", overall);
         out.put("pronunciation", pron);
         out.put("tone", tone);
-        out.put("duration", durMs);
 
-        NodeList sylls = wordElem.getElementsByTagName("syll");
-        boolean anyBadSyll = false;
-        for (int i = 0; i < sylls.getLength(); i++) {
-            Element s = (Element) sylls.item(i);
-            String dp = safeAttr(s, "dp_message", "dp_message", "dpmsg");
-            int dpi = 0;
-            try {
-                dpi = Integer.parseInt(dp == null || dp.isEmpty() ? "0" : dp);
-            } catch (Exception ignored) {
+        if (out.getDoubleValue("duration") == 0.0d) {
+            double durMs = 0.0d;
+            for (int i = 0; i < phonemeArr.size(); i++) {
+                JSONObject p = phonemeArr.getJSONObject(i);
+                double s = p.getDoubleValue("start");
+                double e = p.getDoubleValue("end");
+                if (e > s)
+                    durMs += (e - s);
             }
-            if (dpi != 0) {
-                anyBadSyll = true;
-                break;
-            }
+            out.put("duration", durMs);
         }
-        double completeness = anyBadSyll ? ((double) goodPhonesCount / Math.max(1, totalPhonesSeen) * 100.0) : 100.0;
-        out.put("completeness", completeness);
+
+        if (out.getDoubleValue("completeness") == 0.0d) {
+            double comp = 0.0d;
+            if (readSentence != null)
+                comp = getAttrDouble(readSentence, "integrity_score", "completeness", "accuracy_score");
+            if (comp == 0.0d && totalPhonesSeen > 0)
+                comp = ((double) goodPhonesCount / (double) totalPhonesSeen) * 100.0;
+            out.put("completeness", comp);
+        }
 
         out.put("fluency", fluency);
+
         return out;
     }
 }

@@ -1,7 +1,10 @@
 import React from 'react';
 
-const SentencePronunciationResult = ({ result, recordedAudio, onClose }) => {
+const SentencePronunciationResult = ({ result, recordedAudio, onClose, sentenceText = '' }) => {
   if (!result) return null;
+
+  const [selectedWord, setSelectedWord] = React.useState(null);
+  const toPercent = (v) => (v == null ? 0 : Math.round(v));
 
   const playRecordedAudio = () => {
     if (recordedAudio) {
@@ -27,13 +30,105 @@ const SentencePronunciationResult = ({ result, recordedAudio, onClose }) => {
     return '😅 Cần cải thiện';
   };
 
-  // Parse scores from actual ISE sentence API format
-  const totalScore = result?.total_score || 0;
-  const fluencyScore = result?.fluency || 0;
-  const completenessScore = result?.completeness || 0;
-  const wrongWords = result?.wrong_words || [];
-  const sid = result?.sid;
-  const status = result?.status;
+  // Parse scores from actual ISE sentence API format.
+  // The ISE API sometimes nests metrics under `result.sentence`.
+  const sent = result?.sentence || result || {};
+  const totalScore = sent?.total_score ?? sent?.totalScore ?? sent?.overall ?? result?.total_score ?? result?.totalScore ?? 0;
+  const fluencyScore = sent?.fluency ?? result?.fluency ?? 0;
+  const completenessScore = sent?.completeness ?? result?.completeness ?? 0;
+  const wrongWords = sent?.wrong_words ?? result?.wrong_words ?? sent?.wrongWords ?? result?.wrongWords ?? [];
+  const sid = sent?.sid ?? result?.sid ?? null;
+  const status = sent?.status ?? result?.status ?? null;
+
+  // Render the sentence as clickable characters, similar to SpeakingPracticePage
+  const renderAnnotatedSentence = () => {
+    const sentence = sentenceText || '';
+    if (!sentence) return null;
+    const chars = Array.from(sentence);
+    const isPunct = (ch) => /[\s,，。.?!、!！?？;；:：]/.test(ch);
+    const mapping = [];
+    let wi = 0;
+    for (let ci = 0; ci < chars.length; ci++) {
+      const ch = chars[ci];
+      if (isPunct(ch)) mapping.push(null);
+      else { mapping.push(wi); wi += 1; }
+    }
+
+    // Build a set of character indices that belong to words whose per-word score < 60
+    // We use result.words (aligned by mapping) and mark all characters whose mapping points to a low-scoring word.
+    const wrongIndices = new Set();
+    const wordsArray = Array.isArray(result?.words) ? result.words : [];
+    if (wordsArray.length > 0) {
+      const lowScoreWordIndexes = new Set();
+      for (let wiIndex = 0; wiIndex < wordsArray.length; wiIndex++) {
+        const d = wordsArray[wiIndex] || {};
+        const score = d?.overall ?? d?.pronunciation ?? d?.score ?? d?.pronunciationScore ?? null;
+        if (score != null && Number(score) < 60) {
+          lowScoreWordIndexes.add(wiIndex);
+        }
+      }
+      for (let ci = 0; ci < mapping.length; ci++) {
+        const mi = mapping[ci];
+        if (typeof mi === 'number' && lowScoreWordIndexes.has(mi)) wrongIndices.add(ci);
+      }
+    }
+
+    return (
+      <div className="mb-2">
+        {chars.map((ch, i) => {
+          const wordIndex = mapping[i];
+          const details = (typeof wordIndex === 'number' && Array.isArray(result?.words)) ? result.words[wordIndex] : null;
+          const normalized = {
+            word: ch,
+            index: wordIndex,
+            duration: details?.duration ?? details?.time_len ?? null,
+            overall: details?.overall ?? details?.pronunciation ?? null,
+            fluency: details?.fluency ?? null,
+            phonemes: details?.phonemes ?? details?.phones ?? details?.phoneme_list ?? null,
+            details: details || null,
+          };
+          // Determine wrongness by character index coverage from wrong_words matches
+          const isWrong = wrongIndices.has(i);
+          const charClasses = `inline-block mx-0.5 px-1 rounded ${details ? 'hover:bg-base-200 cursor-pointer' : 'opacity-60'} ${isWrong ? 'text-red-700 bg-red-100 font-bold ring-1 ring-red-300' : ''}`;
+          // Use DaisyUI tooltip if available; fallback to title attribute
+          return (
+            <div key={`${ch}-${i}`} className="tooltip" data-tip={details ? `Chi tiết từ: ${ch}` : ch}>
+              <button
+                onClick={() => setSelectedWord(normalized)}
+                className={charClasses}
+                title={details ? `Chi tiết từ: ${ch}` : ch}
+              >
+                {ch}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // Stars visualization (same style as SpeakingPracticePage)
+  const Stars = ({ percent = 0 }) => {
+    const pct = Math.max(0, Math.min(100, percent));
+    return (
+      <div className="relative inline-block align-middle">
+        <div style={{ color: '#e5e7eb' }}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <svg key={i} className="w-4 h-4 inline-block" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.965a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.286 3.966c.3.92-.755 1.688-1.54 1.118l-3.37-2.447a1 1 0 00-1.175 0l-3.37 2.447c-.784.57-1.84-.197-1.54-1.118l1.286-3.966a1 1 0 00-.364-1.118L2.063 9.392c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.965z" />
+            </svg>
+          ))}
+        </div>
+        <div style={{ position: 'absolute', left: 0, top: 0, overflow: 'hidden', width: `${pct}%`, whiteSpace: 'nowrap', color: '#f6c700' }}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <svg key={i} className="w-4 h-4 inline-block" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.965a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.286 3.966c.3.92-.755 1.688-1.54 1.118l-3.37-2.447a1 1 0 00-1.175 0l-3.37 2.447c-.784.57-1.84-.197-1.54-1.118l1.286-3.966a1 1 0 00-.364-1.118L2.063 9.392c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.965z" />
+            </svg>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-2">
@@ -41,8 +136,8 @@ const SentencePronunciationResult = ({ result, recordedAudio, onClose }) => {
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-bold text-primary">📊 Kết quả đánh giá câu</h4>
         {onClose && (
-          <button 
-            className="btn btn-xs btn-circle btn-ghost" 
+          <button
+            className="btn btn-xs btn-circle btn-ghost"
             onClick={onClose}
           >
             ✕
@@ -80,7 +175,7 @@ const SentencePronunciationResult = ({ result, recordedAudio, onClose }) => {
             </div>
           </div>
         </div>
-        
+
         <div className="card bg-base-200">
           <div className="card-body p-2 text-center">
             <h6 className="font-medium text-xs mb-1">Hoàn thiện</h6>
@@ -91,43 +186,60 @@ const SentencePronunciationResult = ({ result, recordedAudio, onClose }) => {
         </div>
       </div>
 
-      {/* Wrong Words Analysis */}
-      {wrongWords && wrongWords.length > 0 && (
-        <div className="card bg-base-200">
-          <div className="card-body p-3">
-            <h5 className="font-medium text-sm mb-2">❌ Từ cần cải thiện</h5>
-            <div className="flex flex-wrap gap-1">
-              {wrongWords.map((word, index) => (
-                <span 
-                  key={index}
-                  className="badge badge-error badge-sm"
-                >
-                  {word}
-                </span>
-              ))}
-            </div>
-            <div className="text-xs text-base-content/60 mt-2">
-              Hãy luyện tập lại những từ này
-            </div>
-          </div>
+      {/* Annotated sentence: show whole sentence; click a character to view word details */}
+      <div className="card bg-base-200">
+        <div className="card-body p-3">
+          {renderAnnotatedSentence()}
         </div>
-      )}
+      </div>
 
       {/* Status indicator */}
-      {status !== undefined && (
-        <div className="card bg-base-200">
-          <div className="card-body p-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs">Trạng thái</span>
-              <span className={`badge badge-xs ${
-                status === 0 ? 'badge-success' : 
-                status === 1 ? 'badge-warning' : 'badge-error'
-              }`}>
-                {status === 0 ? 'Thành công' : 
-                 status === 1 ? 'Cảnh báo' : 'Lỗi'}
-              </span>
+      {/* Selected word details (rendered when user clicks a character) */}
+      {selectedWord && (
+        <div className="card mt-4 p-4 bg-base-100">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <div className="text-lg font-semibold">Chi tiết: {selectedWord.word}</div>
+            </div>
+            <div>
+              <button className="btn btn-xs btn-ghost" onClick={() => setSelectedWord(null)}>Đóng</button>
             </div>
           </div>
+
+          {(selectedWord.overall != null) || (selectedWord.details && (selectedWord.details.overall != null || selectedWord.details.pronunciation != null)) ? (
+            <div className="mb-2">
+              <div className="text-sm text-gray-600 mb-1">Điểm từ</div>
+              <div className="flex items-center gap-2">
+                <div className="text-sm font-medium text-yellow-700">{toPercent(selectedWord.overall ?? selectedWord.details?.overall ?? selectedWord.details?.pronunciation ?? 0)}%</div>
+              </div>
+            </div>
+          ) : null}
+
+          {(selectedWord.phonemes && selectedWord.phonemes.length > 0) || (selectedWord.details && (selectedWord.details.phonemes || selectedWord.details.phones)) ? (
+            <div>
+              <div className="text-sm text-gray-600 mb-2">Phonemes</div>
+              <div className="overflow-x-auto">
+                <table className="table w-full">
+                  <thead>
+                    <tr>
+                      <th>Phoneme</th>
+                      <th>Score</th>
+                      <th>Tone</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(selectedWord.phonemes || selectedWord.details?.phonemes || selectedWord.details?.phones || []).map((p, idx) => (
+                      <tr key={idx}>
+                        <td>{(typeof p?.phoneme_display === 'string' && p.phoneme_display) || (Array.isArray(p?.phoneme_display) ? p.phoneme_display.join(' ') : p?.phoneme || p?.phone || '-')}</td>
+                        <td>{p?.score != null ? Math.round(p.score) : (p?.pronunciation != null ? Math.round(p.pronunciation) : '-')}</td>
+                        <td>{(p?.mono_tone && typeof p.mono_tone === 'string') ? ((p.mono_tone.match(/\d+/) || [])[0] || p.mono_tone) : (p?.mono_tone || '-')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -137,7 +249,7 @@ const SentencePronunciationResult = ({ result, recordedAudio, onClose }) => {
           <div className="card-body p-3">
             <div className="flex items-center justify-between">
               <h5 className="font-medium text-sm">🎵 Nghe lại bản ghi</h5>
-              <button 
+              <button
                 className="btn btn-xs btn-primary"
                 onClick={playRecordedAudio}
               >
@@ -163,27 +275,6 @@ const SentencePronunciationResult = ({ result, recordedAudio, onClose }) => {
           )}
         </span>
       </div>
-
-      {/* Session Info */}
-      {sid && (
-        <div className="text-base-content/50 text-center text-xs">
-          Session: {sid.split('@')[0]}
-        </div>
-      )}
-
-      {/* Debug Info (development only) */}
-      {process.env.NODE_ENV === 'development' && (
-        <details className="collapse collapse-arrow bg-base-200">
-          <summary className="collapse-title text-xs font-medium">
-            🔍 Debug Info (ISE Sentence API)
-          </summary>
-          <div className="collapse-content">
-            <pre className="text-xs bg-base-300 p-2 rounded overflow-auto">
-              {JSON.stringify(result, null, 2)}
-            </pre>
-          </div>
-        </details>
-      )}
     </div>
   );
 };

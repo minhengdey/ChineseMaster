@@ -37,6 +37,9 @@ public class Lesson {
     @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Vocabulary> vocabularies = new ArrayList<>();
 
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserLesson> userLessons = new ArrayList<>();
+
     public Lesson() {
     }
 
