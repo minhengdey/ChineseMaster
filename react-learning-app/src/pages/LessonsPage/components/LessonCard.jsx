@@ -1,18 +1,41 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { userLessonAPI } from '../../../services/api';
 
 const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
+  const [completed, setCompleted] = useState(Boolean(lesson?.completed));
+  const [inProgress, setInProgress] = useState(Boolean(lesson?.inProgress));
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchStatus = async () => {
+      if (!lesson?.id) return;
+      try {
+        const data = await userLessonAPI.isCompleted(lesson.id);
+        console.log('Lesson', lesson.id, 'completion status:', data);
+        if (!mounted) return;
+        setCompleted(Boolean(data?.completed));
+        // consider inProgress true when some scoredCount exists but not completed
+        setInProgress(!data?.completed && Number(data?.scoredCount) > 0);
+      } catch (e) {
+        console.debug('Failed to fetch lesson completion', e);
+      }
+    };
+    fetchStatus();
+    return () => { mounted = false; };
+  }, [lesson?.id]);
+
   const getLessonStatusIcon = () => {
     if (isLocked) return '🔒';
-    if (lesson.completed) return '✅';
-    if (lesson.inProgress) return '📖';
+    if (completed) return '✅';
+    if (inProgress) return '📖';
     return '📝';
   };
 
   const getLessonStatusText = () => {
     if (isLocked) return 'Đã khóa';
-    if (lesson.completed) return 'Hoàn thành';
-    if (lesson.inProgress) return 'Đang học';
+    if (completed) return 'Hoàn thành';
+    if (inProgress) return 'Đang học';
     return 'Chưa bắt đầu';
   };
 
@@ -21,10 +44,10 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
     if (isLocked) {
       return `${baseClass} opacity-60 cursor-not-allowed`;
     }
-    if (lesson.completed) {
+    if (completed) {
       return `${baseClass} border-2 border-success hover:shadow-2xl`;
     }
-    if (lesson.inProgress) {
+    if (inProgress) {
       return `${baseClass} border-2 border-warning hover:shadow-2xl`;
     }
     return `${baseClass} hover:shadow-2xl hover:scale-105`;
@@ -44,24 +67,24 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
             {getLessonStatusText()}
           </div>
         </div>
-        
+
         <h2 className="card-title text-lg mb-2">{lesson.title}</h2>
-        
+
         {lesson.level && (
           <div className="badge badge-secondary mb-3">{lesson.level}</div>
         )}
-        
+
         <div className="card-actions justify-end">
           {isLocked ? (
             <div className="btn btn-disabled">
               Hoàn thành bài trước
             </div>
           ) : (
-            <Link 
+            <Link
               to={`/curriculum/${curriculumId}/lesson/${lesson.id}`}
               className="btn btn-primary"
             >
-              {lesson.completed ? 'Ôn lại' : lesson.inProgress ? 'Tiếp tục' : 'Bắt đầu'}
+              {completed ? 'Ôn lại' : inProgress ? 'Tiếp tục' : 'Bắt đầu'}
             </Link>
           )}
         </div>

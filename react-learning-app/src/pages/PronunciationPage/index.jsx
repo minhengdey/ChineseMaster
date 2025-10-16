@@ -173,7 +173,7 @@ const PronunciationPage = () => {
 
                   <div className="w-full mt-auto flex justify-between items-center pt-2">
                     <div className="text-xs text-base-content/50">{item.lessonTitle || item.lessonId || ''}</div>
-                    <Link to={`/curriculum/${item.curriculumId || 1}/lesson/${item.lessonId}/practice`} className="btn btn-xs btn-outline">Luyện</Link>
+                    {/* <Link to={`/curriculum/${item.curriculumId || 1}/lesson/${item.lessonId}/practice`} className="btn btn-xs btn-outline">Luyện</Link> */}
                   </div>
                 </div>
               ))}

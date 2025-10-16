@@ -362,8 +362,8 @@ export const iseAPI = {
       }
    },
 
-  // NEW: scoreWord for vocabulary using the new IseWordController
-  scoreWord: async ({ text, audioFile }) => {
+   // NEW: scoreWord for vocabulary using the new IseWordController
+   scoreWord: async ({ text, audioFile }) => {
       try {
          const formData = new FormData();
          formData.append("text", text);
@@ -382,7 +382,23 @@ export const iseAPI = {
             endpoint: "/ise/score",
          });
 
-        const response = await apiClient.post("/ise/score", formData);
+         // Debug: list FormData entries (helps verify the file object and parts the browser will send)
+         try {
+            for (const entry of formData.entries()) {
+               const [k, v] = entry;
+               if (v instanceof File) {
+                  console.debug('[iseAPI.scoreWord] formData entry:', k, 'File', v.name, v.type, v.size);
+               } else if (v instanceof Blob) {
+                  console.debug('[iseAPI.scoreWord] formData entry:', k, 'Blob', v.type);
+               } else {
+                  console.debug('[iseAPI.scoreWord] formData entry:', k, typeof v, v);
+               }
+            }
+         } catch (e) {
+            console.debug('[iseAPI.scoreWord] formData debug failed', e);
+         }
+
+         const response = await apiClient.post("/ise/score", formData);
 
          // IseWordController may return different shapes:
          // - a JSON string
@@ -415,24 +431,24 @@ export const iseAPI = {
             result = result.length > 0 ? result[0] : { raw_response: [] };
          }
 
-        // Build a normalized object exactly like scoreSentence normalization
-        if (result && typeof result === "object") {
-          const sent = result.sentence || {};
-          const normalized = {
-            total_score: (sent.total_score ?? result.total_score ?? result.totalScore ?? result.overall ?? null),
-            fluency: (sent.fluency ?? result.fluency ?? result.fluencyScore ?? null),
-            completeness: (sent.completeness ?? result.completeness ?? result.completenessScore ?? null),
-            wrong_words: (sent.wrong_words ?? result.wrong_words ?? result.wrongWords ?? result.wrong ?? []),
-            sid: (sent.sid ?? result.sid ?? null),
-            status: (sent.status ?? result.status ?? null),
-            raw_xml: (sent.raw_xml ?? result.raw_xml ?? result.rawXml ?? result.rawXML ?? null),
-            words: (result.words ?? sent.words ?? []),
-          };
-          return normalized;
-        }
+         // Build a normalized object exactly like scoreSentence normalization
+         if (result && typeof result === "object") {
+            const sent = result.sentence || {};
+            const normalized = {
+               total_score: (sent.total_score ?? result.total_score ?? result.totalScore ?? result.overall ?? null),
+               fluency: (sent.fluency ?? result.fluency ?? result.fluencyScore ?? null),
+               completeness: (sent.completeness ?? result.completeness ?? result.completenessScore ?? null),
+               wrong_words: (sent.wrong_words ?? result.wrong_words ?? result.wrongWords ?? result.wrong ?? []),
+               sid: (sent.sid ?? result.sid ?? null),
+               status: (sent.status ?? result.status ?? null),
+               raw_xml: (sent.raw_xml ?? result.raw_xml ?? result.rawXml ?? result.rawXML ?? null),
+               words: (result.words ?? sent.words ?? []),
+            };
+            return normalized;
+         }
 
-        // Fallback: return as-is if structure unknown
-        return { raw_response: result };
+         // Fallback: return as-is if structure unknown
+         return { raw_response: result };
       } catch (error) {
          console.error("ISE Word API Error:", error);
 
@@ -473,6 +489,21 @@ export const iseStatsAPI = {
    },
    getTests: async () => {
       const response = await apiClient.get("/ise/stats/tests");
+      return response.data;
+   },
+};
+
+export const userLessonAPI = {
+   complete: async (lessonId, completed) => {
+      const response = await apiClient.post(`/user-lessons/${lessonId}/complete`, { params: { completed } });
+      return response.data;
+   },
+   getUserLesson: async (lessonId) => {
+      const response = await apiClient.get(`/user-lessons/${lessonId}`);
+      return response.data;
+   },
+   isCompleted: async (lessonId) => {
+      const response = await apiClient.get(`/user-lessons/${lessonId}/isCompleted`);
       return response.data;
    },
 };
