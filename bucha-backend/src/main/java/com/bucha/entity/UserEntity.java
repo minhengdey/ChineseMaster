@@ -18,13 +18,14 @@ import java.util.Set;
 public class UserEntity {
     // ... generate getters/setters (omitted for brevity)
     // We'll include plain getters/setters:
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable=false)
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable=false)
+    @Column(nullable = false)
     private String password;
 
     private String name;
@@ -35,17 +36,22 @@ public class UserEntity {
     private boolean darkMode = false;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_badges", joinColumns = @JoinColumn(name="user_id"))
+    @CollectionTable(name = "user_badges", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "badge")
     private Set<String> badges = new HashSet<>();
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // getters/setters
-    public UserEntity() {}
+    public UserEntity() {
+    }
 
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<IseScore> iseScores = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<UserLesson> userLessons = new ArrayList<>();
 
 }

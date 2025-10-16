@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { profileAPI, handleApiError } from "../../services/api";
-import { iseStatsAPI } from "../../services/api";
+import { iseStatsAPI, userLessonAPI } from "../../services/api";
 
 const ProfilePage = ({ user }) => {
    const [isEditing, setIsEditing] = useState(false);
@@ -19,6 +19,26 @@ const ProfilePage = ({ user }) => {
    const [lessonRows, setLessonRows] = useState([]);
    const [testRows, setTestRows] = useState([]);
 
+   // Helper: get date string 'YYYY-MM-DD' in Vietnam timezone (Asia/Ho_Chi_Minh)
+   const getVietnamDateIso = (d = new Date()) => {
+      try {
+         return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(d);
+      } catch (e) {
+         // Fallback to local ISO date (may be off by timezone)
+         return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+      }
+   };
+
+   const formatDate = (isoDate) => {
+      try {
+         if (!isoDate) return "";
+         const d = new Date(isoDate);
+         return isNaN(d.getTime()) ? isoDate : new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }).format(d);
+      } catch (e) {
+         return isoDate;
+      }
+   };
+
    useEffect(() => {
       fetchProfile();
       fetchIseStatsToday();
@@ -32,7 +52,7 @@ const ProfilePage = ({ user }) => {
             const includeInDaily = detail.includeInDaily;
 
             if (includeInDaily && score) {
-               const todayStr = new Date().toISOString().split("T")[0];
+               const todayStr = getVietnamDateIso();
                // increase or add today's row
                setDailyRows((prev) => {
                   const copy = Array.isArray(prev) ? [...prev] : [];
@@ -51,7 +71,7 @@ const ProfilePage = ({ user }) => {
                      const newCount = prevCount + 1;
                      const newAvg = Math.round(
                         (prevAvg * prevCount + (score.total_score ?? 0)) /
-                           newCount
+                        newCount
                      );
                      copy[0] = {
                         ...existing,
@@ -84,7 +104,7 @@ const ProfilePage = ({ user }) => {
                      const newCount = prevCount + 1;
                      const newAvg = Math.round(
                         (prevAvg * prevCount + (score.total_score ?? 0)) /
-                           newCount
+                        newCount
                      );
                      copy[idx] = { ...existing, avgScore: newAvg };
                   }
@@ -106,7 +126,7 @@ const ProfilePage = ({ user }) => {
    const fetchIseStatsToday = async () => {
       setStatsLoading(true);
       try {
-         const today = new Date().toISOString().split("T")[0];
+         const today = getVietnamDateIso();
          const daily = await iseStatsAPI.getDaily(today, today);
          setDailyRows(Array.isArray(daily?.rows) ? daily.rows : []);
       } catch (e) {
@@ -115,7 +135,26 @@ const ProfilePage = ({ user }) => {
       }
       try {
          const lessons = await iseStatsAPI.getLessons();
-         setLessonRows(Array.isArray(lessons?.rows) ? lessons.rows : []);
+         const rows = Array.isArray(lessons?.rows) ? lessons.rows : [];
+
+         // Fetch completion state for each lesson in parallel, but don't fail the whole flow
+         const enriched = await Promise.all(
+            rows.map(async (r) => {
+               try {
+                  const resp = await userLessonAPI.isCompleted(r.lessonId);
+                  return {
+                     ...r,
+                     completedFull: resp?.completed ?? r.completedFull ?? false,
+                     inProgress: resp?.inProgress ?? r.inProgress ?? false,
+                  };
+               } catch (e) {
+                  // If the per-lesson call fails, return original row
+                  return r;
+               }
+            })
+         );
+
+         setLessonRows(enriched);
       } catch (e) {
          console.debug("failed lesson stats", e);
          setLessonRows([]);
@@ -140,7 +179,7 @@ const ProfilePage = ({ user }) => {
             level: profile.level || "Beginner",
             studyGoal: profile.studyGoal || "30 minutes/day",
             joinDate:
-               profile.joinDate || new Date().toISOString().split("T")[0],
+               profile.joinDate || getVietnamDateIso(),
          });
       } catch (error) {
          console.error("Error fetching profile:", handleApiError(error));
@@ -310,9 +349,8 @@ const ProfilePage = ({ user }) => {
                                  Hủy
                               </button>
                               <button
-                                 className={`btn btn-primary ${
-                                    saving ? "loading" : ""
-                                 }`}
+                                 className={`btn btn-primary ${saving ? "loading" : ""
+                                    }`}
                                  onClick={handleSave}
                                  disabled={saving}
                               >
@@ -378,9 +416,8 @@ const ProfilePage = ({ user }) => {
                         <h2 className="card-title mb-2">🔊 Đánh giá phát âm</h2>
                         <div className="space-x-2">
                            <button
-                              className={`btn btn-sm btn-ghost ${
-                                 statsLoading ? "loading" : ""
-                              }`}
+                              className={`btn btn-sm btn-ghost ${statsLoading ? "loading" : ""
+                                 }`}
                               onClick={fetchIseStatsToday}
                            >
                               Refresh
@@ -431,14 +468,13 @@ const ProfilePage = ({ user }) => {
                                        <th>Bài</th>
                                        <th>Điểm trung bình</th>
                                        <th>Hoàn thành</th>
-                                       <th>Điểm bài</th>
                                     </tr>
                                  </thead>
                                  <tbody>
                                     {statsLoading ? (
                                        <tr>
                                           <td
-                                             colSpan={5}
+                                             colSpan={3}
                                              className="text-sm text-gray-500"
                                           >
                                              Đang tải...
@@ -461,7 +497,6 @@ const ProfilePage = ({ user }) => {
                                              <td>
                                                 {r.completedFull ? "✔" : "✘"}
                                              </td>
-                                             <td>{r.lessonScore}</td>
                                           </tr>
                                        ))
                                     )}
@@ -528,11 +563,10 @@ const ProfilePage = ({ user }) => {
                         {achievements.map((achievement) => (
                            <div
                               key={achievement.id}
-                              className={`card shadow ${
-                                 achievement.unlocked
-                                    ? "bg-success/10 border border-success/20"
-                                    : "bg-base-200 opacity-60"
-                              }`}
+                              className={`card shadow ${achievement.unlocked
+                                 ? "bg-success/10 border border-success/20"
+                                 : "bg-base-200 opacity-60"
+                                 }`}
                            >
                               <div className="card-body py-4">
                                  <div className="flex items-center space-x-3">
@@ -613,9 +647,8 @@ const ProfilePage = ({ user }) => {
                                              Hủy
                                           </button>
                                           <button
-                                             className={`btn btn-primary ${
-                                                saving ? "loading" : ""
-                                             }`}
+                                             className={`btn btn-primary ${saving ? "loading" : ""
+                                                }`}
                                              onClick={handleSave}
                                              disabled={saving}
                                           >

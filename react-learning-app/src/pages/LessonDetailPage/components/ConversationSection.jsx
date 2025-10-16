@@ -53,7 +53,7 @@ const ConversationSection = ({ conversations }) => {
       {conversations.map((conversation, index) => (
         <div key={conversation.id} className="card bg-base-100 shadow-lg">
           <div className="card-body">
-            <div 
+            <div
               className="flex justify-between items-center cursor-pointer"
               onClick={() => toggleSection(index)}
             >
@@ -64,7 +64,7 @@ const ConversationSection = ({ conversations }) => {
                 {expandedSection === index ? '▼' : '▶'}
               </button>
             </div>
-            
+
             {(conversation.vnTranslation || conversation.vn) && (
               <p className="text-base-content/70 italic">
                 {conversation.vnTranslation || conversation.vn}
@@ -92,7 +92,7 @@ const ConversationSection = ({ conversations }) => {
                         />
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <div className="text-xl font-medium">
                         {line.zh || line.zhText}
@@ -112,6 +112,7 @@ const ConversationSection = ({ conversations }) => {
                           result={pronunciationResult}
                           recordedAudio={recordedAudio}
                           onClose={closePronunciationResult}
+                          sentenceText={line.zh || line.zhText || line.pinyin || line.text || line.conversationLine || ''}
                         />
                       </div>
                     )}

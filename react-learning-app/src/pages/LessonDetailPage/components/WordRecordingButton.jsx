@@ -44,16 +44,20 @@ const WordRecordingButton = ({ word, pinyin, onScore, onStartRecording, size = '
 
       // Handle recording stop
       mediaRecorder.addEventListener('stop', () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        setAudioBlob(blob);
-
-        // Stop all tracks
-        stream.getTracks().forEach(track => track.stop());
-
-        // Tự động đánh giá phát âm ngay sau khi ghi xong
+        // Wait a bit longer to allow final dataavailable event to fire in some browsers
+        // (some engines emit dataavailable asynchronously after stop)
         setTimeout(() => {
-          submitForAnalysisWithBlob(blob);
-        }, 100);
+          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+          setAudioBlob(blob);
+
+          // Stop all tracks
+          stream.getTracks().forEach(track => track.stop());
+
+          // Tự động đánh giá phát âm ngay sau khi ghi xong
+          setTimeout(() => {
+            submitForAnalysisWithBlob(blob);
+          }, 150);
+        }, 250);
       });
 
       // Start recording
@@ -69,7 +73,14 @@ const WordRecordingButton = ({ word, pinyin, onScore, onStartRecording, size = '
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
+      try {
+        if (typeof mediaRecorderRef.current.requestData === 'function') mediaRecorderRef.current.requestData();
+      } catch (e) { }
+
+      // Give the recorder a bit more time to flush the final chunk before calling stop.
+      setTimeout(() => {
+        try { mediaRecorderRef.current && mediaRecorderRef.current.stop(); } catch (e) { }
+      }, 200);
       setIsRecording(false);
     }
   };

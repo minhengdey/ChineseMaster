@@ -268,10 +268,14 @@ const SpeakingPracticePage = () => {
             });
 
             mediaRecorder.addEventListener('stop', () => {
-                const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-                setAudioBlob(blob);
-                // stop all tracks
-                try { stream.getTracks().forEach(t => t.stop()); } catch (e) { }
+                // Some browsers deliver a final `dataavailable` event slightly after the `stop` event.
+                // Wait briefly before assembling the Blob to ensure we include the last chunk.
+                setTimeout(() => {
+                    const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+                    setAudioBlob(blob);
+                    // stop all tracks
+                    try { stream.getTracks().forEach(t => t.stop()); } catch (e) { }
+                }, 150);
             });
 
             mediaRecorder.start();
@@ -283,8 +287,17 @@ const SpeakingPracticePage = () => {
     };
 
     const stopRecording = () => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-            mediaRecorderRef.current.stop();
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+            try {
+                if (typeof mediaRecorderRef.current.requestData === 'function') {
+                    // ask the recorder to flush any buffered data
+                    mediaRecorderRef.current.requestData();
+                }
+            } catch (e) { /* ignore if not supported */ }
+            // delay the actual stop to allow the dataavailable handler to fire
+            setTimeout(() => {
+                try { mediaRecorderRef.current && mediaRecorderRef.current.stop(); } catch (e) { }
+            }, 60);
         }
         setRecording(false);
     };
@@ -337,6 +350,24 @@ const SpeakingPracticePage = () => {
             try {
                 window.dispatchEvent(new CustomEvent('ise:score:submitted', { detail: { score: normalized, lessonId: lessonId, includeInDaily: isDailyMode ? true : false } }));
             } catch (e) { }
+            // If this is lesson practice (not daily) and we just scored the last item in the queue,
+            // mark the lesson as completed in the backend if not already marked.
+            try {
+                if (lessonId && !isDailyMode) {
+                    // lazy import of API to avoid circular dependency issues
+                    const { userLessonAPI } = await import('../../services/api');
+                    try {
+                        if (queueIndex + 1 === queue.length) {
+                            await userLessonAPI.complete(lessonId, true);
+                        } else {
+                            await userLessonAPI.complete(lessonId, false);
+                        }
+                        console.debug('Marked lesson completed:', lessonId);
+                    } catch (e) {
+                        console.debug('Failed to mark lesson completed', e);
+                    }
+                }
+            } catch (e) { console.debug('lesson complete check failed', e); }
         } catch (err) {
             console.error('submitScore error', err);
             // log full response for debugging
@@ -432,7 +463,7 @@ const SpeakingPracticePage = () => {
                                 fetchRandomSentence();
                             }
                         }}
-                        disabled={recording || !currentScored}
+                        disabled={recording || !currentScored || queueIndex + 1 == queue.length}
                         title={recording ? 'Đang ghi âm' : (!currentScored ? 'Phải ghi âm và gửi điểm trước khi lấy câu mới' : 'Lấy câu mới')}
                     >Lấy câu mới</button>
 

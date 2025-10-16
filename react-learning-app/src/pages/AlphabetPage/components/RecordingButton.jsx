@@ -17,7 +17,7 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }
     setError(null);
     setAudioBlob(null);
     setShowPlayback(false);
-    
+
     // Notify parent component
     if (onStartRecording) {
       onStartRecording();
@@ -31,7 +31,7 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
+
       // Setup MediaRecorder with WebM format
       const options = { mimeType: 'audio/webm' };
       const mediaRecorder = new MediaRecorder(stream, options);
@@ -47,22 +47,25 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }
 
       // Handle recording stop
       mediaRecorder.addEventListener('stop', () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        setAudioBlob(blob);
-        setShowPlayback(true);
-        
-        // Stop all tracks
-        stream.getTracks().forEach(track => track.stop());
-        
-        // Auto submit for scoring
-        submitScore(blob);
+        // Delay briefly to ensure any final dataavailable events arrive
+        setTimeout(() => {
+          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+          setAudioBlob(blob);
+          setShowPlayback(true);
+
+          // Stop all tracks
+          stream.getTracks().forEach(track => track.stop());
+
+          // Auto submit for scoring
+          submitScore(blob);
+        }, 150);
       });
 
       // Start recording
       mediaRecorder.start();
       setIsRecording(true);
       setCountdown(3);
-      
+
       // Countdown timer
       countdownRef.current = setInterval(() => {
         setCountdown(prev => {
@@ -73,7 +76,7 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }
           return prev - 1;
         });
       }, 1000);
-      
+
       // Auto stop after 3 seconds for single syllable
       setTimeout(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
@@ -85,7 +88,7 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }
           }
         }
       }, 3000); // 3 giây để phát âm 1 âm tiết
-      
+
     } catch (err) {
       console.error('getUserMedia error:', err);
       setError('Không thể truy cập microphone. Vui lòng cho phép truy cập microphone.');
@@ -94,7 +97,10 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
+      try { if (typeof mediaRecorderRef.current.requestData === 'function') mediaRecorderRef.current.requestData(); } catch (e) { }
+      setTimeout(() => {
+        try { mediaRecorderRef.current && mediaRecorderRef.current.stop(); } catch (e) { }
+      }, 60);
     }
     if (countdownRef.current) {
       clearInterval(countdownRef.current);
@@ -133,32 +139,32 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }
       });
 
       // Call ISE API chỉ với hanzi
-      const result = await iseAPI.scoreSentence({ 
+      const result = await iseAPI.scoreSentence({
         text: hanzi, // Chỉ sử dụng hanzi
-        audioFile: file, 
-        sub: 'ise', 
-        ent: 'cn_vip' 
+        audioFile: file,
+        sub: 'ise',
+        ent: 'cn_vip'
       });
 
       console.log('Pronunciation result:', result);
-      
+
       // Pass result to parent component
       if (onScore) {
         onScore(result, blob);
       }
-      
+
     } catch (err) {
       console.error('submitScore error:', err);
-      
+
       // Extract server error message
-      const serverMsg = err?.response?.data?.error || 
-                       err?.response?.data || 
-                       err?.message || 
-                       'Không thể đánh giá phát âm';
-      
+      const serverMsg = err?.response?.data?.error ||
+        err?.response?.data ||
+        err?.message ||
+        'Không thể đánh giá phát âm';
+
       const displayMsg = typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg);
       setError(displayMsg);
-      
+
     } finally {
       setIsAnalyzing(false);
     }
@@ -166,20 +172,20 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }
 
   const playRecordedAudio = () => {
     if (!audioBlob) return;
-    
+
     try {
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
-      
+
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
       };
-      
+
       audio.onerror = () => {
         URL.revokeObjectURL(audioUrl);
         setError('Không thể phát audio');
       };
-      
+
       audio.play();
     } catch (error) {
       console.error('Error playing audio:', error);
@@ -206,7 +212,7 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }
       {/* Main Recording Button */}
       <div className="flex gap-2 items-center">
         {!isRecording ? (
-          <button 
+          <button
             className={`btn btn-primary ${sizeClass}`}
             onClick={startRecording}
             disabled={isAnalyzing || !hanzi}
@@ -222,7 +228,7 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }
             )}
           </button>
         ) : (
-          <button 
+          <button
             className={`btn btn-error ${sizeClass}`}
             onClick={stopRecording}
             title="Dừng thu âm"
@@ -234,7 +240,7 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }
 
         {/* Playback Button */}
         {showPlayback && audioBlob && (
-          <button 
+          <button
             className={`btn btn-outline btn-info ${sizeClass}`}
             onClick={playRecordedAudio}
             title="Nghe lại bản ghi"
@@ -245,7 +251,7 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }
 
         {/* Retry Button */}
         {(error || showPlayback) && (
-          <button 
+          <button
             className={`btn btn-outline btn-warning ${sizeClass}`}
             onClick={retry}
             title="Thu âm lại"
