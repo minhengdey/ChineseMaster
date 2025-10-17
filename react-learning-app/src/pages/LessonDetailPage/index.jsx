@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { contentAPI, handleApiError } from '../../services/api';
+import { contentAPI, handleApiError, iseStatsAPI } from '../../services/api';
 import ConversationSection from './components/ConversationSection';
+import ErrorBoundary from '../../components/ErrorBoundary';
 import VocabularySection from './components/VocabularySection';
 import LessonProgress from './components/LessonProgress';
 
@@ -10,6 +11,12 @@ const LessonDetailPage = () => {
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('conversation');
+  const [highlightedLineIds, setHighlightedLineIds] = useState([]);
+  const [highlightedVocabularyIds, setHighlightedVocabularyIds] = useState([]);
+  const [distinctAttempts, setDistinctAttempts] = useState(0);
+  const [distinctLineCount, setDistinctLineCount] = useState(0);
+  const [distinctVocabularyCount, setDistinctVocabularyCount] = useState(0);
+  const [pronouncedCount, setPronouncedCount] = useState(0);
 
   useEffect(() => {
     if (!lessonId) {
@@ -37,10 +44,37 @@ const LessonDetailPage = () => {
       };
 
       setLesson(normalized);
+      // fetch pronounced stats for highlighting
+      try {
+        const stats = await iseStatsAPI.getPronouncedForLesson(lessonId);
+        setDistinctAttempts(stats?.distinctAttempts || 0);
+        setDistinctLineCount(stats?.distinctLineCount || 0);
+        setDistinctVocabularyCount(stats?.distinctVocabularyCount || 0);
+        setPronouncedCount(stats?.pronouncedCount || ((stats?.distinctLineCount || 0) + (stats?.distinctVocabularyCount || 0)));
+        setHighlightedLineIds(stats?.lineIds || []);
+        setHighlightedVocabularyIds(stats?.vocabularyIds || []);
+      } catch (e) {
+        console.warn('Failed to fetch pronounced stats:', e);
+      }
     } catch (error) {
       console.error('Error fetching lesson:', handleApiError(error));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshPronounced = async () => {
+    if (!lessonId) return;
+    try {
+      const stats = await iseStatsAPI.getPronouncedForLesson(lessonId);
+      setDistinctAttempts(stats?.distinctAttempts || 0);
+      setDistinctLineCount(stats?.distinctLineCount || 0);
+      setDistinctVocabularyCount(stats?.distinctVocabularyCount || 0);
+      setPronouncedCount(stats?.pronouncedCount || ((stats?.distinctLineCount || 0) + (stats?.distinctVocabularyCount || 0)));
+      setHighlightedLineIds(stats?.lineIds || []);
+      setHighlightedVocabularyIds(stats?.vocabularyIds || []);
+    } catch (e) {
+      console.warn('Failed to refresh pronounced stats:', e);
     }
   };
 
@@ -82,7 +116,12 @@ const LessonDetailPage = () => {
         {lesson.level && (
           <div className="badge badge-secondary mb-4">{lesson.level}</div>
         )}
-        <LessonProgress lessonId={lessonId} />
+        <LessonProgress
+          lessonId={lessonId}
+          pronouncedCount={pronouncedCount}
+          lineCount={(lesson.conversations || []).reduce((acc, s) => acc + ((s.lines || []).length), 0)}
+          vocabCount={(lesson.vocabularies || []).length}
+        />
       </div>
 
       {/* Tabs */}
@@ -104,10 +143,22 @@ const LessonDetailPage = () => {
       {/* Content */}
       <div className="min-h-96">
         {activeTab === 'conversation' && (
-          <ConversationSection conversations={lesson.conversations || []} />
+          <ErrorBoundary>
+            <ConversationSection
+              conversations={lesson.conversations || []}
+              lessonId={lessonId}
+              highlightedLineIds={highlightedLineIds}
+              refreshPronounced={refreshPronounced}
+            />
+          </ErrorBoundary>
         )}
         {activeTab === 'vocabulary' && (
-          <VocabularySection vocabularies={lesson.vocabularies || []} />
+          <VocabularySection
+            vocabularies={lesson.vocabularies || []}
+            highlightedVocabularyIds={highlightedVocabularyIds}
+            refreshPronounced={refreshPronounced}
+            lessonId={lessonId}
+          />
         )}
       </div>
 

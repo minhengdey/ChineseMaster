@@ -76,7 +76,8 @@ public class IseService {
 
     public ResponseEntity<?> score(JwtUserPrincipal principal, String text, MultipartFile audioFile, String reqSub,
             String reqEnt, String scoreCategory, Long lessonId, Long testId, Boolean includeInDaily,
-            String sessionDate, Double durationSeconds, Integer numSentences) throws Exception {
+            String sessionDate, Double durationSeconds, Integer numSentences, String lineId, String vocabularyId)
+            throws Exception {
         logger.info("Received upload: name={} size={} contentType={}",
                 audioFile == null ? null : audioFile.getOriginalFilename(),
                 audioFile == null ? null : audioFile.getSize(),
@@ -521,6 +522,18 @@ public class IseService {
                     score.setLessonId(lessonId);
                 if (testId != null)
                     score.setTestId(testId);
+                if (lineId != null) {
+                    try {
+                        score.setLineId(Long.parseLong(lineId));
+                    } catch (Exception ignore) {
+                    }
+                }
+                if (vocabularyId != null) {
+                    try {
+                        score.setVocabularyId(Long.parseLong(vocabularyId));
+                    } catch (Exception ignore) {
+                    }
+                }
                 if (includeInDaily != null)
                     score.setIncludeInDaily(includeInDaily);
                 if (sessionDate != null) {
@@ -548,6 +561,24 @@ public class IseService {
                         d.setTotalScore(saved.getTotalScore());
                         d.setDurationSeconds(saved.getDurationSeconds());
                         d.setSessionDate(saved.getSessionDate());
+                        d.setLessonId(saved.getLessonId());
+                        // prefer saved values, fallback to request params
+                        Long finalLineId = saved.getLineId();
+                        if (finalLineId == null && lineId != null) {
+                            try {
+                                finalLineId = Long.parseLong(lineId);
+                            } catch (Exception ignore) {
+                            }
+                        }
+                        Long finalVocabId = saved.getVocabularyId();
+                        if (finalVocabId == null && vocabularyId != null) {
+                            try {
+                                finalVocabId = Long.parseLong(vocabularyId);
+                            } catch (Exception ignore) {
+                            }
+                        }
+                        d.setLineId(finalLineId);
+                        d.setVocabularyId(finalVocabId);
                         if (saved.getUser() != null)
                             d.setUser(saved.getUser());
                         iseDailyEntryRepository.save(d);
@@ -1114,7 +1145,6 @@ public class IseService {
         return 0.0d;
     }
 
-
     // Sửa lại phương thức extractWordScoresFromElement - HOÀN TOÀN MỚI
     private JSONObject extractWordScoresFromElement(Element wordElem) {
         JSONObject out = new JSONObject();
@@ -1217,7 +1247,8 @@ public class IseService {
                 p.put("mono_tone", monoTone == null ? "" : monoTone);
 
                 // Lấy phone score
-                double phScore = getAttrDouble(ph, "phone_score", "phoneme_score", "pronunciation", "pronunciation_score", "score");
+                double phScore = getAttrDouble(ph, "phone_score", "phoneme_score", "pronunciation",
+                        "pronunciation_score", "score");
                 if (phScore == 0.0d) {
                     phScore = computePhoneScoreForPhone(ph, 0.0d);
                 }
@@ -1380,7 +1411,8 @@ public class IseService {
             String monoTone = safeAttr(ph, "mono_tone", "mono_tone_msg", "mono-tone");
             p.put("mono_tone", monoTone == null ? "" : monoTone);
 
-            double phScore = getAttrDouble(ph, "phone_score", "phoneme_score", "pronunciation", "pronunciation_score", "score");
+            double phScore = getAttrDouble(ph, "phone_score", "phoneme_score", "pronunciation", "pronunciation_score",
+                    "score");
             if (phScore == 0.0d)
                 phScore = computePhoneScoreForPhone(ph, 0.0d);
             p.put("score", phScore);
@@ -1624,11 +1656,15 @@ public class IseService {
         // Chỉ override điểm nếu điểm gốc = 0
         if ((overall == 0.0d || pron == 0.0d) && countPhoneScore > 0) {
             double avgPhone = accPhoneScore / countPhoneScore;
-            if (overall == 0.0d) overall = Math.min(100.0, Math.max(0.0, avgPhone));
-            if (pron == 0.0d) pron = overall;
+            if (overall == 0.0d)
+                overall = Math.min(100.0, Math.max(0.0, avgPhone));
+            if (pron == 0.0d)
+                pron = overall;
         } else if ((overall == 0.0d || pron == 0.0d) && fallbackPhoneScore > 0.0d) {
-            if (overall == 0.0d) overall = Math.min(100.0, fallbackPhoneScore);
-            if (pron == 0.0d) pron = overall;
+            if (overall == 0.0d)
+                overall = Math.min(100.0, fallbackPhoneScore);
+            if (pron == 0.0d)
+                pron = overall;
         }
 
         if (tone == 0.0d && countToneScore > 0) {

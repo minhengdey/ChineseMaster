@@ -39,6 +39,8 @@ public class IseScore {
     // their ids
     // (foreign keys to other tables if present)
     Long lessonId;
+    Long lineId;
+    Long vocabularyId;
     Long testId;
 
     // Whether this attempt should be included in daily averages (helps exclude

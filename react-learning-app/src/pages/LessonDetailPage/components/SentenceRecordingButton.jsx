@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { iseAPI } from '../../../services/api';
 
-const SentenceRecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }) => {
+const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onStartRecording, size = 'sm' }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
@@ -189,15 +189,19 @@ const SentenceRecordingButton = ({ text, hanzi, onScore, onStartRecording, size 
       console.log('Audio blob type:', blob.type);
       console.log('Audio blob size:', blob.size);
 
-      const result = await iseAPI.scoreSentence({
+      const payload = {
         text: textToAnalyze,
-        audioFile: blob
-      });
+        audioFile: blob,
+      };
+      if (lessonId !== undefined && lessonId !== null) payload.lessonId = lessonId;
+      if (lineId !== undefined && lineId !== null) payload.lineId = String(lineId);
+
+      const result = await iseAPI.scoreSentence(payload);
 
       console.log('Analysis result:', result);
 
       if (result && result.success !== false && onScore) {
-        onScore(result, blob);
+        onScore(result, blob, lineId);
       } else {
         setError(result?.error || result?.message || 'Không thể đánh giá phát âm. Vui lòng thử lại.');
       }

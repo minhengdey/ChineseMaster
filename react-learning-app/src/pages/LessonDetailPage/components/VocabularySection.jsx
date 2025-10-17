@@ -3,18 +3,23 @@ import AudioPlayer from './AudioPlayer';
 import WordRecordingButton from './WordRecordingButton';
 import WordPronunciationResult from './WordPronunciationResult';
 
-const VocabularySection = ({ vocabularies }) => {
+const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refreshPronounced, lessonId }) => {
   const [pronunciationResult, setPronunciationResult] = useState(null);
   const [showPronunciationResult, setShowPronunciationResult] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState(null);
   // activeItemKey is a string like 'word-<id>' or 'example-<id>' to support both word and example recordings
   const [activeItemKey, setActiveItemKey] = useState(null);
 
-  const handlePronunciationScore = (result, audioBlob, itemKey) => {
+  const handlePronunciationScore = async (result, audioBlob, itemKey) => {
     setPronunciationResult(result);
     setRecordedAudio(audioBlob);
     setActiveItemKey(itemKey);
     setShowPronunciationResult(true);
+    try {
+      if (typeof refreshPronounced === 'function') await refreshPronounced();
+    } catch (e) {
+      console.warn('Failed to refresh pronounced after word score:', e);
+    }
   };
 
   const handleStartRecording = (itemKey) => {
@@ -57,7 +62,7 @@ const VocabularySection = ({ vocabularies }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {vocabularies.map((vocabulary) => (
-        <div key={vocabulary.id} className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+        <div key={vocabulary.id} className={`card shadow-lg hover:shadow-xl transition-shadow ${highlightedVocabularyIds.includes(vocabulary.id) ? 'border border-success bg-success/10' : 'bg-base-100'}`}>
           <div className="card-body p-4">
             <div className="flex justify-between items-start mb-3">
               <div className="text-2xl font-bold text-primary">
@@ -70,24 +75,26 @@ const VocabularySection = ({ vocabularies }) => {
                 <WordRecordingButton
                   word={vocabulary.word}
                   pinyin={vocabulary.pinyin}
-                  onScore={(result, audioBlob) => handlePronunciationScore(result, audioBlob, `word-${vocabulary.id}`)}
+                  vocabularyId={vocabulary.id}
+                  lessonId={lessonId}
+                  onScore={(result, audioBlob, key) => handlePronunciationScore(result, audioBlob, key || `word-${vocabulary.id}`)}
                   onStartRecording={() => handleStartRecording(`word-${vocabulary.id}`)}
                   size="xs"
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <div className="text-base-content/80">
                 {vocabulary.pinyin}
               </div>
-              
+
               {vocabulary.type && (
                 <div className={`badge ${getTypeColor(vocabulary.type)} badge-sm`}>
                   {vocabulary.type}
                 </div>
               )}
-              
+
               <div className="text-base-content/90 font-medium">
                 {vocabulary.meaning}
               </div>
@@ -122,7 +129,9 @@ const VocabularySection = ({ vocabularies }) => {
                     <WordRecordingButton
                       word={exampleText || vocabulary.word}
                       pinyin={examplePinyin || vocabulary.pinyin}
-                      onScore={(result, audioBlob) => handlePronunciationScore(result, audioBlob, `example-${vocabulary.id}`)}
+                      vocabularyId={vocabulary.id}
+                      lessonId={lessonId}
+                      onScore={(result, audioBlob, key) => handlePronunciationScore(result, audioBlob, key || `example-${vocabulary.id}`)}
                       onStartRecording={() => handleStartRecording(`example-${vocabulary.id}`)}
                       size="xs"
                     />

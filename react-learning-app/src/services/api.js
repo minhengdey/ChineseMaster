@@ -243,6 +243,7 @@ export const iseAPI = {
       ent = "cn_vip",
       scoreCategory,
       lessonId,
+      lineId,
       testId,
       includeInDaily,
       sessionDate,
@@ -281,6 +282,11 @@ export const iseAPI = {
                new Blob([String(lessonId)], {
                   type: "text/plain;charset=UTF-8",
                })
+            );
+         if (lineId != null)
+            formData.append(
+               "lineId",
+               new Blob([String(lineId)], { type: "text/plain;charset=UTF-8" })
             );
          if (testId != null)
             formData.append(
@@ -363,7 +369,7 @@ export const iseAPI = {
    },
 
    // NEW: scoreWord for vocabulary using the new IseWordController
-   scoreWord: async ({ text, audioFile }) => {
+   scoreWord: async ({ text, audioFile, vocabularyId, lessonId }) => {
       try {
          const formData = new FormData();
          formData.append("text", text);
@@ -373,6 +379,19 @@ export const iseAPI = {
             type: audioFile.type || "audio/webm",
          });
          formData.append("audio", audioFileWithName);
+         // attach vocabularyId and lessonId when present so backend can attribute attempt
+         if (vocabularyId != null) {
+            formData.append(
+               "vocabularyId",
+               new Blob([String(vocabularyId)], { type: "text/plain;charset=UTF-8" })
+            );
+         }
+         if (lessonId != null) {
+            formData.append(
+               "lessonId",
+               new Blob([String(lessonId)], { type: "text/plain;charset=UTF-8" })
+            );
+         }
 
          console.log("Sending to ISE Word API:", {
             text: text,
@@ -489,6 +508,10 @@ export const iseStatsAPI = {
    },
    getTests: async () => {
       const response = await apiClient.get("/ise/stats/tests");
+      return response.data;
+   },
+   getPronouncedForLesson: async (lessonId) => {
+      const response = await apiClient.get('/ise/stats/pronounced', { params: { lessonId } });
       return response.data;
    },
 };
