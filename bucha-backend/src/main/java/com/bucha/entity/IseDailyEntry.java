@@ -24,6 +24,12 @@ public class IseDailyEntry {
     // reference to original attempt if needed
     Long attemptId;
 
+    // If the attempt is associated with a lesson or a specific line/vocabulary
+    // within a lesson
+    Long lessonId;
+    Long lineId;
+    Long vocabularyId;
+
     LocalDateTime sessionDate;
     LocalDateTime createdAt = LocalDateTime.now();
 

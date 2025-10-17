@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { iseAPI } from '../../../services/api';
 
-const WordRecordingButton = ({ word, pinyin, onScore, onStartRecording, size = 'xs' }) => {
+const WordRecordingButton = ({ word, pinyin, vocabularyId, lessonId, onScore, onStartRecording, size = 'xs' }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
@@ -123,10 +123,10 @@ const WordRecordingButton = ({ word, pinyin, onScore, onStartRecording, size = '
       });
 
       // Use the new scoreWord API
-      const result = await iseAPI.scoreWord({
-        text: textToAnalyze,
-        audioFile: blob
-      });
+      const payload = { text: textToAnalyze, audioFile: blob };
+      if (vocabularyId !== undefined && vocabularyId !== null) payload.vocabularyId = String(vocabularyId);
+      if (lessonId !== undefined && lessonId !== null) payload.lessonId = String(lessonId);
+      const result = await iseAPI.scoreWord(payload);
 
       console.log('Word analysis result (raw):', result);
 
@@ -168,7 +168,7 @@ const WordRecordingButton = ({ word, pinyin, onScore, onStartRecording, size = '
       }
 
       // Always call onScore with the normalized result so parent UI can display something
-      onScore && onScore(normalizedResult, blob);
+      onScore && onScore(normalizedResult, blob, vocabularyId ? `word-${vocabularyId}` : undefined);
 
     } catch (error) {
       console.error('Error analyzing vocabulary with ISE Word API:', error);

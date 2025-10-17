@@ -3,7 +3,7 @@ import AudioPlayer from './AudioPlayer';
 import SentenceRecordingButton from './SentenceRecordingButton';
 import SentencePronunciationResult from './SentencePronunciationResult';
 
-const ConversationSection = ({ conversations }) => {
+const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds = [], refreshPronounced }) => {
   const [expandedSection, setExpandedSection] = useState(null);
   const [pronunciationResult, setPronunciationResult] = useState(null);
   const [showPronunciationResult, setShowPronunciationResult] = useState(false);
@@ -14,11 +14,17 @@ const ConversationSection = ({ conversations }) => {
     setExpandedSection(expandedSection === index ? null : index);
   };
 
-  const handlePronunciationScore = (result, audioBlob, lineId) => {
+  const handlePronunciationScore = async (result, audioBlob, lineId) => {
     setPronunciationResult(result);
     setRecordedAudio(audioBlob);
     setActiveLineId(lineId);
     setShowPronunciationResult(true);
+    // Refresh pronounced stats so highlighting/progress updates live
+    try {
+      if (typeof refreshPronounced === 'function') await refreshPronounced();
+    } catch (e) {
+      console.warn('Failed to refresh pronounced after score:', e);
+    }
   };
 
   const handleStartRecording = (lineId) => {
@@ -74,7 +80,7 @@ const ConversationSection = ({ conversations }) => {
             {expandedSection === index && (
               <div className="mt-6 space-y-4">
                 {conversation.lines?.map((line) => (
-                  <div key={line.id} className="bg-base-200 p-4 rounded-lg">
+                  <div key={line.id} className={`p-4 rounded-lg ${highlightedLineIds.includes(line.id) ? 'bg-success/10 border border-success' : 'bg-base-200'}`}>
                     <div className="flex justify-between items-start mb-2">
                       <span className="font-semibold text-primary">
                         {line.speaker}
@@ -86,9 +92,11 @@ const ConversationSection = ({ conversations }) => {
                         <SentenceRecordingButton
                           text={line.pinyin}
                           hanzi={line.zh || line.zhText}
-                          onScore={(result, audioBlob) => handlePronunciationScore(result, audioBlob, line.id)}
+                          lineId={line.id}
+                          onScore={(result, audioBlob, returnedLineId) => handlePronunciationScore(result, audioBlob, returnedLineId || line.id)}
                           onStartRecording={() => handleStartRecording(line.id)}
                           size="xs"
+                          lessonId={lessonId}
                         />
                       </div>
                     </div>

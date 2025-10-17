@@ -128,7 +128,8 @@ public class IseStatsController {
                         double avg = list.stream().mapToDouble(s -> Optional.ofNullable(s.getTotalScore()).orElse(0.0))
                                         .average()
                                         .orElse(0.0);
-                        UserLesson userLesson = userLessonRepository.findByUser_IdAndLesson_Id(userId, lessonId).orElse(null);
+                        UserLesson userLesson = userLessonRepository.findByUser_IdAndLesson_Id(userId, lessonId)
+                                        .orElse(null);
                         boolean completed = false;
                         if (userLesson != null) {
                                 completed = userLesson.isCompleted();
@@ -176,5 +177,34 @@ public class IseStatsController {
                 }).collect(Collectors.toList());
 
                 return ResponseEntity.ok(Map.of("rows", rows));
+        }
+
+        // Pronounced items for a lesson: distinct attempts count + list of pronounced
+        // line and vocabulary ids
+        @GetMapping("/pronounced")
+        public ResponseEntity<?> pronouncedForLesson(@AuthenticationPrincipal JwtUserPrincipal principal,
+                        @RequestParam(value = "lessonId") Long lessonId) {
+                Long userId = principal.id();
+                if (lessonId == null)
+                        return ResponseEntity.badRequest().body(Map.of("error", "lessonId is required"));
+
+                long distinctAttempts = iseDailyEntryRepository.countDistinctAttemptsByUserAndLesson(userId, lessonId);
+                List<Long> lineIds = iseDailyEntryRepository.findDistinctLineIdsByUserAndLesson(userId, lessonId);
+                List<Long> vocabIds = iseDailyEntryRepository.findDistinctVocabularyIdsByUserAndLesson(userId,
+                                lessonId);
+
+                Map<String, Object> out = new HashMap<>();
+                int distinctLineCount = (lineIds == null) ? 0 : lineIds.size();
+                int distinctVocabCount = (vocabIds == null) ? 0 : vocabIds.size();
+                int pronouncedCount = distinctLineCount + distinctVocabCount;
+
+                out.put("distinctAttempts", distinctAttempts);
+                out.put("lineIds", lineIds == null ? Collections.emptyList() : lineIds);
+                out.put("vocabularyIds", vocabIds == null ? Collections.emptyList() : vocabIds);
+                out.put("distinctLineCount", distinctLineCount);
+                out.put("distinctVocabularyCount", distinctVocabCount);
+                out.put("pronouncedCount", pronouncedCount);
+
+                return ResponseEntity.ok(out);
         }
 }
