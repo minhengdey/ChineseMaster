@@ -31,7 +31,8 @@ public class IseController {
             @RequestPart(value = "numSentences", required = false) String numSentences,
             @RequestPart(value = "scoreCategory", required = false) String scoreCategory,
             @RequestPart(value = "sessionDate", required = false) String sessionDate,
-            @RequestPart(value = "durationSeconds", required = false) String durationSeconds) throws Exception {
+            @RequestPart(value = "durationSeconds", required = false) String durationSeconds,
+            @RequestPart(value = "source", required = false) String source) throws Exception {
 
         return iseService.score(principal, text, audioFile, reqSub, reqEnt,
                 scoreCategory, lessonId != null ? Long.parseLong(lessonId) : null,
@@ -39,6 +40,6 @@ public class IseController {
                 includeInDaily != null ? Boolean.parseBoolean(includeInDaily) : null,
                 sessionDate, durationSeconds != null ? Double.parseDouble(durationSeconds) : null,
                 numSentences != null ? Integer.parseInt(numSentences) : null,
-                lineId, vocabularyId);
+                lineId, vocabularyId, source);
     }
 }

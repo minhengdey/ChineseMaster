@@ -51,8 +51,9 @@ const LessonDetailPage = () => {
         setDistinctLineCount(stats?.distinctLineCount || 0);
         setDistinctVocabularyCount(stats?.distinctVocabularyCount || 0);
         setPronouncedCount(stats?.pronouncedCount || ((stats?.distinctLineCount || 0) + (stats?.distinctVocabularyCount || 0)));
-        setHighlightedLineIds(stats?.lineIds || []);
-        setHighlightedVocabularyIds(stats?.vocabularyIds || []);
+        // normalize ids to strings to avoid type mismatch when comparing
+        setHighlightedLineIds((stats?.lineIds || []).map(String));
+        setHighlightedVocabularyIds((stats?.vocabularyIds || []).map(String));
       } catch (e) {
         console.warn('Failed to fetch pronounced stats:', e);
       }
@@ -67,16 +68,55 @@ const LessonDetailPage = () => {
     if (!lessonId) return;
     try {
       const stats = await iseStatsAPI.getPronouncedForLesson(lessonId);
-      setDistinctAttempts(stats?.distinctAttempts || 0);
-      setDistinctLineCount(stats?.distinctLineCount || 0);
-      setDistinctVocabularyCount(stats?.distinctVocabularyCount || 0);
-      setPronouncedCount(stats?.pronouncedCount || ((stats?.distinctLineCount || 0) + (stats?.distinctVocabularyCount || 0)));
-      setHighlightedLineIds(stats?.lineIds || []);
-      setHighlightedVocabularyIds(stats?.vocabularyIds || []);
+
+      // Backwards-compatible handling: API may either return aggregated lists (lineIds/vocabularyIds)
+      // or a raw "entries" array of objects with fields { lessonId, lineId, vocabularyId, ... }.
+      // If entries present, compute highlighted ids from DB-like predicate:
+      //   entry.lessonId == lessonId && (entry.lineId == lineId || entry.vocabularyId == vocabularyId)
+      let lineIds = [];
+      let vocabularyIds = [];
+
+      if (Array.isArray(stats?.entries) && stats.entries.length > 0) {
+        for (const e of stats.entries) {
+          try {
+            // ensure lessonId matches the current lesson (some APIs may return cross-lesson data)
+            if (e?.lessonId == null) continue;
+            if (String(e.lessonId) !== String(lessonId)) continue;
+            if (e?.lineId != null) lineIds.push(String(e.lineId));
+            if (e?.vocabularyId != null) vocabularyIds.push(String(e.vocabularyId));
+          } catch (ignored) { }
+        }
+        // dedupe
+        lineIds = Array.from(new Set(lineIds));
+        vocabularyIds = Array.from(new Set(vocabularyIds));
+
+        setDistinctAttempts(stats?.distinctAttempts || 0);
+        setDistinctLineCount(lineIds.length);
+        setDistinctVocabularyCount(vocabularyIds.length);
+        setPronouncedCount((lineIds.length || 0) + (vocabularyIds.length || 0));
+        setHighlightedLineIds(lineIds);
+        setHighlightedVocabularyIds(vocabularyIds);
+      } else {
+        // existing aggregated shape
+        setDistinctAttempts(stats?.distinctAttempts || 0);
+        setDistinctLineCount(stats?.distinctLineCount || 0);
+        setDistinctVocabularyCount(stats?.distinctVocabularyCount || 0);
+        setPronouncedCount(stats?.pronouncedCount || ((stats?.distinctLineCount || 0) + (stats?.distinctVocabularyCount || 0)));
+        setHighlightedLineIds((stats?.lineIds || []).map(String));
+        setHighlightedVocabularyIds((stats?.vocabularyIds || []).map(String));
+      }
     } catch (e) {
       console.warn('Failed to refresh pronounced stats:', e);
     }
   };
+
+  // Immediately fetch pronounced stats when entering the lesson screen so UI highlights are available ASAP.
+  // This runs on mount and whenever lessonId changes.
+  React.useEffect(() => {
+    if (!lessonId) return;
+    // fire-and-forget; refreshPronounced handles errors
+    refreshPronounced();
+  }, [lessonId]);
 
   if (loading) {
     return (

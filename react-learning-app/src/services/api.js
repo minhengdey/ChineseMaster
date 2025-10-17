@@ -244,6 +244,7 @@ export const iseAPI = {
       scoreCategory,
       lessonId,
       lineId,
+      source,
       testId,
       includeInDaily,
       sessionDate,
@@ -287,6 +288,11 @@ export const iseAPI = {
             formData.append(
                "lineId",
                new Blob([String(lineId)], { type: "text/plain;charset=UTF-8" })
+            );
+         if (source != null)
+            formData.append(
+               "source",
+               new Blob([String(source)], { type: "text/plain;charset=UTF-8" })
             );
          if (testId != null)
             formData.append(
