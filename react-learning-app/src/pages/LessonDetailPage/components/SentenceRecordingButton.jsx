@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { iseAPI } from '../../../services/api';
+import { createRecorder, computeSha256Hex, playBlobSafely } from '../../../utils/audioUtils';
 
 const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onStartRecording, size = 'sm' }) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -10,70 +11,20 @@ const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onSta
   const chunksRef = useRef([]);
   const streamRef = useRef(null);
 
-  const getSupportedMimeType = () => {
-    if (typeof MediaRecorder === 'undefined') return '';
-    const candidates = [
-      'audio/webm;codecs=opus',
-      'audio/webm',
-      'audio/ogg;codecs=opus',
-      'audio/ogg'
-    ];
-    for (const c of candidates) {
-      try {
-        if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c)) return c;
-      } catch (e) {
-        // ignore
-      }
-    }
-    return '';
-  };
-
   const startRecording = async () => {
-    // Reset states
     setError(null);
     setAudioBlob(null);
     setIsAnalyzing(false);
 
-    // Notify parent component
-    if (onStartRecording) {
-      onStartRecording();
-    }
-
-    // Check browser support
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setError('Trình duyệt không hỗ trợ ghi âm');
-      return;
-    }
+    if (onStartRecording) onStartRecording();
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Setup MediaRecorder with WebM format
-      const options = { mimeType: 'audio/webm' };
-      const mediaRecorder = new MediaRecorder(stream, options);
-      mediaRecorderRef.current = mediaRecorder;
+      const rec = await createRecorder({ mimeType: 'audio/webm;codecs=opus' });
+      mediaRecorderRef.current = rec; // object with start/stop
       chunksRef.current = [];
-
-      // Handle data available
-      mediaRecorder.addEventListener('dataavailable', (e) => {
-        if (e.data && e.data.size > 0) {
-          chunksRef.current.push(e.data);
-        }
-      });
-
-      // Handle dataavailable already set above. We finalize on explicit stop to
-      // deterministically assemble the Blob (see stopRecording()).
-
-      // Start recording
-      streamRef.current = stream;
+      streamRef.current = rec.stream;
+      await rec.start();
       setIsRecording(true);
-      try {
-        mediaRecorder.start();
-      } catch (e) {
-        console.warn('mediaRecorder.start failed, trying without options', e);
-        try { mediaRecorder = new MediaRecorder(stream); mediaRecorderRef.current = mediaRecorder; mediaRecorder.start(); } catch (err) { console.error(err); }
-      }
-
     } catch (error) {
       console.error('Error starting recording:', error);
       setError('Không thể truy cập microphone. Vui lòng cho phép quyền ghi âm.');
@@ -81,91 +32,22 @@ const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onSta
     }
   };
 
-  const stopRecording = () => {
-    const mediaRecorder = mediaRecorderRef.current;
-    const stream = streamRef.current;
-
-    if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
-
-    // Ask recorder to flush any pending data if available, then stop and wait
-    // for the 'stop' event to deterministically assemble the final Blob.
-    const finalizePromise = new Promise((resolve, reject) => {
-      let settled = false;
-
-      const cleanup = () => {
-        try { mediaRecorder.removeEventListener('stop', onStop); } catch (e) { }
-        try { mediaRecorder.removeEventListener('error', onError); } catch (e) { }
-      };
-
-      const onStop = () => {
-        // allow a small window for the final dataavailable to arrive
-        setTimeout(() => {
-          try {
-            const mime = mediaRecorder.mimeType || getSupportedMimeType() || 'audio/webm';
-            const blob = new Blob(chunksRef.current.slice(), { type: mime });
-            settled = true;
-            cleanup();
-            resolve(blob);
-          } catch (err) {
-            settled = true;
-            cleanup();
-            reject(err);
-          }
-        }, 120);
-      };
-
-      const onError = (err) => {
-        if (!settled) {
-          settled = true;
-          cleanup();
-          reject(err);
-        }
-      };
-
-      mediaRecorder.addEventListener('stop', onStop);
-      mediaRecorder.addEventListener('error', onError);
-
-      // Safety timeout: if 'stop' never fires, time out after 3s
-      const safety = setTimeout(() => {
-        if (!settled) {
-          try {
-            const mime = mediaRecorder.mimeType || getSupportedMimeType() || 'audio/webm';
-            const blob = new Blob(chunksRef.current.slice(), { type: mime });
-            settled = true;
-            cleanup();
-            resolve(blob);
-          } catch (err) {
-            settled = true;
-            cleanup();
-            reject(err);
-          }
-        }
-      }, 3000);
-
-      // Ensure the recorder flushes buffered data
-      try { if (typeof mediaRecorder.requestData === 'function') mediaRecorder.requestData(); } catch (e) { }
-
-      // Then ask it to stop (this will trigger 'stop' event)
-      try { mediaRecorder.stop(); } catch (e) { try { mediaRecorder.state && mediaRecorder.stream && mediaRecorder.stream.getTracks().forEach(t => t.stop()); } catch (_) { } }
-    });
+  const stopRecording = async () => {
+    // Use our recorder wrapper (mediaRecorderRef) presence as the signal to stop.
+    if (!mediaRecorderRef.current) return;
 
     setIsRecording(false);
-
-    finalizePromise.then((blob) => {
-      try {
-        // stop tracks
-        try { if (stream && stream.getTracks) stream.getTracks().forEach(track => track.stop()); } catch (e) { }
-        setAudioBlob(blob);
-        // Auto analyze shortly after finalization
-        setTimeout(() => submitForAnalysisWithBlob(blob), 150);
-      } catch (e) {
-        console.error('Error finalizing recording:', e);
-        setError('Lỗi khi xử lý file âm thanh');
-      }
-    }).catch(err => {
-      console.error('Error during finalizePromise:', err);
+    try {
+      const rec = mediaRecorderRef.current;
+      const { blob, stream } = await rec.stop();
+      try { if (stream && stream.getTracks) stream.getTracks().forEach(t => t.stop()); } catch (e) { }
+      setAudioBlob(blob);
+      // Auto analyze shortly after finalization
+      setTimeout(() => submitForAnalysisWithBlob(blob), 150);
+    } catch (err) {
+      console.error('Error during finalize:', err);
       setError('Không thể hoàn tất ghi âm. Vui lòng thử lại.');
-    });
+    }
   };
 
   const submitForAnalysisWithBlob = async (blob) => {
@@ -189,9 +71,17 @@ const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onSta
       console.log('Audio blob type:', blob.type);
       console.log('Audio blob size:', blob.size);
 
+      // Add helpful metadata: mime, size, sha256
+      const mime = blob.type || 'audio/webm';
+      const size = blob.size;
+      const sha256 = await computeSha256Hex(blob);
+
       const payload = {
         text: textToAnalyze,
         audioFile: blob,
+        mimeType: mime,
+        size: String(size),
+        sha256,
       };
       if (lessonId !== undefined && lessonId !== null) payload.lessonId = lessonId;
       if (lineId !== undefined && lineId !== null) payload.lineId = String(lineId);
@@ -219,9 +109,7 @@ const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onSta
 
   const playRecordedAudio = () => {
     if (audioBlob) {
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      audio.play().catch(error => {
+      playBlobSafely(audioBlob).catch(error => {
         console.error('Error playing audio:', error);
         setError('Không thể phát âm thanh đã ghi');
       });

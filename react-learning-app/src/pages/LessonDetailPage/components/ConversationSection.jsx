@@ -3,7 +3,12 @@ import AudioPlayer from './AudioPlayer';
 import SentenceRecordingButton from './SentenceRecordingButton';
 import SentencePronunciationResult from './SentencePronunciationResult';
 
-const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds = [], refreshPronounced }) => {
+const ConversationSection = ({
+  conversations = [],
+  lessonId,
+  highlightedLineIds = [],
+  refreshPronounced,
+}) => {
   const [expandedSection, setExpandedSection] = useState(null);
   const [pronunciationResult, setPronunciationResult] = useState(null);
   const [showPronunciationResult, setShowPronunciationResult] = useState(false);
@@ -14,14 +19,26 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
     setExpandedSection(expandedSection === index ? null : index);
   };
 
+  // Debug: print highlighted IDs received from backend so we can verify matching
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      console.debug('[ConversationSection] highlightedLineIds (from API):', highlightedLineIds);
+    } catch (e) {
+      // ignore
+    }
+  }
+
   const handlePronunciationScore = async (result, audioBlob, lineId) => {
     setPronunciationResult(result);
     setRecordedAudio(audioBlob);
     setActiveLineId(lineId);
     setShowPronunciationResult(true);
+
     // Refresh pronounced stats so highlighting/progress updates live
     try {
-      if (typeof refreshPronounced === 'function') await refreshPronounced();
+      if (typeof refreshPronounced === 'function') {
+        await refreshPronounced();
+      }
     } catch (e) {
       console.warn('Failed to refresh pronounced after score:', e);
     }
@@ -47,9 +64,7 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
       <div className="text-center py-12">
         <div className="text-6xl mb-4">💬</div>
         <h3 className="text-xl font-semibold mb-2">Chưa có hội thoại nào</h3>
-        <p className="text-base-content/70">
-          Nội dung hội thoại sẽ được cập nhật sớm.
-        </p>
+        <p className="text-base-content/70">Nội dung hội thoại sẽ được cập nhật sớm.</p>
       </div>
     );
   }
@@ -57,16 +72,14 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
   return (
     <div className="space-y-6">
       {conversations.map((conversation, index) => (
-        <div key={conversation.id} className="card bg-base-100 shadow-lg">
+        <div key={conversation.id ?? index} className="card bg-base-100 shadow-lg">
           <div className="card-body">
             <div
               className="flex justify-between items-center cursor-pointer"
               onClick={() => toggleSection(index)}
             >
-              <h3 className="card-title text-lg">
-                {conversation.section}
-              </h3>
-              <button className="btn btn-ghost btn-sm">
+              <h3 className="card-title text-lg">{conversation.section}</h3>
+              <button className="btn btn-ghost btn-sm" type="button">
                 {expandedSection === index ? '▼' : '▶'}
               </button>
             </div>
@@ -79,53 +92,74 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
 
             {expandedSection === index && (
               <div className="mt-6 space-y-4">
-                {conversation.lines?.map((line) => (
-                  <div key={line.id} className={`p-4 rounded-lg ${highlightedLineIds.includes(line.id) ? 'bg-success/10 border border-success' : 'bg-base-200'}`}>
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="font-semibold text-primary">
-                        {line.speaker}
-                      </span>
-                      <div className="flex gap-2">
-                        {(line.audioUrl || line.audioAsset) && (
-                          <AudioPlayer audioUrl={line.audioUrl} audioAsset={line.audioAsset} />
-                        )}
-                        <SentenceRecordingButton
-                          text={line.pinyin}
-                          hanzi={line.zh || line.zhText}
-                          lineId={line.id}
-                          onScore={(result, audioBlob, returnedLineId) => handlePronunciationScore(result, audioBlob, returnedLineId || line.id)}
-                          onStartRecording={() => handleStartRecording(line.id)}
-                          size="xs"
-                          lessonId={lessonId}
-                        />
-                      </div>
-                    </div>
+                {conversation.lines?.map((line) => {
+                  const isHighlighted = (highlightedLineIds || [])
+                    .map(String)
+                    .includes(String(line.id));
+                  // Debug per-line
+                  if (process.env.NODE_ENV !== 'production') {
+                    try {
+                      console.debug(`[ConversationSection] line ${line.id} highlighted?`, isHighlighted);
+                    } catch (e) { }
+                  }
 
-                    <div className="space-y-2">
-                      <div className="text-xl font-medium">
-                        {line.zh || line.zhText}
-                      </div>
-                      <div className="text-base-content/80">
-                        {line.pinyin}
-                      </div>
-                      <div className="text-base-content/70 italic">
-                        {line.vn || line.vnTranslation}
-                      </div>
-                    </div>
+                  return (
+                    <div
+                      key={line.id}
+                      className={`p-4 rounded-lg ${isHighlighted ? 'bg-success/10 border border-success' : 'bg-base-200'
+                        }`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="font-semibold text-primary">{line.speaker}</span>
 
-                    {/* Hiển thị kết quả đánh giá phát âm cho line này */}
-                    {showPronunciationResult && activeLineId === line.id && (
-                      <div className="mt-4">
-                        <SentencePronunciationResult
-                          result={pronunciationResult}
-                          recordedAudio={recordedAudio}
-                          onClose={closePronunciationResult}
-                          sentenceText={line.zh || line.zhText || line.pinyin || line.text || line.conversationLine || ''}
-                        />
+                        <div className="flex gap-2">
+                          {(line.audioUrl || line.audioAsset) && (
+                            <AudioPlayer audioUrl={line.audioUrl} audioAsset={line.audioAsset} />
+                          )}
+
+                          <SentenceRecordingButton
+                            text={line.pinyin}
+                            hanzi={line.zh || line.zhText}
+                            lineId={line.id}
+                            onScore={(result, audioBlob, returnedLineId) =>
+                              handlePronunciationScore(result, audioBlob, returnedLineId ?? line.id)
+                            }
+                            onStartRecording={() => handleStartRecording(line.id)}
+                            size="xs"
+                            lessonId={lessonId}
+                          />
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))}
+
+                      <div className="space-y-2">
+                        <div className="text-xl font-medium">{line.zh || line.zhText}</div>
+                        <div className="text-base-content/80">{line.pinyin}</div>
+                        <div className="text-base-content/70 italic">
+                          {line.vn || line.vnTranslation}
+                        </div>
+                      </div>
+
+                      {/* Hiển thị kết quả đánh giá phát âm cho line này */}
+                      {showPronunciationResult && activeLineId === line.id && (
+                        <div className="mt-4">
+                          <SentencePronunciationResult
+                            result={pronunciationResult}
+                            recordedAudio={recordedAudio}
+                            onClose={closePronunciationResult}
+                            sentenceText={
+                              line.zh ||
+                              line.zhText ||
+                              line.pinyin ||
+                              line.text ||
+                              line.conversationLine ||
+                              ''
+                            }
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

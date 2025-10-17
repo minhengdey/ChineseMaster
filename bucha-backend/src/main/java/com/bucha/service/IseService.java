@@ -76,7 +76,8 @@ public class IseService {
 
     public ResponseEntity<?> score(JwtUserPrincipal principal, String text, MultipartFile audioFile, String reqSub,
             String reqEnt, String scoreCategory, Long lessonId, Long testId, Boolean includeInDaily,
-            String sessionDate, Double durationSeconds, Integer numSentences, String lineId, String vocabularyId)
+            String sessionDate, Double durationSeconds, Integer numSentences, String lineId, String vocabularyId,
+            String source)
             throws Exception {
         logger.info("Received upload: name={} size={} contentType={}",
                 audioFile == null ? null : audioFile.getOriginalFilename(),
@@ -323,60 +324,89 @@ public class IseService {
                                             }
                                             sentenceOut.put("completeness", completeness);
 
-                                            // Build wrong_words based solely on the word-level "overall" score.
-                                            // Assumption: consider a word wrong when its overall <
-                                            // WRONG_WORD_THRESHOLD.
-                                            java.util.List<String> wrongList = new java.util.ArrayList<>();
-                                            final double WRONG_WORD_THRESHOLD = 60.0d;
+                                            // Check if sentence was marked rejected by ISE. If so,
+                                            // preserve sentence-level scores and do not attempt to
+                                            // recompute/override them using word/phone-level details.
+                                            boolean sentenceRejected = false;
+                                            String sentenceExceptInfo = null;
                                             if (readSentence != null) {
-                                                NodeList words = readSentence.getElementsByTagName("word");
-                                                for (int wi = 0; words != null && wi < words.getLength(); wi++) {
-                                                    Element w = (Element) words.item(wi);
-                                                    String content = w.getAttribute("content");
-                                                    if (content == null || content.isEmpty()) {
-                                                        content = w.getTextContent() == null ? ""
-                                                                : w.getTextContent().trim();
-                                                    }
-                                                    if (content == null || content.isEmpty())
-                                                        continue;
-
-                                                    double overall = 0.0d;
-                                                    try {
-                                                        JSONObject wordScores = extractWordScoresFromElement(w);
-                                                        if (wordScores != null && wordScores.containsKey("overall"))
-                                                            overall = wordScores.getDoubleValue("overall");
-                                                    } catch (Throwable t) {
-                                                        logger.warn("Failed to extract word score for '{}': {}",
-                                                                content, t.getMessage());
-                                                    }
-
-                                                    // Fallback: if extractor didn't return an overall, try attributes
-                                                    // on the element or parent
-                                                    if (overall == 0.0d) {
-                                                        String s = w.getAttribute("total_score");
-                                                        if (s == null || s.isEmpty()) {
-                                                            Node parent = w.getParentNode();
-                                                            if (parent instanceof Element) {
-                                                                s = ((Element) parent).getAttribute("total_score");
-                                                            }
-                                                        }
-                                                        if (s != null && !s.isEmpty()) {
-                                                            try {
-                                                                overall = Double.parseDouble(s);
-                                                            } catch (Exception ignored) {
-                                                            }
-                                                        }
-                                                    }
-
-                                                    if (overall < WRONG_WORD_THRESHOLD) {
-                                                        wrongList.add(content);
-                                                    }
+                                                String isRejectedAttr = readSentence.getAttribute("is_rejected");
+                                                sentenceExceptInfo = readSentence.getAttribute("except_info");
+                                                if (isRejectedAttr != null && !isRejectedAttr.isEmpty()
+                                                        && ("true".equalsIgnoreCase(isRejectedAttr)
+                                                                || "1".equals(isRejectedAttr))) {
+                                                    sentenceRejected = true;
                                                 }
                                             }
-                                            com.alibaba.fastjson.JSONArray wrongArr = new com.alibaba.fastjson.JSONArray();
-                                            for (String s : wrongList)
-                                                wrongArr.add(s);
-                                            sentenceOut.put("wrong_words", wrongArr);
+
+                                            if (sentenceRejected) {
+                                                sentenceOut.put("is_rejected", true);
+                                                if (sentenceExceptInfo != null && !sentenceExceptInfo.isEmpty())
+                                                    sentenceOut.put("except_info", sentenceExceptInfo);
+                                                sentenceOut.put("warning",
+                                                        "Recording quality too poor (Error "
+                                                                + (sentenceExceptInfo == null ? "unknown"
+                                                                        : sentenceExceptInfo)
+                                                                + "). Please try again with a longer, clearer recording.");
+                                                // Do not compute wrong_words from word-level scores when rejected
+                                                sentenceOut.put("wrong_words", new com.alibaba.fastjson.JSONArray());
+                                            } else {
+                                                // Build wrong_words based solely on the word-level "overall" score.
+                                                // Assumption: consider a word wrong when its overall <
+                                                // WRONG_WORD_THRESHOLD.
+                                                java.util.List<String> wrongList = new java.util.ArrayList<>();
+                                                final double WRONG_WORD_THRESHOLD = 60.0d;
+                                                if (readSentence != null) {
+                                                    NodeList words = readSentence.getElementsByTagName("word");
+                                                    for (int wi = 0; words != null && wi < words.getLength(); wi++) {
+                                                        Element w = (Element) words.item(wi);
+                                                        String content = w.getAttribute("content");
+                                                        if (content == null || content.isEmpty()) {
+                                                            content = w.getTextContent() == null ? ""
+                                                                    : w.getTextContent().trim();
+                                                        }
+                                                        if (content == null || content.isEmpty())
+                                                            continue;
+
+                                                        double overall = 0.0d;
+                                                        try {
+                                                            JSONObject wordScores = extractWordScoresFromElement(w);
+                                                            if (wordScores != null && wordScores.containsKey("overall"))
+                                                                overall = wordScores.getDoubleValue("overall");
+                                                        } catch (Throwable t) {
+                                                            logger.warn("Failed to extract word score for '{}': {}",
+                                                                    content, t.getMessage());
+                                                        }
+
+                                                        // Fallback: if extractor didn't return an overall, try
+                                                        // attributes
+                                                        // on the element or parent
+                                                        if (overall == 0.0d) {
+                                                            String s = w.getAttribute("total_score");
+                                                            if (s == null || s.isEmpty()) {
+                                                                Node parent = w.getParentNode();
+                                                                if (parent instanceof Element) {
+                                                                    s = ((Element) parent).getAttribute("total_score");
+                                                                }
+                                                            }
+                                                            if (s != null && !s.isEmpty()) {
+                                                                try {
+                                                                    overall = Double.parseDouble(s);
+                                                                } catch (Exception ignored) {
+                                                                }
+                                                            }
+                                                        }
+
+                                                        if (overall < WRONG_WORD_THRESHOLD) {
+                                                            wrongList.add(content);
+                                                        }
+                                                    }
+                                                }
+                                                com.alibaba.fastjson.JSONArray wrongArr = new com.alibaba.fastjson.JSONArray();
+                                                for (String s : wrongList)
+                                                    wrongArr.add(s);
+                                                sentenceOut.put("wrong_words", wrongArr);
+                                            }
 
                                             sentenceOut.put("raw_xml", xmlString);
                                             sentenceOut.put("sid", sidRef.get());
@@ -436,18 +466,30 @@ public class IseService {
 
             Document doc = parseXmlSafely(rawXml);
             NodeList words = null;
+            boolean sentenceRejected = false;
             if (doc != null) {
                 NodeList rsList = doc.getElementsByTagName("read_sentence");
                 Element readSentence = null;
                 if (rsList != null && rsList.getLength() > 0)
                     readSentence = (Element) rsList.item(0);
-                if (readSentence != null)
+                if (readSentence != null) {
                     words = readSentence.getElementsByTagName("word");
+                    String isRejectedAttr = readSentence.getAttribute("is_rejected");
+                    if (isRejectedAttr != null
+                            && ("true".equalsIgnoreCase(isRejectedAttr) || "1".equals(isRejectedAttr))) {
+                        sentenceRejected = true;
+                    }
+                }
                 if (words == null || words.getLength() == 0)
                     words = doc.getElementsByTagName("word");
             }
 
-            if (words != null && words.getLength() > 0) {
+            if (sentenceRejected) {
+                // When sentence is rejected, skip per-word re-scoring to avoid
+                // recomputing a misleading sentence total. Return an empty words
+                // array and mark the response accordingly.
+                logger.info("ISE marked sentence as rejected; skipping per-word scoring to preserve sentence totals.");
+            } else if (words != null && words.getLength() > 0) {
                 for (int i = 0; i < words.getLength(); i++) {
                     Element w = (Element) words.item(i);
                     String content = w.getAttribute("content");
@@ -555,7 +597,11 @@ public class IseService {
                 // also persist into new summary tables as appropriate
                 try {
                     // persist daily entry when included in daily
-                    if (Boolean.TRUE.equals(saved.getIncludeInDaily())) {
+                    // or when the attempt references a specific line or vocabulary id
+                    // (so item-level attempts are tracked even if client did not set
+                    // includeInDaily)
+                    if (Boolean.TRUE.equals(saved.getIncludeInDaily()) || saved.getLineId() != null
+                            || saved.getVocabularyId() != null) {
                         com.bucha.entity.IseDailyEntry d = new com.bucha.entity.IseDailyEntry();
                         d.setAttemptId(saved.getId());
                         d.setTotalScore(saved.getTotalScore());
@@ -584,17 +630,30 @@ public class IseService {
                         iseDailyEntryRepository.save(d);
                     }
 
-                    // persist lesson entry when lessonId present
+                    // persist lesson entry when lessonId present AND source indicates
+                    // speaking-practice
+                    logger.info("[IseService] lesson persist check: saved.lessonId={} source={}", saved.getLessonId(),
+                            source);
                     if (saved.getLessonId() != null) {
-                        com.bucha.entity.IseLessonEntry le = new com.bucha.entity.IseLessonEntry();
-                        le.setAttemptId(saved.getId());
-                        le.setLessonId(saved.getLessonId());
-                        le.setTotalScore(saved.getTotalScore());
-                        le.setDurationSeconds(saved.getDurationSeconds());
-                        le.setSessionDate(saved.getSessionDate());
-                        if (saved.getUser() != null)
-                            le.setUser(saved.getUser());
-                        iseLessonEntryRepository.save(le);
+                        if ("speaking-practice".equalsIgnoreCase(String.valueOf(source))) {
+                            com.bucha.entity.IseLessonEntry le = new com.bucha.entity.IseLessonEntry();
+                            le.setAttemptId(saved.getId());
+                            le.setLessonId(saved.getLessonId());
+                            le.setTotalScore(saved.getTotalScore());
+                            le.setDurationSeconds(saved.getDurationSeconds());
+                            le.setSessionDate(saved.getSessionDate());
+                            if (saved.getUser() != null)
+                                le.setUser(saved.getUser());
+                            iseLessonEntryRepository.save(le);
+                            logger.info("[IseService] persisted IseLessonEntry for attemptId={} lessonId={}",
+                                    saved.getId(), saved.getLessonId());
+                        } else {
+                            logger.info(
+                                    "[IseService] skipping IseLessonEntry persist because source!='speaking-practice' (source={})",
+                                    source);
+                        }
+                    } else {
+                        logger.info("[IseService] skipping IseLessonEntry persist because saved.lessonId is null");
                     }
 
                     // persist test entry when testId present
