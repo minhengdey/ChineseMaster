@@ -242,6 +242,7 @@ public class LessonMigrationService {
 
       // Tones
       if (pDto.getTones() != null) {
+         int toneIdx = 1;
          for (ToneMigrationDto dto : pDto.getTones()) {
             String canonical = canonicalizeJson(dto);
             String hash = computeSha256Hex(canonical);
@@ -257,6 +258,7 @@ public class LessonMigrationService {
                   existing.setToneMark(dto.getTone_mark());
                   existing.setPitchValue(dto.getPitch_value());
                   existing.setPronunciation(dto.getPronunciation());
+                  existing.setOrder(toneIdx);
                   existing.setContentHash(hash);
                   toneRepository.save(existing);
                }
@@ -266,11 +268,13 @@ public class LessonMigrationService {
                ent.setToneMark(dto.getTone_mark());
                ent.setPitchValue(dto.getPitch_value());
                ent.setPronunciation(dto.getPronunciation());
+               ent.setOrder(toneIdx);
                if (dto.getId() != null)
                   ent.setExternalId(dto.getId());
                ent.setContentHash(hash);
                toneRepository.save(ent);
             }
+            toneIdx++;
          }
       }
    }
