@@ -330,6 +330,8 @@ const SpeakingPracticePage = () => {
                 includeInDaily: isDailyMode ? true : false,
                 // session timestamp
                 sessionDate: sessionDate,
+                // indicate source so backend can persist lesson entries only for speaking practice
+                source: 'speaking-practice',
             });
             // Normalize response: move metrics from resp.sentence to top-level for easier UI use
             const sent = resp?.sentence || {};
@@ -342,6 +344,10 @@ const SpeakingPracticePage = () => {
                 status: sent?.status ?? resp?.status ?? null,
                 raw_xml: sent?.raw_xml ?? resp?.raw_xml ?? null,
                 words: resp?.words ?? sent?.words ?? resp?.words ?? [],
+                // propagate ISE rejection metadata when present so UI can show helpful guidance
+                is_rejected: sent?.is_rejected ?? resp?.is_rejected ?? false,
+                except_info: sent?.except_info ?? resp?.except_info ?? null,
+                warning: sent?.warning ?? resp?.warning ?? null,
             };
             setSelectedWord(null);
             setResult(normalized);
