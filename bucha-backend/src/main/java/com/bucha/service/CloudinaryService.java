@@ -57,6 +57,7 @@ public class CloudinaryService {
 
     private Long getLatestVersionForRaw(String publicId) {
         try {
+
             @SuppressWarnings("rawtypes")
             Map res = cloudinary.api().resource(stripJsonExt(publicId),
                     ObjectUtils.asMap("resource_type", "raw", "type", "upload"));

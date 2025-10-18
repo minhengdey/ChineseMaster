@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ConversationLineRepository extends JpaRepository<ConversationLine, Long> {
@@ -14,4 +15,6 @@ public interface ConversationLineRepository extends JpaRepository<ConversationLi
 
    @Query("SELECT COUNT(cl) FROM ConversationLine cl WHERE cl.conversation.lesson.id = :lessonId")
    long countByLessonId(@Param("lessonId") Long lessonId);
+
+   Optional<ConversationLine> findByExternalId(Long externalId);
 }

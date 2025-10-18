@@ -17,6 +17,12 @@ public class ConversationLine {
    @GeneratedValue(strategy = GenerationType.IDENTITY)
    private Long id;
 
+   @Column(name = "external_id")
+   private Long externalId;
+
+   @Column(name = "content_hash", length = 64)
+   private String contentHash;
+
    @Column(nullable = false)
    private String speaker; // e.g., "大卫", "李军", "王老师"
 
