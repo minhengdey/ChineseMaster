@@ -29,6 +29,7 @@ app:
 logging:
    level:
       root: ERROR
+      com.bucha.service.CloudinaryService: DEBUG
       # org.springframework: DEBUG
       com.bucha: DEBUG
 
