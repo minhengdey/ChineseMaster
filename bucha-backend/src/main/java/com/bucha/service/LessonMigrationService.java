@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Objects;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +27,13 @@ import java.security.NoSuchAlgorithmException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.bucha.dto.migration.pronunciation.PronunciationDto;
+import com.bucha.dto.migration.pronunciation.InitialSoundMigrationDto;
+import com.bucha.dto.migration.pronunciation.FinalSoundMigrationDto;
+import com.bucha.dto.migration.pronunciation.ToneMigrationDto;
+import com.bucha.repository.InitialSoundRepository;
+import com.bucha.repository.FinalSoundRepository;
+import com.bucha.repository.ToneRepository;
 
 @Slf4j
 @Service
@@ -38,6 +46,9 @@ public class LessonMigrationService {
    private final ConversationLineRepository conversationLineRepository;
    private final VocabularyRepository vocabularyRepository;
    private final LineRepository lineRepository;
+   private final InitialSoundRepository initialSoundRepository;
+   private final FinalSoundRepository finalSoundRepository;
+   private final ToneRepository toneRepository;
 
    // Local file migration removed (Cloudinary-only mode)
 
@@ -273,6 +284,118 @@ public class LessonMigrationService {
       }
 
       return lesson;
+   }
+
+   @Transactional
+   public void migratePronunciation(PronunciationDto pDto) {
+      if (pDto == null)
+         return;
+
+      // Initials
+      if (pDto.getInitials() != null) {
+         for (InitialSoundMigrationDto dto : pDto.getInitials()) {
+            String canonical = canonicalizeJson(dto);
+            String hash = computeSha256Hex(canonical);
+
+            com.bucha.entity.InitialSound existing = null;
+            if (dto.getId() != null) {
+               existing = initialSoundRepository.findByExternalId(dto.getId()).orElse(null);
+            }
+
+            if (existing != null) {
+               if (!Objects.equals(existing.getContentHash(), hash)) {
+                  existing.setType(dto.getType());
+                  existing.setText(dto.getText());
+                  existing.setIpa(dto.getIpa());
+                  existing.setPronunciation(dto.getPronunciation());
+                  existing.setContentHash(hash);
+                  initialSoundRepository.save(existing);
+               }
+            } else {
+               com.bucha.entity.InitialSound ent = new com.bucha.entity.InitialSound();
+               ent.setType(dto.getType());
+               ent.setText(dto.getText());
+               ent.setIpa(dto.getIpa());
+               ent.setPronunciation(dto.getPronunciation());
+               if (dto.getId() != null)
+                  ent.setExternalId(dto.getId());
+               ent.setContentHash(hash);
+               initialSoundRepository.save(ent);
+            }
+         }
+      }
+
+      // Finals
+      if (pDto.getFinals() != null) {
+         for (FinalSoundMigrationDto dto : pDto.getFinals()) {
+            String canonical = canonicalizeJson(dto);
+            String hash = computeSha256Hex(canonical);
+
+            com.bucha.entity.FinalSound existing = null;
+            if (dto.getId() != null) {
+               existing = finalSoundRepository.findByExternalId(dto.getId()).orElse(null);
+            }
+
+            if (existing != null) {
+               if (!Objects.equals(existing.getContentHash(), hash)) {
+                  existing.setCategory(dto.getCategory());
+                  existing.setText(dto.getText());
+                  existing.setIpa(dto.getIpa());
+                  existing.setPronunciation(dto.getPronunciation());
+                  existing.setContentHash(hash);
+                  finalSoundRepository.save(existing);
+               }
+            } else {
+               com.bucha.entity.FinalSound ent = new com.bucha.entity.FinalSound();
+               ent.setCategory(dto.getCategory());
+               ent.setText(dto.getText());
+               ent.setIpa(dto.getIpa());
+               ent.setPronunciation(dto.getPronunciation());
+               if (dto.getId() != null)
+                  ent.setExternalId(dto.getId());
+               ent.setContentHash(hash);
+               finalSoundRepository.save(ent);
+            }
+         }
+      }
+
+      // Tones
+      if (pDto.getTones() != null) {
+         int toneIdx = 1;
+         for (ToneMigrationDto dto : pDto.getTones()) {
+            String canonical = canonicalizeJson(dto);
+            String hash = computeSha256Hex(canonical);
+
+            com.bucha.entity.Tone existing = null;
+            if (dto.getId() != null) {
+               existing = toneRepository.findByExternalId(dto.getId()).orElse(null);
+            }
+
+            if (existing != null) {
+               if (!Objects.equals(existing.getContentHash(), hash)) {
+                  existing.setName(dto.getName());
+                  existing.setToneMark(dto.getTone_mark());
+                  existing.setPitchValue(dto.getPitch_value());
+                  existing.setPronunciation(dto.getPronunciation());
+                  existing.setOrder(toneIdx);
+                  existing.setContentHash(hash);
+                  toneRepository.save(existing);
+               }
+            } else {
+               com.bucha.entity.Tone ent = new com.bucha.entity.Tone();
+               ent.setName(dto.getName());
+               ent.setToneMark(dto.getTone_mark());
+               ent.setPitchValue(dto.getPitch_value());
+               ent.setPronunciation(dto.getPronunciation());
+               ent.setOrder(toneIdx);
+               if (dto.getId() != null)
+                  ent.setExternalId(dto.getId());
+               ent.setContentHash(hash);
+               toneRepository.save(ent);
+            }
+            toneIdx++;
+         }
+      }
    }
 
    private String canonicalizeJson(Object obj) {

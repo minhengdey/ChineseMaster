@@ -2,24 +2,18 @@
   <xml_result>
       <read_sentence lan="cn" type="study" version="7,0,0,1024">
           <rec_paper>
-              <read_sentence accuracy_score="0.000000" beg_pos="0" content="同学。" emotion_score="0.000000" end_pos="208" except_info="28676" fluency_score="0.000000" integrity_score="0.000000" is_rejected="true" phone_score="0.000000" time_len="208" tone_score="0.000000" total_score="0.000000">
-                  <sentence beg_pos="0" content="同学" end_pos="208" fluency_score="0.000000" phone_score="0.000000" time_len="208" tone_score="0.000000" total_score="0.000000">
-                      <word beg_pos="0" content="同" end_pos="76" symbol="tong2" time_len="76">
-                          <syll beg_pos="0" content="sil" dp_message="0" end_pos="76" rec_node_type="sil" time_len="76">
-                              <phone beg_pos="0" content="sil" dp_message="0" end_pos="76" rec_node_type="sil" time_len="76"></phone>
-                          </syll>
-                          <syll beg_pos="76" content="同" dp_message="16" end_pos="76" rec_node_type="paper" symbol="tong2" time_len="0">
-                              <phone content="t" dp_message="16" is_yun="0" perr_msg="16" rec_node_type="paper"></phone>
-                              <phone content="ong" dp_message="16" is_yun="1" mono_tone="TONE2" perr_msg="16" rec_node_type="paper"></phone>
+              <read_sentence accuracy_score="0.000000" beg_pos="0" content="你好。" emotion_score="0.000000" end_pos="88" except_info="28689" fluency_score="0.000000" integrity_score="0.000000" is_rejected="true" phone_score="0.000000" time_len="88" tone_score="0.000000" total_score="0.000000">
+                  <sentence beg_pos="0" content="你好" end_pos="0" fluency_score="0.000000" phone_score="0.000000" time_len="0" tone_score="0.000000" total_score="0.000000">
+                      <word beg_pos="0" content="你" end_pos="0" symbol="ni2" time_len="0">
+                          <syll beg_pos="0" content="你" dp_message="16" end_pos="0" rec_node_type="paper" symbol="ni2" time_len="0">
+                              <phone beg_pos="0" content="n" dp_message="16" end_pos="0" is_yun="0" perr_msg="16" rec_node_type="paper" time_len="0"></phone>
+                              <phone beg_pos="0" content="i" dp_message="16" end_pos="0" is_yun="1" mono_tone="TONE2" perr_msg="16" rec_node_type="paper" time_len="0"></phone>
                           </syll>
                       </word>
-                      <word beg_pos="76" content="学" end_pos="208" symbol="xue2" time_len="132">
-                          <syll beg_pos="76" content="学" dp_message="0" end_pos="94" rec_node_type="paper" symbol="xue2" time_len="18">
-                              <phone beg_pos="76" content="x" dp_message="0" end_pos="89" is_yun="0" perr_level_msg="3" perr_msg="1" rec_node_type="paper" time_len="13"></phone>
-                              <phone beg_pos="89" content="ve" dp_message="0" end_pos="94" is_yun="1" mono_tone="TONE2" perr_level_msg="3" perr_msg="3" rec_node_type="paper" time_len="5"></phone>
-                          </syll>
-                          <syll beg_pos="94" content="sil" dp_message="0" end_pos="208" rec_node_type="sil" time_len="114">
-                              <phone beg_pos="94" content="sil" end_pos="208" time_len="114"></phone>
+                      <word beg_pos="0" content="好" end_pos="0" symbol="hao3" time_len="0">
+                          <syll beg_pos="0" content="好" dp_message="16" end_pos="0" rec_node_type="paper" symbol="hao3" time_len="0">
+                              <phone beg_pos="0" content="h" dp_message="16" end_pos="0" is_yun="0" perr_msg="16" rec_node_type="paper" time_len="0"></phone>
+                              <phone beg_pos="0" content="ao" dp_message="16" end_pos="0" is_yun="1" mono_tone="TONE3" perr_msg="16" rec_node_type="paper" time_len="0"></phone>
                           </syll>
                       </word>
                   </sentence>
