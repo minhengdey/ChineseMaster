@@ -16,4 +16,5 @@ public class VocabularyMigrationDTO {
    private String type;
    private String meaning;
    private LineMigrationDTO example;
+   private Integer order;
 }

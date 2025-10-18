@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 public class ConversationMigrationDTO {
    private Long id;
    private String section;
+   private Integer order;
 
    @JsonProperty("vn_translation")
    private String vnTranslation;

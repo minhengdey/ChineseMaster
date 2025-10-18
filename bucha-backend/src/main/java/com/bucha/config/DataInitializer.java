@@ -4,11 +4,16 @@ import com.bucha.entity.Curriculum;
 import com.bucha.service.LessonMigrationService;
 import com.bucha.service.CloudinaryService;
 import com.bucha.dto.CurriculumMetadataDto;
+import com.bucha.dto.content.ConversationDto;
+import com.bucha.dto.migration.ConversationMigrationDTO;
 import com.bucha.dto.migration.LessonMigrationDTO;
+import com.bucha.dto.migration.LineMigrationDTO;
+import com.bucha.dto.migration.VocabularyMigrationDTO;
 
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,63 +83,6 @@ public class DataInitializer implements CommandLineRunner {
       }
    }
 
-   // Try to set a stable id on the DTO using common setter/field names via
-   // reflection.
-   private void setStableIdOnDto(Object dto, Long id) {
-      if (dto == null || id == null)
-         return;
-      try {
-         // try setter setId(Long) or setId(long)
-         try {
-            Method m = dto.getClass().getMethod("setId", Long.class);
-            m.invoke(dto, id);
-            return;
-         } catch (NoSuchMethodException ignore) {
-         }
-         try {
-            Method m2 = dto.getClass().getMethod("setId", long.class);
-            m2.invoke(dto, id);
-            return;
-         } catch (NoSuchMethodException ignore) {
-         }
-
-         // try setExternalId(Long)
-         try {
-            Method m3 = dto.getClass().getMethod("setExternalId", Long.class);
-            m3.invoke(dto, id);
-            return;
-         } catch (NoSuchMethodException ignore) {
-         }
-
-         // try field "id"
-         try {
-            Field f = dto.getClass().getDeclaredField("id");
-            f.setAccessible(true);
-            if (f.getType() == Long.class || f.getType() == long.class) {
-               f.set(dto, id);
-               return;
-            }
-         } catch (NoSuchFieldException | IllegalAccessException ignore) {
-         }
-
-         // try field "externalId"
-         try {
-            Field f2 = dto.getClass().getDeclaredField("externalId");
-            f2.setAccessible(true);
-            if (f2.getType() == Long.class || f2.getType() == long.class) {
-               f2.set(dto, id);
-               return;
-            }
-         } catch (NoSuchFieldException | IllegalAccessException ignore) {
-         }
-
-         // if none matched, log debug
-         logger.debug("Unable to set stable id on DTO of type {}", dto.getClass().getName());
-      } catch (Exception e) {
-         logger.debug("Error while setting stable id on DTO: {}", e.getMessage());
-      }
-   }
-
    private void migrateFromCloudinary() {
       logger.info("Starting Cloudinary-based migration...");
       if (curriculaCsv == null || curriculaCsv.isBlank()) {
@@ -147,11 +95,13 @@ public class DataInitializer implements CommandLineRunner {
          String slug = raw.trim();
          if (slug.isEmpty())
             continue;
+         Long stableCurriculumId = computeStableId(curriculumBasePath + "/" + slug);
 
          try {
             String baseFolder = curriculumBasePath + "/" + slug;
             CurriculumMetadataDto metadata = cloudinaryService
                   .fetchCurriculumMetadataDto(baseFolder + "/metadata.json");
+            metadata.setId(stableCurriculumId);
             Curriculum curriculum = lessonMigrationService.getOrCreateCurriculumFromMetadata(metadata);
             if (curriculum == null) {
                logger.warn("Skip curriculum '{}' due to invalid metadata", slug);
@@ -164,6 +114,7 @@ public class DataInitializer implements CommandLineRunner {
                continue;
             }
 
+            AtomicInteger lessonOrder = new AtomicInteger(1);
             for (String lf : lessonFiles) {
                String file = lf == null ? null : lf.trim();
                if (file == null || file.isEmpty())
@@ -175,9 +126,35 @@ public class DataInitializer implements CommandLineRunner {
                }
                // compute stable id from content path so id remains stable across syncs
                Long stableLessonId = computeStableId(baseFolder + "/" + file);
-               setStableIdOnDto(lesson, stableLessonId);
-
+               lesson.setId(stableLessonId);
+               lesson.setOrder(lessonOrder.getAndIncrement());
                String audioRoot = baseFolder + "/audio";
+
+               AtomicInteger convOrder = new AtomicInteger(1);
+               for (ConversationMigrationDTO conv : lesson.getConversations()) {
+                  conv.setOrder(convOrder.getAndIncrement());
+                  conv.setId(computeStableId(audioRoot + "/"
+                        + String.format("lesson-%d-conv-%d", lesson.getOrder(), conv.getOrder())));
+                  for (int i = 0; i < conv.getLines().size(); i++) {
+                     LineMigrationDTO line = conv.getLines().get(i);
+                     line.setOrder(i + 1);
+                     line.setId(computeStableId(audioRoot + "/"
+                           + String.format("lesson-%d_conv-%d_line-%d", lesson.getOrder(), conv.getOrder(),
+                                 line.getOrder())));
+                  }
+               }
+
+               AtomicInteger vocabOrder = new AtomicInteger(1);
+               for (VocabularyMigrationDTO vocab : lesson.getVocabulary()) {
+                  vocab.setId(computeStableId(audioRoot + "/"
+                        + String.format("lesson-%d-vocab-%d", lesson.getOrder(), vocabOrder.get())));
+                  if (vocab.getExample() != null) {
+                     vocab.getExample().setId(computeStableId(audioRoot + "/"
+                           + String.format("lesson-%d_vocab-%d_example", lesson.getOrder(), vocabOrder.get())));
+                  }
+                  vocab.setOrder(vocabOrder.get());
+                  vocabOrder.incrementAndGet();
+               }
                lessonMigrationService.migrateLesson(lesson, curriculum, audioRoot);
             }
 

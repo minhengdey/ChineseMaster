@@ -15,6 +15,7 @@ public class LineMigrationDTO {
    private Long id;
 
    private String speaker;
+   private Integer order;
 
    @JsonProperty("zh")
    private String zh;

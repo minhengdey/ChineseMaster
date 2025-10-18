@@ -13,11 +13,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Objects;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -90,14 +91,12 @@ public class LessonMigrationService {
          lesson = lessonRepository.save(lesson);
       }
 
-      AtomicInteger convOrdinal = new AtomicInteger(1);
       if (lessonDto.getConversations() != null) {
          for (ConversationMigrationDTO convDto : lessonDto.getConversations()) {
-            int convOrder = convOrdinal.getAndIncrement();
+            int convOrder = convDto.getOrder();
 
             String convCanonical = canonicalizeJson(convDto);
             String convHash = computeSha256Hex(convCanonical);
-
             Conversation conv = null;
             if (convDto.getId() != null) {
                conv = conversationRepository.findByExternalId(convDto.getId()).orElse(null);
@@ -134,10 +133,9 @@ public class LessonMigrationService {
                conv = conversationRepository.save(conv);
             }
 
-            AtomicInteger lineOrdinal = new AtomicInteger(1);
             if (convDto.getLines() != null) {
                for (LineMigrationDTO lineDto : convDto.getLines()) {
-                  int lineOrder = lineOrdinal.getAndIncrement();
+                  int lineOrder = lineDto.getOrder();
 
                   String lineCanonical = canonicalizeJson(lineDto);
                   String lineHash = computeSha256Hex(lineCanonical);
@@ -184,8 +182,6 @@ public class LessonMigrationService {
          }
       }
 
-      // Vocabulary
-      AtomicInteger vocabOrdinal = new AtomicInteger(1);
       if (lessonDto.getVocabulary() != null) {
 
          for (VocabularyMigrationDTO vDto : lessonDto.getVocabulary()) {
@@ -205,7 +201,7 @@ public class LessonMigrationService {
                      exampleLine.setVnTranslation(vDto.getExample().getVn());
                      if (audioRootPublicId != null && lessonDto.getOrder() != null) {
                         String pid = String.format("%s/lesson-%d_vocab-%d_example", audioRootPublicId,
-                              lessonDto.getOrder(), vocabOrdinal.get());
+                              lessonDto.getOrder(), vDto.getOrder());
                         exampleLine.setAudioPublicId(pid);
                      }
                      exampleLine.setContentHash(exampleHash);
@@ -218,7 +214,7 @@ public class LessonMigrationService {
                   exampleLine.setVnTranslation(vDto.getExample().getVn());
                   if (audioRootPublicId != null && lessonDto.getOrder() != null) {
                      String pid = String.format("%s/lesson-%d_vocab-%d_example", audioRootPublicId,
-                           lessonDto.getOrder(), vocabOrdinal.get());
+                           lessonDto.getOrder(), vDto.getOrder());
                      exampleLine.setAudioPublicId(pid);
                   }
                   exampleLine.setExternalId(vDto.getExample().getId());
@@ -227,7 +223,7 @@ public class LessonMigrationService {
                }
             }
 
-            int vocabOrder = vocabOrdinal.getAndIncrement();
+            int vocabOrder = vDto.getOrder();
 
             String vocabCanonical = canonicalizeJson(vDto);
             String vocabHash = computeSha256Hex(vocabCanonical);
@@ -316,20 +312,23 @@ public class LessonMigrationService {
             log.warn("Curriculum metadata missing required fields 'order' or 'name'. Skipping.");
             return null;
          }
-
-         return curriculumRepository.findByOrder(metadata.getOrder()).map(c -> {
-            c.setDescription(metadata.getDescription());
-            c.setLevel(metadata.getLevel());
-            c.setName(metadata.getName());
-            return curriculumRepository.save(c);
-         }).orElseGet(() -> {
-            return curriculumRepository.save(Curriculum.builder()
-                  .order(metadata.getOrder())
-                  .name(metadata.getName())
-                  .description(metadata.getDescription())
-                  .level(metadata.getLevel())
-                  .build());
-         });
+         Curriculum curriculum = null;
+         if (metadata.getId() != null) {
+            curriculum = curriculumRepository.findByExternalId(metadata.getId()).orElse(null);
+         }
+         if (curriculum != null) {
+            curriculum.setDescription(metadata.getDescription());
+            curriculum.setLevel(metadata.getLevel());
+            curriculum.setName(metadata.getName());
+            return curriculumRepository.save(curriculum);
+         }
+         return curriculumRepository.save(Curriculum.builder()
+               .externalId(metadata.getId())
+               .name(metadata.getName())
+               .description(metadata.getDescription())
+               .level(metadata.getLevel())
+               .order(metadata.getOrder())
+               .build());
 
       } catch (Exception e) {
          log.error("Failed to upsert curriculum from metadata", e);
@@ -366,5 +365,22 @@ public class LessonMigrationService {
          }
       }
       return conversationLines;
+   }
+
+   private Long computeStableId(String seed) {
+      if (seed == null)
+         return null;
+      try {
+         MessageDigest md = MessageDigest.getInstance("SHA-256");
+         byte[] hash = md.digest(seed.getBytes(StandardCharsets.UTF_8));
+         byte[] first8 = Arrays.copyOf(hash, 8);
+         long val = new BigInteger(1, first8).longValue();
+         if (val == Long.MIN_VALUE)
+            val = Math.abs(val + 1);
+         return Math.abs(val);
+      } catch (NoSuchAlgorithmException ex) {
+         // fallback to hashCode if SHA-256 not available (very unlikely)
+         return (long) Math.abs(seed.hashCode());
+      }
    }
 }
