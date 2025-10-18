@@ -46,19 +46,61 @@ public class PronunciationService {
    }
 
    public PronunciationGuideDto findByTone(String toneName) {
-         // try matching by name first (backwards compat), then by tone_mark
-         Optional<Tone> maybe = toneRepository.findByName(toneName);
+      // try matching by name first (backwards compat)
+      Optional<Tone> maybe = toneRepository.findByName(toneName);
+
+      // Normalize common frontend formats: "TONE2" or "2" or multi-digit marks like
+      // "214"
+      String normalizedToneMark = null;
+      if (maybe.isEmpty() && toneName != null) {
+         String upper = toneName.trim().toUpperCase();
+         // TONE2 -> 2
+         java.util.regex.Matcher m = java.util.regex.Pattern
+               .compile("TONE(\\d+)", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(upper);
+         if (m.find()) {
+            normalizedToneMark = m.group(1);
+         } else {
+            // any digits in the string
+            java.util.regex.Matcher m2 = java.util.regex.Pattern.compile("(\\d+)").matcher(toneName);
+            if (m2.find())
+               normalizedToneMark = m2.group(1);
+         }
+      }
+
+      // try tone_mark using normalized value first, then raw input as fallback
+      if (maybe.isEmpty()) {
+         // If normalizedToneMark looks like a number, try matching by sortOrder first
+         if (normalizedToneMark != null) {
+            try {
+               Integer idx = Integer.valueOf(normalizedToneMark);
+               maybe = toneRepository.findByOrder(idx);
+            } catch (NumberFormatException ignored) {
+            }
+            // if not found by sortOrder, fall back to toneMark match
+            if (maybe.isEmpty()) {
+               maybe = toneRepository.findByToneMark(normalizedToneMark);
+            }
+         }
          if (maybe.isEmpty()) {
+            // try raw input as toneMark
             maybe = toneRepository.findByToneMark(toneName);
          }
+      }
       if (maybe.isEmpty())
          return null;
       Tone s = maybe.get();
       PronunciationGuideDto dto = new PronunciationGuideDto();
       dto.setType("tone");
-         // prefer returning tone_mark when available as the key (e.g. '55' or '214')
-         dto.setKey(s.getToneMark() != null ? s.getToneMark() : s.getName());
-         dto.setIpa(s.getPitchValue());
+      // prefer returning tone_mark when available as the key, otherwise fall back to
+      // sortOrder or name
+      if (s.getToneMark() != null) {
+         dto.setKey(s.getToneMark());
+      } else if (s.getOrder() != null) {
+         dto.setKey(String.valueOf(s.getOrder()));
+      } else {
+         dto.setKey(s.getName());
+      }
+      dto.setIpa(s.getPitchValue());
       dto.setPronunciation(s.getPronunciation());
       return dto;
    }

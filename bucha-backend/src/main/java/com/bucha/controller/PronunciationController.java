@@ -30,15 +30,18 @@ public class PronunciationController {
 
       // try initial
       PronunciationGuideDto dto = pronunciationService.findByInitial(q);
-      if (dto != null) return ResponseEntity.ok(dto);
+      if (dto != null)
+         return ResponseEntity.ok(dto);
 
       // try final
       dto = pronunciationService.findByFinal(q);
-      if (dto != null) return ResponseEntity.ok(dto);
+      if (dto != null)
+         return ResponseEntity.ok(dto);
 
       // try tone
       dto = pronunciationService.findByTone(q);
-      if (dto != null) return ResponseEntity.ok(dto);
+      if (dto != null)
+         return ResponseEntity.ok(dto);
 
       return ResponseEntity.notFound().build();
    }
