@@ -12,6 +12,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LineMigrationDTO {
 
+   private Long id;
+
+   private String speaker;
+
    @JsonProperty("zh")
    private String zh;
 

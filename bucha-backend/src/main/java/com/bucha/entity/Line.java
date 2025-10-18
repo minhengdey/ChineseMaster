@@ -28,6 +28,12 @@ public class Line {
    @GeneratedValue(strategy = GenerationType.IDENTITY)
    private Long id;
 
+   @Column(name = "external_id")
+   private Long externalId;
+
+   @Column(name = "content_hash", length = 64)
+   private String contentHash;
+
    @Column(name = "zh_text", nullable = false, length = 1000)
    private String zhText; // Chinese text
 

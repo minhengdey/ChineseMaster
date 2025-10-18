@@ -16,6 +16,12 @@ public class Vocabulary {
    @GeneratedValue(strategy = GenerationType.IDENTITY)
    private Long id;
 
+   @Column(name = "external_id")
+   private Long externalId;
+
+   @Column(name = "content_hash", length = 64)
+   private String contentHash;
+
    @Column(nullable = false)
    private String word; // Chinese word/phrase
 

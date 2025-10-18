@@ -14,10 +14,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ConversationMigrationDTO {
+   private Long id;
    private String section;
 
    @JsonProperty("vn_translation")
    private String vnTranslation;
 
-   private List<LineDto> lines;
+   private List<LineMigrationDTO> lines;
 }

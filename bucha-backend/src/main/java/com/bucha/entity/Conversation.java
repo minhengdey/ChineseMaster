@@ -16,6 +16,11 @@ public class Conversation {
    @GeneratedValue(strategy = GenerationType.IDENTITY)
    private Long id;
 
+   @Column(name = "external_id")
+   private Long externalId;
+
+   @Column(name = "content_hash", length = 64)
+   private String contentHash;
    @Column(nullable = false)
    private String section; // e.g., "你好吗", "你叫什么名字？"
 

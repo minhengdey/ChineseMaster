@@ -3,15 +3,12 @@ package com.bucha.service;
 import com.bucha.dto.CurriculumMetadataDto;
 import com.bucha.dto.migration.ConversationMigrationDTO;
 import com.bucha.dto.migration.LessonMigrationDTO;
-import com.bucha.dto.migration.LineDto;
+import com.bucha.dto.migration.LineMigrationDTO;
 import com.bucha.dto.migration.VocabularyMigrationDTO;
 import com.bucha.entity.*;
 import com.bucha.repository.*;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -20,6 +17,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Objects;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 @Slf4j
 @Service
@@ -43,65 +48,137 @@ public class LessonMigrationService {
       if (lessonDto == null)
          return null;
 
-      // Bắt buộc phải có trường 'order'
+      // required order
       if (lessonDto.getOrder() == null) {
          log.warn("Skipping lesson DTO. Reason: Required field 'order' is missing.");
-         return null; // Bỏ qua file này
+         return null;
       }
 
-      // Kiểm tra xem lesson đã tồn tại chưa
-      Lesson lesson = lessonRepository.findByCurriculumAndOrder(curriculum, lessonDto.getOrder())
-            .orElse(new Lesson());
+      // compute canonical hash for lesson DTO
+      String lessonCanonical = canonicalizeJson(lessonDto);
+      String lessonHash = computeSha256Hex(lessonCanonical);
 
-      // Cập nhật hoặc tạo mới Lesson
-      lesson.setTitle(lessonDto.getTitle());
-      lesson.setCurriculum(curriculum);
-      lesson.setOrder(lessonDto.getOrder());
-
-      // Nếu là lesson đã tồn tại, xóa dữ liệu cũ để ghi đè
-      if (lesson.getId() != null) {
-         lesson.getConversations().clear();
-         lesson.getVocabularies().clear();
+      Lesson lesson = null;
+      if (lessonDto.getId() != null) {
+         lesson = lessonRepository.findByExternalId(lessonDto.getId()).orElse(null);
       }
 
-      // Lưu lesson trước
-      lesson = lessonRepository.save(lesson);
+      if (lesson != null) {
+         // existing lesson: update if changed
+         if (!Objects.equals(lesson.getContentHash(), lessonHash)) {
+            lesson.setTitle(lessonDto.getTitle());
+            lesson.setCurriculum(curriculum);
+            lesson.setOrder(lessonDto.getOrder());
+            lesson.setContentHash(lessonHash);
+            lessonRepository.save(lesson);
+            // clear children to re-import
+            lesson.getConversations().clear();
+            lesson.getVocabularies().clear();
+         }
+      } else {
+         // find by curriculum+order fallback
+         lesson = lessonRepository.findByCurriculumAndOrder(curriculum, lessonDto.getOrder()).orElse(new Lesson());
+         lesson.setTitle(lessonDto.getTitle());
+         lesson.setCurriculum(curriculum);
+         lesson.setOrder(lessonDto.getOrder());
+         lesson.setExternalId(lessonDto.getId());
+         lesson.setContentHash(lessonHash);
+         if (lesson.getId() != null) {
+            lesson.getConversations().clear();
+            lesson.getVocabularies().clear();
+         }
+         lesson = lessonRepository.save(lesson);
+      }
 
       AtomicInteger convOrdinal = new AtomicInteger(1);
       if (lessonDto.getConversations() != null) {
          for (ConversationMigrationDTO convDto : lessonDto.getConversations()) {
             int convOrder = convOrdinal.getAndIncrement();
-            Conversation conv = new Conversation();
-            conv.setOrder(convOrder);
-            conv.setLesson(lesson);
-            try {
-               conv.setSection(convDto.getSection());
-            } catch (Exception ignore) {
+
+            String convCanonical = canonicalizeJson(convDto);
+            String convHash = computeSha256Hex(convCanonical);
+
+            Conversation conv = null;
+            if (convDto.getId() != null) {
+               conv = conversationRepository.findByExternalId(convDto.getId()).orElse(null);
             }
-            try {
-               conv.setVnTranslation(convDto.getVnTranslation());
-            } catch (Exception ignore) {
+
+            if (conv != null) {
+               if (!Objects.equals(conv.getContentHash(), convHash)) {
+                  conv.setOrder(convOrder);
+                  try {
+                     conv.setSection(convDto.getSection());
+                  } catch (Exception ignored) {
+                  }
+                  try {
+                     conv.setVnTranslation(convDto.getVnTranslation());
+                  } catch (Exception ignored) {
+                  }
+                  conv.setContentHash(convHash);
+                  conversationRepository.save(conv);
+               }
+            } else {
+               conv = new Conversation();
+               conv.setOrder(convOrder);
+               conv.setLesson(lesson);
+               try {
+                  conv.setSection(convDto.getSection());
+               } catch (Exception ignored) {
+               }
+               try {
+                  conv.setVnTranslation(convDto.getVnTranslation());
+               } catch (Exception ignored) {
+               }
+               conv.setExternalId(convDto.getId());
+               conv.setContentHash(convHash);
+               conv = conversationRepository.save(conv);
             }
-            conv = conversationRepository.save(conv);
 
             AtomicInteger lineOrdinal = new AtomicInteger(1);
             if (convDto.getLines() != null) {
-               for (LineDto lineDto : convDto.getLines()) {
+               for (LineMigrationDTO lineDto : convDto.getLines()) {
                   int lineOrder = lineOrdinal.getAndIncrement();
-                  ConversationLine line = new ConversationLine();
-                  line.setConversation(conv);
-                  line.setOrder(lineOrder);
-                  line.setSpeaker(lineDto.getSpeaker());
-                  line.setZhText(lineDto.getZh());
-                  line.setPinyin(lineDto.getPinyin());
-                  line.setVnTranslation(lineDto.getVn());
-                  // derive audio public id from pattern
-                  if (audioRootPublicId != null && lessonDto.getOrder() != null) {
-                     String pid = String.format("%s/lesson-%d_conv-%d_line-%d", audioRootPublicId,
-                           lessonDto.getOrder(), convOrder, lineOrder);
-                     line.setAudioPublicId(pid);
+
+                  String lineCanonical = canonicalizeJson(lineDto);
+                  String lineHash = computeSha256Hex(lineCanonical);
+
+                  ConversationLine line = null;
+                  if (lineDto.getId() != null) {
+                     line = conversationLineRepository.findByExternalId(lineDto.getId()).orElse(null);
                   }
-                  conversationLineRepository.save(line);
+
+                  if (line != null) {
+                     if (!Objects.equals(line.getContentHash(), lineHash)) {
+                        line.setOrder(lineOrder);
+                        line.setSpeaker(lineDto.getSpeaker());
+                        line.setZhText(lineDto.getZh());
+                        line.setPinyin(lineDto.getPinyin());
+                        line.setVnTranslation(lineDto.getVn());
+                        if (audioRootPublicId != null && lessonDto.getOrder() != null) {
+                           String pid = String.format("%s/lesson-%d_conv-%d_line-%d", audioRootPublicId,
+                                 lessonDto.getOrder(), convOrder, lineOrder);
+                           line.setAudioPublicId(pid);
+                        }
+                        line.setContentHash(lineHash);
+                        conversationLineRepository.save(line);
+                     }
+                  } else {
+                     line = new ConversationLine();
+                     line.setConversation(conv);
+                     line.setOrder(lineOrder);
+                     line.setSpeaker(lineDto.getSpeaker());
+                     line.setZhText(lineDto.getZh());
+                     line.setPinyin(lineDto.getPinyin());
+                     line.setVnTranslation(lineDto.getVn());
+                     if (audioRootPublicId != null && lessonDto.getOrder() != null) {
+                        String pid = String.format("%s/lesson-%d_conv-%d_line-%d", audioRootPublicId,
+                              lessonDto.getOrder(), convOrder, lineOrder);
+                        line.setAudioPublicId(pid);
+                     }
+                     line.setExternalId(lineDto.getId());
+                     line.setContentHash(lineHash);
+                     conversationLineRepository.save(line);
+                  }
                }
             }
          }
@@ -114,38 +191,119 @@ public class LessonMigrationService {
          for (VocabularyMigrationDTO vDto : lessonDto.getVocabulary()) {
             Line exampleLine = null;
             if (vDto.getExample() != null) {
-               exampleLine = new Line();
-               exampleLine.setZhText(vDto.getExample().getZh());
-               exampleLine.setPinyin(vDto.getExample().getPinyin());
-               exampleLine.setVnTranslation(vDto.getExample().getVn());
-               if (audioRootPublicId != null && lessonDto.getOrder() != null) {
-                  String pid = String.format("%s/lesson-%d_vocab-%d_example", audioRootPublicId,
-                        lessonDto.getOrder(), vocabOrdinal.get());
-                  exampleLine.setAudioPublicId(pid);
+               String exampleCanonical = canonicalizeJson(vDto.getExample());
+               String exampleHash = computeSha256Hex(exampleCanonical);
+
+               if (vDto.getExample().getId() != null) {
+                  exampleLine = lineRepository.findByExternalId(vDto.getExample().getId()).orElse(null);
                }
-               exampleLine = lineRepository.save(exampleLine);
+
+               if (exampleLine != null) {
+                  if (!Objects.equals(exampleLine.getContentHash(), exampleHash)) {
+                     exampleLine.setZhText(vDto.getExample().getZh());
+                     exampleLine.setPinyin(vDto.getExample().getPinyin());
+                     exampleLine.setVnTranslation(vDto.getExample().getVn());
+                     if (audioRootPublicId != null && lessonDto.getOrder() != null) {
+                        String pid = String.format("%s/lesson-%d_vocab-%d_example", audioRootPublicId,
+                              lessonDto.getOrder(), vocabOrdinal.get());
+                        exampleLine.setAudioPublicId(pid);
+                     }
+                     exampleLine.setContentHash(exampleHash);
+                     lineRepository.save(exampleLine);
+                  }
+               } else {
+                  exampleLine = new Line();
+                  exampleLine.setZhText(vDto.getExample().getZh());
+                  exampleLine.setPinyin(vDto.getExample().getPinyin());
+                  exampleLine.setVnTranslation(vDto.getExample().getVn());
+                  if (audioRootPublicId != null && lessonDto.getOrder() != null) {
+                     String pid = String.format("%s/lesson-%d_vocab-%d_example", audioRootPublicId,
+                           lessonDto.getOrder(), vocabOrdinal.get());
+                     exampleLine.setAudioPublicId(pid);
+                  }
+                  exampleLine.setExternalId(vDto.getExample().getId());
+                  exampleLine.setContentHash(exampleHash);
+                  exampleLine = lineRepository.save(exampleLine);
+               }
             }
 
             int vocabOrder = vocabOrdinal.getAndIncrement();
-            Vocabulary vocab = new Vocabulary();
-            vocab.setLesson(lesson);
-            vocab.setOrder(vocabOrder);
-            vocab.setWord(vDto.getWord());
-            vocab.setPinyin(vDto.getPinyin());
-            vocab.setType(vDto.getType());
-            vocab.setMeaning(vDto.getMeaning());
-            vocab.setExample(exampleLine);
-            if (audioRootPublicId != null && lessonDto.getOrder() != null) {
-               String pid = String.format("%s/lesson-%d_vocab-%d", audioRootPublicId,
-                     lessonDto.getOrder(), vocabOrder);
-               vocab.setAudioPublicId(pid);
+
+            String vocabCanonical = canonicalizeJson(vDto);
+            String vocabHash = computeSha256Hex(vocabCanonical);
+
+            Vocabulary vocab = null;
+            if (vDto.getId() != null) {
+               vocab = vocabularyRepository.findByExternalId(vDto.getId()).orElse(null);
             }
-            vocabularyRepository.save(vocab);
+
+            if (vocab != null) {
+               if (!Objects.equals(vocab.getContentHash(), vocabHash)) {
+                  vocab.setLesson(lesson);
+                  vocab.setOrder(vocabOrder);
+                  vocab.setWord(vDto.getWord());
+                  vocab.setPinyin(vDto.getPinyin());
+                  vocab.setType(vDto.getType());
+                  vocab.setMeaning(vDto.getMeaning());
+                  vocab.setExample(exampleLine);
+                  if (audioRootPublicId != null && lessonDto.getOrder() != null) {
+                     String pid = String.format("%s/lesson-%d_vocab-%d", audioRootPublicId,
+                           lessonDto.getOrder(), vocabOrder);
+                     vocab.setAudioPublicId(pid);
+                  }
+                  vocab.setContentHash(vocabHash);
+                  vocabularyRepository.save(vocab);
+               }
+            } else {
+               vocab = new Vocabulary();
+               vocab.setLesson(lesson);
+               vocab.setOrder(vocabOrder);
+               vocab.setWord(vDto.getWord());
+               vocab.setPinyin(vDto.getPinyin());
+               vocab.setType(vDto.getType());
+               vocab.setMeaning(vDto.getMeaning());
+               vocab.setExample(exampleLine);
+               if (audioRootPublicId != null && lessonDto.getOrder() != null) {
+                  String pid = String.format("%s/lesson-%d_vocab-%d", audioRootPublicId,
+                        lessonDto.getOrder(), vocabOrder);
+                  vocab.setAudioPublicId(pid);
+               }
+               vocab.setExternalId(vDto.getId());
+               vocab.setContentHash(vocabHash);
+               vocabularyRepository.save(vocab);
+            }
 
          }
       }
 
       return lesson;
+   }
+
+   private String canonicalizeJson(Object obj) {
+      try {
+         ObjectMapper mapper = new ObjectMapper();
+         mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+         return mapper.writeValueAsString(obj);
+      } catch (JsonProcessingException e) {
+         throw new RuntimeException(e);
+      }
+   }
+
+   private String computeSha256Hex(String input) {
+      try {
+         MessageDigest digest = MessageDigest.getInstance("SHA-256");
+         byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+         StringBuilder hexString = new StringBuilder(2 * hash.length);
+         for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1)
+               hexString.append('0');
+            hexString.append(hex);
+         }
+         return hexString.toString();
+      } catch (NoSuchAlgorithmException e) {
+         throw new RuntimeException(e);
+      }
    }
 
    public Curriculum getOrCreateCurriculumFromMetadata(CurriculumMetadataDto metadata) {

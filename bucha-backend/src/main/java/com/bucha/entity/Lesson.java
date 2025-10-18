@@ -18,6 +18,9 @@ public class Lesson {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "external_id")
+    private Long externalId;
+
     @Column(nullable = false)
     private String title; // e.g., "Bài 1 你好"
 
@@ -30,6 +33,9 @@ public class Lesson {
 
     @Column()
     private String level;
+
+    @Column(name = "content_hash", length = 64)
+    private String contentHash;
 
     @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Conversation> conversations = new ArrayList<>();

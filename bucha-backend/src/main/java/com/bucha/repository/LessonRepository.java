@@ -16,4 +16,6 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 
     Optional<Lesson> findByCurriculumAndOrder(Curriculum curriculum, Integer order);
 
+    Optional<Lesson> findByExternalId(Long externalId);
+
 }
