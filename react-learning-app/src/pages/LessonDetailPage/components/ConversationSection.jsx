@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AudioPlayer from './AudioPlayer';
 import SentenceRecordingButton from './SentenceRecordingButton';
 import SentencePronunciationResult from './SentencePronunciationResult';
+import { iseStatsAPI } from '../../../services/api';
 
 const ConversationSection = ({
   conversations = [],
@@ -9,11 +10,13 @@ const ConversationSection = ({
   highlightedLineIds = [],
   refreshPronounced,
 }) => {
+
   const [expandedSection, setExpandedSection] = useState(null);
   const [pronunciationResult, setPronunciationResult] = useState(null);
   const [showPronunciationResult, setShowPronunciationResult] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [activeLineId, setActiveLineId] = useState(null);
+  const [localHighlightedLineIds, setLocalHighlightedLineIds] = useState([]);
 
   const toggleSection = (index) => {
     setExpandedSection(expandedSection === index ? null : index);
@@ -22,13 +25,34 @@ const ConversationSection = ({
   // Debug: print highlighted IDs received from backend so we can verify matching
   if (process.env.NODE_ENV !== 'production') {
     try {
-      console.debug('[ConversationSection] highlightedLineIds (from API):', highlightedLineIds);
+      console.debug('[ConversationSection] highlightedLineIds (from API):', highlightedLineIds, 'local:', localHighlightedLineIds);
     } catch (e) {
       // ignore
     }
   }
 
+  useEffect(() => {
+    let mounted = true;
+    const fetchPronounced = async () => {
+      if (!lessonId) return;
+      try {
+        const stats = await iseStatsAPI.getPronouncedForLesson(lessonId);
+        // stats may contain lineIds (array) or entries; prefer aggregated lineIds
+        const ids = (stats && Array.isArray(stats.lineIds) && stats.lineIds.length)
+          ? stats.lineIds.map(String)
+          : (Array.isArray(stats.entries) ? stats.entries.map(e => String(e.lineId)).filter(Boolean) : []);
+        if (mounted) setLocalHighlightedLineIds(ids);
+      } catch (e) {
+        console.warn('Failed to fetch pronounced stats for lesson', lessonId, e);
+      }
+    };
+
+    fetchPronounced();
+    return () => { mounted = false; };
+  }, [lessonId]);
+
   const handlePronunciationScore = async (result, audioBlob, lineId) => {
+    console.log(lineId)
     setPronunciationResult(result);
     setRecordedAudio(audioBlob);
     setActiveLineId(lineId);
@@ -58,6 +82,8 @@ const ConversationSection = ({
     setRecordedAudio(null);
     setActiveLineId(null);
   };
+
+
 
   if (!conversations || conversations.length === 0) {
     return (
@@ -93,7 +119,10 @@ const ConversationSection = ({
             {expandedSection === index && (
               <div className="mt-6 space-y-4">
                 {conversation.lines?.map((line) => {
-                  const isHighlighted = (highlightedLineIds || [])
+                  const effectiveHighlighted = (localHighlightedLineIds && localHighlightedLineIds.length)
+                    ? localHighlightedLineIds
+                    : highlightedLineIds || [];
+                  const isHighlighted = (effectiveHighlighted || [])
                     .map(String)
                     .includes(String(line.id));
                   // Debug per-line
