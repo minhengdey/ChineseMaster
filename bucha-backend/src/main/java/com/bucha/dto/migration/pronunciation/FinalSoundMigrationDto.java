@@ -3,10 +3,10 @@ package com.bucha.dto.migration.pronunciation;
 import lombok.Data;
 
 @Data
-public class InitialSoundDto {
+public class FinalSoundMigrationDto {
    private Long id;
-   private String type;
-   private String initial;
+   private String category;
+   private String text;
    private String ipa;
    private String pronunciation;
 }

@@ -29,9 +29,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
 import com.bucha.dto.migration.pronunciation.PronunciationDto;
-import com.bucha.dto.migration.pronunciation.InitialSoundDto;
-import com.bucha.dto.migration.pronunciation.FinalSoundDto;
-import com.bucha.dto.migration.pronunciation.ToneDto;
+import com.bucha.dto.migration.pronunciation.InitialSoundMigrationDto;
+import com.bucha.dto.migration.pronunciation.FinalSoundMigrationDto;
+import com.bucha.dto.migration.pronunciation.ToneMigrationDto;
 import com.bucha.entity.InitialSound;
 import com.bucha.entity.FinalSound;
 import com.bucha.entity.Tone;
@@ -178,7 +178,7 @@ public class DataInitializer implements CommandLineRunner {
          if (pDto != null) {
             long idx = 1;
             if (pDto.getInitials() != null) {
-               for (InitialSoundDto isd : pDto.getInitials()) {
+               for (InitialSoundMigrationDto isd : pDto.getInitials()) {
                   Long stableId = computeStableId(pronunciationPath + "/initial_" + idx);
                   isd.setId(stableId);
                   idx++;
@@ -187,7 +187,7 @@ public class DataInitializer implements CommandLineRunner {
 
             idx = 1;
             if (pDto.getFinals() != null) {
-               for (FinalSoundDto fsd : pDto.getFinals()) {
+               for (FinalSoundMigrationDto fsd : pDto.getFinals()) {
                   Long stableId = computeStableId(pronunciationPath + "/final_" + idx);
                   fsd.setId(stableId);
                   idx++;
@@ -196,7 +196,7 @@ public class DataInitializer implements CommandLineRunner {
 
             idx = 1;
             if (pDto.getTones() != null) {
-               for (ToneDto td : pDto.getTones()) {
+               for (ToneMigrationDto td : pDto.getTones()) {
                   Long stableId = computeStableId(pronunciationPath + "/tone_" + idx);
                   td.setId(stableId);
                   idx++;

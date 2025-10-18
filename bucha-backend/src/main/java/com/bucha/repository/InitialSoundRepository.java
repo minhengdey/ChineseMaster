@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface InitialSoundRepository extends JpaRepository<InitialSound, Long> {
    Optional<InitialSound> findByExternalId(Long externalId);
 
-   Optional<InitialSound> findByInitial(String initial);
+   Optional<InitialSound> findByText(String text);
 }

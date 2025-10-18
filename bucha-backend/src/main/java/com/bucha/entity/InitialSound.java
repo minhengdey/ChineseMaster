@@ -16,7 +16,7 @@ public class InitialSound {
    private Long id;
 
    private String type;
-   private String initial;
+   private String text;
    private String ipa;
 
    @Column(length = 2000)

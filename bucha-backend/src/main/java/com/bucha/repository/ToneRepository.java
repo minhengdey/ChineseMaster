@@ -11,4 +11,5 @@ public interface ToneRepository extends JpaRepository<Tone, Long> {
    Optional<Tone> findByExternalId(Long externalId);
 
    Optional<Tone> findByName(String name);
+   Optional<Tone> findByToneMark(String toneMark);
 }

@@ -3,7 +3,7 @@ package com.bucha.dto.migration.pronunciation;
 import lombok.Data;
 
 @Data
-public class ToneDto {
+public class ToneMigrationDto {
    private Long id;
    private String name;
    private String tone_mark;

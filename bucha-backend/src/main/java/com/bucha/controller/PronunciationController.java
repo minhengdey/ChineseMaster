@@ -16,27 +16,30 @@ public class PronunciationController {
 
    private final PronunciationService pronunciationService;
 
-   @GetMapping("/initial")
-   public ResponseEntity<PronunciationGuideDto> getInitial(@RequestParam String initial) {
-      PronunciationGuideDto dto = pronunciationService.findByInitial(initial);
-      if (dto == null)
-         return ResponseEntity.notFound().build();
-      return ResponseEntity.ok(dto);
-   }
+   /**
+    * Lookup endpoint that accepts a single query parameter `q`.
+    * The controller will try to resolve the query as an initial sound, then
+    * as a final sound, and finally as a tone. Returns 404 if nothing found.
+    * Example: GET /api/pronunciation?q=zh
+    */
+   @GetMapping
+   public ResponseEntity<PronunciationGuideDto> lookup(@RequestParam("q") String q) {
+      if (q == null || q.trim().isEmpty()) {
+         return ResponseEntity.badRequest().build();
+      }
 
-   @GetMapping("/final")
-   public ResponseEntity<PronunciationGuideDto> getFinal(@RequestParam String finalText) {
-      PronunciationGuideDto dto = pronunciationService.findByFinal(finalText);
-      if (dto == null)
-         return ResponseEntity.notFound().build();
-      return ResponseEntity.ok(dto);
-   }
+      // try initial
+      PronunciationGuideDto dto = pronunciationService.findByInitial(q);
+      if (dto != null) return ResponseEntity.ok(dto);
 
-   @GetMapping("/tone")
-   public ResponseEntity<PronunciationGuideDto> getTone(@RequestParam String name) {
-      PronunciationGuideDto dto = pronunciationService.findByTone(name);
-      if (dto == null)
-         return ResponseEntity.notFound().build();
-      return ResponseEntity.ok(dto);
+      // try final
+      dto = pronunciationService.findByFinal(q);
+      if (dto != null) return ResponseEntity.ok(dto);
+
+      // try tone
+      dto = pronunciationService.findByTone(q);
+      if (dto != null) return ResponseEntity.ok(dto);
+
+      return ResponseEntity.notFound().build();
    }
 }

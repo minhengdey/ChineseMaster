@@ -6,7 +6,7 @@ import java.util.List;
 
 @Data
 public class PronunciationDto {
-   private List<InitialSoundDto> initials;
-   private List<FinalSoundDto> finals;
-   private List<ToneDto> tones;
+   private List<InitialSoundMigrationDto> initials;
+   private List<FinalSoundMigrationDto> finals;
+   private List<ToneMigrationDto> tones;
 }

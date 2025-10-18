@@ -30,9 +30,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.bucha.dto.migration.pronunciation.PronunciationDto;
-import com.bucha.dto.migration.pronunciation.InitialSoundDto;
-import com.bucha.dto.migration.pronunciation.FinalSoundDto;
-import com.bucha.dto.migration.pronunciation.ToneDto;
+import com.bucha.dto.migration.pronunciation.InitialSoundMigrationDto;
+import com.bucha.dto.migration.pronunciation.FinalSoundMigrationDto;
+import com.bucha.dto.migration.pronunciation.ToneMigrationDto;
 import com.bucha.repository.InitialSoundRepository;
 import com.bucha.repository.FinalSoundRepository;
 import com.bucha.repository.ToneRepository;
@@ -174,7 +174,7 @@ public class LessonMigrationService {
 
       // Initials
       if (pDto.getInitials() != null) {
-         for (InitialSoundDto dto : pDto.getInitials()) {
+         for (InitialSoundMigrationDto dto : pDto.getInitials()) {
             String canonical = canonicalizeJson(dto);
             String hash = computeSha256Hex(canonical);
 
@@ -186,7 +186,7 @@ public class LessonMigrationService {
             if (existing != null) {
                if (!Objects.equals(existing.getContentHash(), hash)) {
                   existing.setType(dto.getType());
-                  existing.setInitial(dto.getInitial());
+                  existing.setText(dto.getText());
                   existing.setIpa(dto.getIpa());
                   existing.setPronunciation(dto.getPronunciation());
                   existing.setContentHash(hash);
@@ -195,7 +195,7 @@ public class LessonMigrationService {
             } else {
                com.bucha.entity.InitialSound ent = new com.bucha.entity.InitialSound();
                ent.setType(dto.getType());
-               ent.setInitial(dto.getInitial());
+               ent.setText(dto.getText());
                ent.setIpa(dto.getIpa());
                ent.setPronunciation(dto.getPronunciation());
                if (dto.getId() != null)
@@ -208,7 +208,7 @@ public class LessonMigrationService {
 
       // Finals
       if (pDto.getFinals() != null) {
-         for (FinalSoundDto dto : pDto.getFinals()) {
+         for (FinalSoundMigrationDto dto : pDto.getFinals()) {
             String canonical = canonicalizeJson(dto);
             String hash = computeSha256Hex(canonical);
 
@@ -220,7 +220,7 @@ public class LessonMigrationService {
             if (existing != null) {
                if (!Objects.equals(existing.getContentHash(), hash)) {
                   existing.setCategory(dto.getCategory());
-                  existing.setFinalText(dto.getFinalText());
+                  existing.setText(dto.getText());
                   existing.setIpa(dto.getIpa());
                   existing.setPronunciation(dto.getPronunciation());
                   existing.setContentHash(hash);
@@ -229,7 +229,7 @@ public class LessonMigrationService {
             } else {
                com.bucha.entity.FinalSound ent = new com.bucha.entity.FinalSound();
                ent.setCategory(dto.getCategory());
-               ent.setFinalText(dto.getFinalText());
+               ent.setText(dto.getText());
                ent.setIpa(dto.getIpa());
                ent.setPronunciation(dto.getPronunciation());
                if (dto.getId() != null)
@@ -242,7 +242,7 @@ public class LessonMigrationService {
 
       // Tones
       if (pDto.getTones() != null) {
-         for (ToneDto dto : pDto.getTones()) {
+         for (ToneMigrationDto dto : pDto.getTones()) {
             String canonical = canonicalizeJson(dto);
             String hash = computeSha256Hex(canonical);
 

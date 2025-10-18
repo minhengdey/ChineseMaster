@@ -2,9 +2,11 @@ import axios from "axios";
 // import "window._env_";
 // Base API configuration (fallback-safe)
 const API_BASE_URL =
-   (typeof window !== 'undefined' && window._env_ && window._env_.VITE_API_BASE_URL)
+   typeof window !== "undefined" &&
+   window._env_ &&
+   window._env_.VITE_API_BASE_URL
       ? window._env_.VITE_API_BASE_URL
-      : (import.meta?.env?.VITE_API_BASE_URL || "http://localhost:8080/api");
+      : import.meta?.env?.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 const apiClient = axios.create({
    baseURL: API_BASE_URL,
@@ -197,9 +199,9 @@ export const contentAPI = {
 
    // Get lesson detail with conversations and vocabulary
    getLessonDetail: async (lessonId) => {
-      if (lessonId == null || lessonId === '') {
+      if (lessonId == null || lessonId === "") {
          // Defensive: avoid sending requests like /content/lessons/undefined to the server
-         throw new Error('getLessonDetail requires a valid lessonId');
+         throw new Error("getLessonDetail requires a valid lessonId");
       }
       const response = await apiClient.get(`/content/lessons/${lessonId}`);
       return response.data;
@@ -214,9 +216,12 @@ export const audioAPI = {
    getAudioUrl: (filename) => {
       if (!filename) return null;
       try {
-         if (typeof filename === 'string' && (filename.startsWith('http://') || filename.startsWith('https://'))) {
+         if (
+            typeof filename === "string" &&
+            (filename.startsWith("http://") || filename.startsWith("https://"))
+         ) {
             // Fix a common path typo observed in some cloudinary assets
-            return filename.replace('/curriculumn/', '/curriculum/');
+            return filename.replace("/curriculumn/", "/curriculum/");
          }
       } catch (e) {
          // fallthrough to default behavior
@@ -226,7 +231,8 @@ export const audioAPI = {
 
    playAudio: (filename) => {
       const url = audioAPI.getAudioUrl(filename);
-      if (!url) return Promise.reject(new Error('no audio filename/url provided'));
+      if (!url)
+         return Promise.reject(new Error("no audio filename/url provided"));
       const audio = new Audio(url);
       return audio.play();
    },
@@ -368,8 +374,8 @@ export const iseAPI = {
          console.error("ISE API Error:", error);
          throw new Error(
             error.response?.data?.message ||
-            error.message ||
-            "Không thể đánh giá phát âm. Vui lòng kiểm tra kết nối mạng và thử lại."
+               error.message ||
+               "Không thể đánh giá phát âm. Vui lòng kiểm tra kết nối mạng và thử lại."
          );
       }
    },
@@ -389,13 +395,17 @@ export const iseAPI = {
          if (vocabularyId != null) {
             formData.append(
                "vocabularyId",
-               new Blob([String(vocabularyId)], { type: "text/plain;charset=UTF-8" })
+               new Blob([String(vocabularyId)], {
+                  type: "text/plain;charset=UTF-8",
+               })
             );
          }
          if (lessonId != null) {
             formData.append(
                "lessonId",
-               new Blob([String(lessonId)], { type: "text/plain;charset=UTF-8" })
+               new Blob([String(lessonId)], {
+                  type: "text/plain;charset=UTF-8",
+               })
             );
          }
 
@@ -412,15 +422,32 @@ export const iseAPI = {
             for (const entry of formData.entries()) {
                const [k, v] = entry;
                if (v instanceof File) {
-                  console.debug('[iseAPI.scoreWord] formData entry:', k, 'File', v.name, v.type, v.size);
+                  console.debug(
+                     "[iseAPI.scoreWord] formData entry:",
+                     k,
+                     "File",
+                     v.name,
+                     v.type,
+                     v.size
+                  );
                } else if (v instanceof Blob) {
-                  console.debug('[iseAPI.scoreWord] formData entry:', k, 'Blob', v.type);
+                  console.debug(
+                     "[iseAPI.scoreWord] formData entry:",
+                     k,
+                     "Blob",
+                     v.type
+                  );
                } else {
-                  console.debug('[iseAPI.scoreWord] formData entry:', k, typeof v, v);
+                  console.debug(
+                     "[iseAPI.scoreWord] formData entry:",
+                     k,
+                     typeof v,
+                     v
+                  );
                }
             }
          } catch (e) {
-            console.debug('[iseAPI.scoreWord] formData debug failed', e);
+            console.debug("[iseAPI.scoreWord] formData debug failed", e);
          }
 
          const response = await apiClient.post("/ise/score", formData);
@@ -437,7 +464,10 @@ export const iseAPI = {
             try {
                result = JSON.parse(result);
             } catch (parseError) {
-               console.warn("Failed to parse ISE Word response as JSON:", parseError);
+               console.warn(
+                  "Failed to parse ISE Word response as JSON:",
+                  parseError
+               );
                return { raw_response: result };
             }
          }
@@ -460,14 +490,34 @@ export const iseAPI = {
          if (result && typeof result === "object") {
             const sent = result.sentence || {};
             const normalized = {
-               total_score: (sent.total_score ?? result.total_score ?? result.totalScore ?? result.overall ?? null),
-               fluency: (sent.fluency ?? result.fluency ?? result.fluencyScore ?? null),
-               completeness: (sent.completeness ?? result.completeness ?? result.completenessScore ?? null),
-               wrong_words: (sent.wrong_words ?? result.wrong_words ?? result.wrongWords ?? result.wrong ?? []),
-               sid: (sent.sid ?? result.sid ?? null),
-               status: (sent.status ?? result.status ?? null),
-               raw_xml: (sent.raw_xml ?? result.raw_xml ?? result.rawXml ?? result.rawXML ?? null),
-               words: (result.words ?? sent.words ?? []),
+               total_score:
+                  sent.total_score ??
+                  result.total_score ??
+                  result.totalScore ??
+                  result.overall ??
+                  null,
+               fluency:
+                  sent.fluency ?? result.fluency ?? result.fluencyScore ?? null,
+               completeness:
+                  sent.completeness ??
+                  result.completeness ??
+                  result.completenessScore ??
+                  null,
+               wrong_words:
+                  sent.wrong_words ??
+                  result.wrong_words ??
+                  result.wrongWords ??
+                  result.wrong ??
+                  [],
+               sid: sent.sid ?? result.sid ?? null,
+               status: sent.status ?? result.status ?? null,
+               raw_xml:
+                  sent.raw_xml ??
+                  result.raw_xml ??
+                  result.rawXml ??
+                  result.rawXML ??
+                  null,
+               words: result.words ?? sent.words ?? [],
             };
             return normalized;
          }
@@ -517,14 +567,47 @@ export const iseStatsAPI = {
       return response.data;
    },
    getPronouncedForLesson: async (lessonId) => {
-      const response = await apiClient.get('/ise/stats/pronounced', { params: { lessonId } });
+      const response = await apiClient.get("/ise/stats/pronounced", {
+         params: { lessonId },
+      });
       return response.data;
+   },
+};
+
+// Pronunciation guide lookup (uses backend /api/pronunciation endpoints)
+export const pronunciationAPI = {
+   // New unified lookup endpoint. Pass `q` which may be an initial, final or tone.
+   lookup: async (q) => {
+      if (!q) return null;
+      try {
+         const response = await apiClient.get("/pronunciation", {
+            params: { q },
+         });
+         return response.data;
+      } catch (err) {
+         if (err.response && err.response.status === 404) return null;
+         throw err;
+      }
+   },
+
+   // Backwards-compatible wrappers (optional)
+   getByInitial: async (initial) => {
+      return pronunciationAPI.lookup(initial);
+   },
+   getByFinal: async (finalText) => {
+      return pronunciationAPI.lookup(finalText);
+   },
+   getByTone: async (name) => {
+      return pronunciationAPI.lookup(name);
    },
 };
 
 export const userLessonAPI = {
    complete: async (lessonId, completed) => {
-      const response = await apiClient.post(`/user-lessons/${lessonId}/complete`, { params: { completed } });
+      const response = await apiClient.post(
+         `/user-lessons/${lessonId}/complete`,
+         { params: { completed } }
+      );
       return response.data;
    },
    getUserLesson: async (lessonId) => {
@@ -532,7 +615,9 @@ export const userLessonAPI = {
       return response.data;
    },
    isCompleted: async (lessonId) => {
-      const response = await apiClient.get(`/user-lessons/${lessonId}/isCompleted`);
+      const response = await apiClient.get(
+         `/user-lessons/${lessonId}/isCompleted`
+      );
       return response.data;
    },
 };
@@ -543,13 +628,13 @@ export const migrationAPI = {
       // Some deployments use a misspelled path "Lession". Try both gracefully.
       const paths = !lessonId
          ? [
-            "/migration/conversationLineByLessonId",
-            "/migration/conversationLineByLessionId",
-         ]
+              "/migration/conversationLineByLessonId",
+              "/migration/conversationLineByLessionId",
+           ]
          : [
-            `/migration/conversationLineByLessonId/${lessonId}`,
-            `/migration/conversationLineByLessionId/${lessonId}`,
-         ];
+              `/migration/conversationLineByLessonId/${lessonId}`,
+              `/migration/conversationLineByLessionId/${lessonId}`,
+           ];
 
       let lastError;
       for (const p of paths) {

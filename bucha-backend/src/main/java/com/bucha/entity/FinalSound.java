@@ -17,8 +17,8 @@ public class FinalSound {
 
    private String category;
 
-   @Column(name = "final_text")
-   private String finalText;
+   @Column(name = "text")
+   private String text;
 
    private String ipa;
 
