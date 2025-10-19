@@ -1,305 +1,212 @@
-import React, { useState, useRef } from 'react';
-import { iseAPI } from '../../../services/api';
+import React, { useState, useRef } from "react";
+import { iseAPI } from "../../../services/api";
+import {
+   createRecorder,
+   computeSha256Hex,
+   playBlobSafely,
+} from "../../../utils/audioUtils";
 
-const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = 'sm' }) => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [error, setError] = useState(null);
-  const [audioBlob, setAudioBlob] = useState(null);
-  const [showPlayback, setShowPlayback] = useState(false);
-  const [countdown, setCountdown] = useState(3);
-  const mediaRecorderRef = useRef(null);
-  const chunksRef = useRef([]);
-  const countdownRef = useRef(null);
+const RecordingButton = ({
+   text,
+   hanzi,
+   onScore,
+   onStartRecording,
+   size = "xs",
+}) => {
+   const [isRecording, setIsRecording] = useState(false);
+   const [isAnalyzing, setIsAnalyzing] = useState(false);
+   const [error, setError] = useState(null);
+   const [audioBlob, setAudioBlob] = useState(null);
+   const recorderRef = useRef(null);
 
-  const startRecording = async () => {
-    // Reset states
-    setError(null);
-    setAudioBlob(null);
-    setShowPlayback(false);
+   const startRecording = async () => {
+      setError(null);
+      setAudioBlob(null);
+      setIsAnalyzing(false);
+      if (onStartRecording) onStartRecording();
+      try {
+         const rec = await createRecorder({
+            mimeType: "audio/webm;codecs=opus",
+         });
+         recorderRef.current = rec;
+         await rec.start();
+         setIsRecording(true);
+      } catch (e) {
+         console.error("startRecording failed", e);
+         setError(
+            "Không thể truy cập microphone. Vui lòng cho phép quyền ghi âm."
+         );
+      }
+   };
 
-    // Notify parent component
-    if (onStartRecording) {
-      onStartRecording();
-    }
+   const stopRecording = async () => {
+      setIsRecording(false);
+      try {
+         if (!recorderRef.current) return;
+         const rec = recorderRef.current;
+         const { blob, stream } = await rec.stop();
+         try {
+            if (stream && stream.getTracks)
+               stream.getTracks().forEach((t) => t.stop());
+         } catch (e) {}
+         setAudioBlob(blob);
+         setTimeout(() => submitForAnalysisWithBlob(blob), 150);
+      } catch (e) {
+         console.error("stopRecording error", e);
+         setError("Không thể hoàn tất ghi âm. Vui lòng thử lại.");
+      }
+   };
 
-    // Check browser support
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setError('Trình duyệt không hỗ trợ ghi âm');
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Setup MediaRecorder with WebM format
-      const options = { mimeType: 'audio/webm' };
-      const mediaRecorder = new MediaRecorder(stream, options);
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
-
-      // Handle data available
-      mediaRecorder.addEventListener('dataavailable', (e) => {
-        if (e.data && e.data.size > 0) {
-          chunksRef.current.push(e.data);
-        }
-      });
-
-      // Handle recording stop
-      mediaRecorder.addEventListener('stop', () => {
-        // Delay briefly to ensure any final dataavailable events arrive
-        setTimeout(() => {
-          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-          setAudioBlob(blob);
-          setShowPlayback(true);
-
-          // Stop all tracks
-          stream.getTracks().forEach(track => track.stop());
-
-          // Auto submit for scoring
-          submitScore(blob);
-        }, 150);
-      });
-
-      // Start recording
-      mediaRecorder.start();
-      setIsRecording(true);
-      setCountdown(3);
-
-      // Countdown timer
-      countdownRef.current = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(countdownRef.current);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      // Auto stop after 3 seconds for single syllable
-      setTimeout(() => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-          console.log('Auto-stopping recording after 3 seconds');
-          mediaRecorderRef.current.stop();
-          setIsRecording(false);
-          if (countdownRef.current) {
-            clearInterval(countdownRef.current);
-          }
-        }
-      }, 3000); // 3 giây để phát âm 1 âm tiết
-
-    } catch (err) {
-      console.error('getUserMedia error:', err);
-      setError('Không thể truy cập microphone. Vui lòng cho phép truy cập microphone.');
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      try { if (typeof mediaRecorderRef.current.requestData === 'function') mediaRecorderRef.current.requestData(); } catch (e) { }
-      setTimeout(() => {
-        try { mediaRecorderRef.current && mediaRecorderRef.current.stop(); } catch (e) { }
-      }, 60);
-    }
-    if (countdownRef.current) {
-      clearInterval(countdownRef.current);
-    }
-    setIsRecording(false);
-  };
-
-  const submitScore = async (blob = audioBlob) => {
-    if (!blob) {
-      setError('Chưa có bản ghi để gửi');
-      return;
-    }
-
-    if (!hanzi) {
-      setError('Không có ký tự Hán để đánh giá');
-      return;
-    }
-
-    try {
+   const submitForAnalysisWithBlob = async (blob) => {
+      if (!blob) {
+         setError("Không có file âm thanh để phân tích");
+         return;
+      }
+      if (!hanzi) {
+         setError("Không có ký tự để đánh giá");
+         return;
+      }
+      if (blob.size === 0) {
+         setError("File âm thanh trống. Vui lòng thu âm lại.");
+         return;
+      }
+      if (blob.size > 5 * 1024 * 1024) {
+         setError("File âm thanh quá lớn. Vui lòng thu âm ngắn hơn.");
+         return;
+      }
       setIsAnalyzing(true);
       setError(null);
+      try {
+         const textToAnalyze = hanzi;
+         const mime = blob.type || "audio/webm";
+         const size = blob.size;
+         const sha256 = await computeSha256Hex(blob);
+         const payload = {
+            text: textToAnalyze,
+            audioFile: blob,
+            mimeType: mime,
+            size: String(size),
+            sha256,
+         };
 
-      // Convert blob to File with .webm name
-      const file = new File([blob], 'recording.webm', { type: blob.type });
+         const result = await iseAPI.scoreWord(payload);
+         const raw = result?.raw_response ?? result;
 
-      console.log('DEBUG - Props received:', {
-        text: text,
-        hanzi: hanzi,
-      });
-
-      console.log('Sending to ISE API:', {
-        text: hanzi, // Chỉ sử dụng hanzi
-        audioFileName: file.name,
-        audioSize: file.size,
-        audioType: file.type
-      });
-
-      // Call ISE API chỉ với hanzi
-      const result = await iseAPI.scoreSentence({
-        text: hanzi, // Chỉ sử dụng hanzi
-        audioFile: file,
-        sub: 'ise',
-        ent: 'cn_vip'
-      });
-
-      console.log('Pronunciation result:', result);
-
-      // Pass result to parent component
-      if (onScore) {
-        onScore(result, blob);
+         // Normalize result similar to existing logic in file
+         let normalized = raw;
+         if (typeof raw === "object") {
+            const sent = raw.sentence || {};
+            normalized = {
+               total_score:
+                  sent.total_score ??
+                  raw.total_score ??
+                  raw.totalScore ??
+                  raw.overall ??
+                  null,
+               fluency: sent.fluency ?? raw.fluency ?? null,
+               completeness: sent.completeness ?? raw.completeness ?? null,
+               pronunciation: sent.pronunciation ?? raw.pronunciation ?? null,
+               tone: sent.tone ?? raw.tone ?? null,
+               wrong_words:
+                  sent.wrong_words ?? raw.wrong_words ?? raw.wrongWords ?? [],
+               sid: sent.sid ?? raw.sid ?? null,
+               status: sent.status ?? raw.status ?? null,
+               raw_xml: sent.raw_xml ?? raw.raw_xml ?? null,
+               words: raw.words ?? sent.words ?? [],
+               phonemes: raw.phonemes ?? sent.phonemes ?? [],
+               is_rejected: sent.is_rejected ?? raw.is_rejected ?? false,
+               except_info: sent.except_info ?? raw.except_info ?? null,
+               warning: sent.warning ?? raw.warning ?? null,
+            };
+         }
+         onScore && onScore(normalized, blob);
+      } catch (err) {
+         console.error("submitForAnalysisWithBlob error", err);
+         setError(
+            err.message || "Không thể đánh giá phát âm. Vui lòng thử lại."
+         );
+      } finally {
+         setIsAnalyzing(false);
       }
+   };
 
-    } catch (err) {
-      console.error('submitScore error:', err);
+   const playRecordedAudio = () => {
+      if (!audioBlob) return;
+      playBlobSafely(audioBlob).catch((err) => {
+         console.error("playback error", err);
+         setError("Không thể phát âm thanh đã ghi");
+      });
+   };
 
-      // Extract server error message
-      const serverMsg = err?.response?.data?.error ||
-        err?.response?.data ||
-        err?.message ||
-        'Không thể đánh giá phát âm';
-
-      const displayMsg = typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg);
-      setError(displayMsg);
-
-    } finally {
+   const retry = () => {
+      setAudioBlob(null);
+      setError(null);
       setIsAnalyzing(false);
-    }
-  };
+   };
 
-  const playRecordedAudio = () => {
-    if (!audioBlob) return;
+   const getSizeClasses = () => {
+      switch (size) {
+         case "xs":
+            return "btn-xs text-xs";
+         case "sm":
+            return "btn-sm text-sm";
+         case "md":
+            return "btn-md";
+         case "lg":
+            return "btn-lg text-lg";
+         default:
+            return "btn-xs text-xs";
+      }
+   };
 
-    try {
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
+   if (error) {
+      return (
+         <div className="flex flex-col gap-1">
+            <div className="alert alert-error alert-sm">
+               <span className="text-xs">{error}</span>
+            </div>
+            <button
+               className={`btn btn-outline btn-warning ${getSizeClasses()}`}
+               onClick={retry}
+            >
+               � Thử lại
+            </button>
+         </div>
+      );
+   }
 
-      audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-      };
+   if (isAnalyzing) {
+      return (
+         <button
+            className={`btn btn-outline btn-info ${getSizeClasses()}`}
+            disabled
+         >
+            <span className="loading loading-spinner loading-xs"></span>Đang
+            phân tích...
+         </button>
+      );
+   }
 
-      audio.onerror = () => {
-        URL.revokeObjectURL(audioUrl);
-        setError('Không thể phát audio');
-      };
-
-      audio.play();
-    } catch (error) {
-      console.error('Error playing audio:', error);
-      setError('Không thể phát audio');
-    }
-  };
-
-  const retry = () => {
-    setError(null);
-    setAudioBlob(null);
-    setShowPlayback(false);
-    setIsAnalyzing(false);
-    setCountdown(3);
-    if (countdownRef.current) {
-      clearInterval(countdownRef.current);
-    }
-  };
-
-  // Button size classes
-  const sizeClass = size === 'xs' ? 'btn-xs' : size === 'sm' ? 'btn-sm' : size === 'lg' ? 'btn-lg' : '';
-
-  return (
-    <div className="flex flex-col gap-2">
-      {/* Main Recording Button */}
-      <div className="flex gap-2 items-center">
-        {!isRecording ? (
-          <button
-            className={`btn btn-primary ${sizeClass}`}
-            onClick={startRecording}
-            disabled={isAnalyzing || !hanzi}
-            title={!hanzi ? "Cần có ký tự Hán để thu âm" : "Bắt đầu thu âm"}
-          >
-            {isAnalyzing ? (
-              <>
-                <span className="loading loading-spinner loading-xs"></span>
-                Đang xử lý...
-              </>
-            ) : (
-              <>🎤 Thu âm</>
-            )}
-          </button>
-        ) : (
-          <button
-            className={`btn btn-error ${sizeClass}`}
+   if (isRecording) {
+      return (
+         <button
+            className={`btn btn-error ${getSizeClasses()}`}
             onClick={stopRecording}
-            title="Dừng thu âm"
-          >
-            <span className="loading loading-dots loading-xs"></span>
-            Dừng
-          </button>
-        )}
+         >
+            🔴 Đang thu âm...
+         </button>
+      );
+   }
 
-        {/* Playback Button */}
-        {showPlayback && audioBlob && (
-          <button
-            className={`btn btn-outline btn-info ${sizeClass}`}
-            onClick={playRecordedAudio}
-            title="Nghe lại bản ghi"
-          >
-            🔊 Nghe lại
-          </button>
-        )}
-
-        {/* Retry Button */}
-        {(error || showPlayback) && (
-          <button
-            className={`btn btn-outline btn-warning ${sizeClass}`}
-            onClick={retry}
-            title="Thu âm lại"
-          >
-            🔄 Thử lại
-          </button>
-        )}
-      </div>
-
-      {/* Error Display */}
-      {error && (
-        <div className="alert alert-error alert-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-4 w-4" fill="none" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span className="text-xs">{error}</span>
-        </div>
-      )}
-
-      {/* Recording Status */}
-      {isRecording && (
-        <div className="alert alert-info alert-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-4 w-4" fill="none" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <span className="text-xs">🔴 Đang thu âm... Nói ngay: "{hanzi}" ({countdown}s)</span>
-        </div>
-      )}
-
-      {/* Processing Status */}
-      {isAnalyzing && (
-        <div className="alert alert-warning alert-sm">
-          <span className="loading loading-spinner loading-xs"></span>
-          <span className="text-xs">Đang phân tích phát âm...</span>
-        </div>
-      )}
-
-      {/* Success Status */}
-      {showPlayback && !error && !isAnalyzing && (
-        <div className="alert alert-success alert-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-4 w-4" fill="none" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <span className="text-xs">✅ Đã hoàn thành đánh giá phát âm</span>
-        </div>
-      )}
-    </div>
-  );
+   return (
+      <button
+         className={`btn btn-outline btn-success ${getSizeClasses()}`}
+         onClick={startRecording}
+         title="Bắt đầu ghi âm để luyện phát âm"
+      >
+         🎤
+      </button>
+   );
 };
 
 export default RecordingButton;
