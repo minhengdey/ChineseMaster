@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AudioPlayer from './AudioPlayer';
 import WordRecordingButton from './WordRecordingButton';
-import WordPronunciationResult from './WordPronunciationResult';
+import SentencePronunciationResult from './SentencePronunciationResult';
 
 const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refreshPronounced, lessonId, showPinyin = true }) => {
   const [localShowPinyin, setLocalShowPinyin] = useState(showPinyin);
@@ -69,11 +69,12 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
   };
 
   const renderVocabulary = (vocabulary) => {
-    const effectiveHighlighted = (localHighlightedVocabularyIds && localHighlightedVocabularyIds.length)
-      ? localHighlightedVocabularyIds
-      : highlightedVocabularyIds || [];
-    const highlightedSet = new Set((effectiveHighlighted || []).map(String));
-    const isHighlighted = highlightedSet.has(String(vocabulary.externalId)) || highlightedSet.has(String(vocabulary.id));
+    // Merge server-provided highlights with local ones so we don't hide server highlights when
+    // adding newly-practiced words locally. Use a Set of strings for robust comparisons.
+    const merged = new Set();
+    (highlightedVocabularyIds || []).forEach(i => merged.add(String(i)));
+    (localHighlightedVocabularyIds || []).forEach(i => merged.add(String(i)));
+    const isHighlighted = merged.has(String(vocabulary.externalId)) || merged.has(String(vocabulary.id));
     return (
       <div key={vocabulary.id} className={`card shadow-lg hover:shadow-xl transition-shadow ${isHighlighted ? 'border border-success bg-success/10' : 'bg-base-100'}`}>
         <div className="card-body p-4">
@@ -144,7 +145,7 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
 
           {/* Hiển thị kết quả đánh giá phát âm cho word này */}
           {showPronunciationResult && (String(activeItemKey) === `word-${vocabulary.id}` || String(activeItemKey) === `example-${vocabulary.id}`) && (
-            <WordPronunciationResult result={pronunciationResult} recordedAudio={recordedAudio} onClose={closePronunciationResult} />
+            <SentencePronunciationResult result={pronunciationResult} recordedAudio={recordedAudio} onClose={closePronunciationResult} sentenceText={vocabulary.word} />
           )}
         </div>
       </div>
