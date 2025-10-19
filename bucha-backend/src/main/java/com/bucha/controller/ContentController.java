@@ -39,4 +39,10 @@ public class ContentController {
    public ResponseEntity<LessonDetailDto> getLessonById(@PathVariable Long id) {
       return ResponseEntity.ok(contentService.getLessonById(id));
    }
+
+   // Debug: return conversation lines and their externalIds for a lesson
+   @GetMapping("/debug/lessons/{id}/lines-external")
+   public ResponseEntity<?> getLessonLinesExternal(@PathVariable Long id) {
+      return ResponseEntity.ok(contentService.getConversationLinesWithExternalForLesson(id));
+   }
 }

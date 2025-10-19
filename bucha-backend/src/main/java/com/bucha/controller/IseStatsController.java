@@ -188,7 +188,6 @@ public class IseStatsController {
                 if (lessonId == null)
                         return ResponseEntity.badRequest().body(Map.of("error", "lessonId is required"));
 
-                long distinctAttempts = iseDailyEntryRepository.countDistinctAttemptsByUserAndLesson(userId, lessonId);
                 List<Long> lineIds = iseDailyEntryRepository.findDistinctLineIdsByUserAndLesson(userId, lessonId);
                 List<Long> vocabIds = iseDailyEntryRepository.findDistinctVocabularyIdsByUserAndLesson(userId,
                                 lessonId);
@@ -198,12 +197,13 @@ public class IseStatsController {
                 int distinctVocabCount = (vocabIds == null) ? 0 : vocabIds.size();
                 int pronouncedCount = distinctLineCount + distinctVocabCount;
 
-                out.put("distinctAttempts", distinctAttempts);
                 out.put("lineIds", lineIds == null ? Collections.emptyList() : lineIds);
                 out.put("vocabularyIds", vocabIds == null ? Collections.emptyList() : vocabIds);
                 out.put("distinctLineCount", distinctLineCount);
                 out.put("distinctVocabularyCount", distinctVocabCount);
                 out.put("pronouncedCount", pronouncedCount);
+
+                logger.info("out: " + out.toString());
 
                 return ResponseEntity.ok(out);
         }

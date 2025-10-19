@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class LineDto {
    private Long id;
+   private Long externalId;
    private String zh; // Chinese text
    private String pinyin; // Pinyin pronunciation
    private String vn; // Vietnamese translation

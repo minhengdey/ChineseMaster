@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class VocabularyDto {
     private Long id;
+    private Long externalId;
     private Integer order;
     private String word;
     private String pinyin;

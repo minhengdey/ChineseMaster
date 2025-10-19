@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { lessonsAPI, contentAPI } from '../../services/api';
 import AudioPlayer from '../LessonDetailPage/components/AudioPlayer';
 import WordRecordingButton from '../LessonDetailPage/components/WordRecordingButton';
-import WordPronunciationResult from '../LessonDetailPage/components/WordPronunciationResult';
+import SentencePronunciationResult from '../LessonDetailPage/components/SentencePronunciationResult';
 import { Link } from 'react-router-dom';
 
 const PronunciationPage = () => {
@@ -14,6 +14,7 @@ const PronunciationPage = () => {
   const [pageSize, setPageSize] = useState(24);
   // category selection removed
   const [searchTerm, setSearchTerm] = useState('');
+  const [showPinyin, setShowPinyin] = useState(true);
   const [pronunciationResult, setPronunciationResult] = useState(null);
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [showPronunciationResult, setShowPronunciationResult] = useState(false);
@@ -94,7 +95,8 @@ const PronunciationPage = () => {
           <p className="text-base text-base-content/70">Học phát âm tiếng Trung với hệ thống Pinyin — nghe, lặp lại và luyện nói.</p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <button className="btn btn-ghost btn-sm" onClick={() => setShowPinyin(s => !s)}>{showPinyin ? 'Ẩn pinyin' : 'Hiện pinyin'}</button>
           <Link to="/speaking/daily" className="btn btn-accent">Luyện nói hôm nay</Link>
           <Link to="/curriculum" className="btn btn-outline">Giáo trình & Bài học</Link>
         </div>
@@ -142,7 +144,7 @@ const PronunciationPage = () => {
                   <div className="w-full flex items-center justify-between">
                     <div>
                       <div className="text-lg font-bold">{item.word}</div>
-                      {item.pinyin && <div className="text-sm text-base-content/70">{item.pinyin}</div>}
+                      {showPinyin && item.pinyin && <div className="text-sm text-base-content/70">{item.pinyin}</div>}
                     </div>
                     <div className="ml-2 flex items-center gap-2">
                       {(item.audioUrl || item.audioAsset) && (
@@ -195,11 +197,12 @@ const PronunciationPage = () => {
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="max-w-2xl w-full">
             <div className="card bg-base-100 shadow-xl p-4">
-              <WordPronunciationResult
+              <SentencePronunciationResult
                 result={pronunciationResult}
                 recordedAudio={recordedAudio}
-                word={(activeItemKey && activeItemKey.startsWith('word-')) ? (paginatedVocab.find(v => `word-${v.id}` === activeItemKey || `word-${v.id}` === activeItemKey) ? (paginatedVocab.find(v => `word-${v.id}` === activeItemKey || `word-${v.id}` === activeItemKey).word) : null) : null}
-                pinyin={(activeItemKey && activeItemKey.startsWith('word-')) ? (paginatedVocab.find(v => `word-${v.id}` === activeItemKey || `word-${v.id}` === activeItemKey) ? (paginatedVocab.find(v => `word-${v.id}` === activeItemKey || `word-${v.id}` === activeItemKey).pinyin) : null) : null}
+                sentenceText={(activeItemKey && activeItemKey.startsWith('word-'))
+                  ? (paginatedVocab.find(v => `word-${v.id}` === activeItemKey) || {}).word
+                  : null}
                 onClose={() => {
                   setShowPronunciationResult(false);
                   setPronunciationResult(null);
