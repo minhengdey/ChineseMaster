@@ -126,7 +126,7 @@ const ConversationSection = ({
               className="flex justify-between items-center cursor-pointer"
               onClick={() => toggleSection(index)}
             >
-              <h3 className="card-title text-lg">{conversation.section}</h3>
+              <h3 className="card-title text-2xl md:text-3xl font-extrabold">{`Bài khóa ${conversation.order}: ${conversation.section}`}</h3>
               <button className="btn btn-ghost btn-sm" type="button">
                 {expandedSection === index ? '▼' : '▶'}
               </button>
@@ -184,9 +184,9 @@ const ConversationSection = ({
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <div className="text-xl font-medium">{line.zh || line.zhText}</div>
-                        {showPinyin && <div className="text-base-content/80">{line.pinyin}</div>}
+                      <div className="space-y-2 text-left">
+                        <div className="text-2xl md:text-3xl font-extrabold text-primary">{line.zh || line.zhText}</div>
+                        {showPinyin && <div className="text-lg text-base-content/80">{line.pinyin}</div>}
                         <div className="text-base-content/70 italic">
                           {line.vn || line.vnTranslation}
                         </div>

@@ -77,9 +77,8 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
     return (
       <div key={vocabulary.id} className={`card shadow-lg hover:shadow-xl transition-shadow ${isHighlighted ? 'border border-success bg-success/10' : 'bg-base-100'}`}>
         <div className="card-body p-4">
-          <div className="flex justify-between items-start mb-3">
-            <div className="text-2xl font-bold text-primary">{vocabulary.word}</div>
-            <div className="flex gap-2">
+          <div className="relative mb-3">
+            <div className="absolute top-0 right-0 flex gap-2">
               {(vocabulary.audioUrl || vocabulary.audioAsset) && (
                 <AudioPlayer audioUrl={vocabulary.audioUrl} audioAsset={vocabulary.audioAsset} size="sm" />
               )}
@@ -93,16 +92,19 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
                 size="xs"
               />
             </div>
+            <div className="w-full text-center py-6">
+              <div className="text-4xl md:text-6xl font-extrabold text-primary leading-tight">{vocabulary.word}</div>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            {localShowPinyin && <div className="text-base-content/80">{vocabulary.pinyin}</div>}
+          <div className="space-y-2 text-center">
+            {localShowPinyin && <div className="text-xl text-base-content/80">{vocabulary.pinyin}</div>}
 
             {vocabulary.type && (
-              <div className={`badge ${getTypeColor(vocabulary.type)} badge-sm`}>{vocabulary.type}</div>
+              <div className={`mx-auto badge ${getTypeColor(vocabulary.type)} badge-sm`}>{vocabulary.type}</div>
             )}
 
-            <div className="text-base-content/90 font-medium">{vocabulary.meaning}</div>
+            <div className="text-xl text-base-content/90 font-medium">{vocabulary.meaning}</div>
           </div>
 
           {/* Example sentence for this vocabulary (normalized fields or legacy example) */}
@@ -116,10 +118,10 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
 
             return (
               <div className="mt-3 pt-3 border-t">
-                <div className="text-sm text-base-content/70 mb-1">Ví dụ</div>
-                <div className="text-base font-medium">{exampleText}</div>
-                {localShowPinyin && examplePinyin && <div className="text-sm text-base-content/70">{examplePinyin}</div>}
-                {exampleVn && <div className="text-sm text-base-content/70">{exampleVn}</div>}
+                <div className="text-lg text-base-content/70 mb-1 text-center">Ví dụ</div>
+                <div className="text-xl font-medium text-center">{exampleText}</div>
+                {localShowPinyin && examplePinyin && <div className="text-lg text-base-content/70 text-center">{examplePinyin}</div>}
+                {exampleVn && <div className="text-lg text-base-content/70 text-center">{exampleVn}</div>}
                 {exampleAudio && (
                   <div className="mt-2">
                     <AudioPlayer audioUrl={exampleAudio} size="sm" />
