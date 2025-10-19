@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { profileAPI, handleApiError } from "../../services/api";
-import { iseStatsAPI, userLessonAPI } from "../../services/api";
+import { profileAPI, handleApiError, iseStatsAPI, userLessonAPI } from "../../services/api";
+import DailyLeaderboard from '../../components/DailyLeaderboard';
 
 const ProfilePage = ({ user }) => {
    const [isEditing, setIsEditing] = useState(false);
@@ -18,197 +18,11 @@ const ProfilePage = ({ user }) => {
    const [dailyRows, setDailyRows] = useState([]);
    const [lessonRows, setLessonRows] = useState([]);
    const [testRows, setTestRows] = useState([]);
-
-   // Helper: get date string 'YYYY-MM-DD' in Vietnam timezone (Asia/Ho_Chi_Minh)
-   const getVietnamDateIso = (d = new Date()) => {
-      try {
-         return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(d);
-      } catch (e) {
-         // Fallback to local ISO date (may be off by timezone)
-         return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-      }
-   };
-
-   const formatDate = (isoDate) => {
-      try {
-         if (!isoDate) return "";
-         const d = new Date(isoDate);
-         return isNaN(d.getTime()) ? isoDate : new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }).format(d);
-      } catch (e) {
-         return isoDate;
-      }
-   };
-
-   useEffect(() => {
-      fetchProfile();
-      fetchIseStatsToday();
-
-      const handler = (e) => {
-         // Optimistically update UI with submitted score data to make profile feel responsive
-         try {
-            const detail = e?.detail || {};
-            const score = detail.score;
-            const lessonId = detail.lessonId;
-            const includeInDaily = detail.includeInDaily;
-
-            if (includeInDaily && score) {
-               const todayStr = getVietnamDateIso();
-               // increase or add today's row
-               setDailyRows((prev) => {
-                  const copy = Array.isArray(prev) ? [...prev] : [];
-                  if (copy.length === 0 || copy[0]?.date !== todayStr) {
-                     // insert today's row at start
-                     copy.unshift({
-                        date: todayStr,
-                        avgScore: Math.round(score.total_score ?? 0),
-                        count: 1,
-                     });
-                  } else {
-                     // update average and count (simple incremental average)
-                     const existing = copy[0];
-                     const prevAvg = Number(existing.avgScore || 0);
-                     const prevCount = Number(existing.count || 0);
-                     const newCount = prevCount + 1;
-                     const newAvg = Math.round(
-                        (prevAvg * prevCount + (score.total_score ?? 0)) /
-                        newCount
-                     );
-                     copy[0] = {
-                        ...existing,
-                        avgScore: newAvg,
-                        count: newCount,
-                     };
-                  }
-                  return copy;
-               });
-            }
-
-            // update lesson rows if lessonId present
-            if (lessonId && score) {
-               setLessonRows((prev) => {
-                  const copy = Array.isArray(prev) ? [...prev] : [];
-                  const idx = copy.findIndex(
-                     (r) => String(r.lessonId) === String(lessonId)
-                  );
-                  if (idx === -1) {
-                     copy.push({
-                        lessonId,
-                        avgScore: Math.round(score.total_score ?? 0),
-                        completedFull: false,
-                        lessonScore: Math.round(score.total_score ?? 0),
-                     });
-                  } else {
-                     const existing = copy[idx];
-                     const prevAvg = Number(existing.avgScore || 0);
-                     const prevCount = Number(existing.attempts || 1); // attempts may not be present; fallback to 1
-                     const newCount = prevCount + 1;
-                     const newAvg = Math.round(
-                        (prevAvg * prevCount + (score.total_score ?? 0)) /
-                        newCount
-                     );
-                     copy[idx] = { ...existing, avgScore: newAvg };
-                  }
-                  return copy;
-               });
-            }
-         } catch (err) {
-            console.debug("optimistic stats update failed", err);
-         }
-
-         // finally schedule a background refresh to reconcile with server state
-         setTimeout(() => fetchIseStatsToday(), 1000);
-      };
-
-      window.addEventListener("ise:score:submitted", handler);
-      return () => window.removeEventListener("ise:score:submitted", handler);
-   }, []);
-
-   const fetchIseStatsToday = async () => {
-      setStatsLoading(true);
-      try {
-         const today = getVietnamDateIso();
-         const daily = await iseStatsAPI.getDaily(today, today);
-         setDailyRows(Array.isArray(daily?.rows) ? daily.rows : []);
-      } catch (e) {
-         console.debug("failed daily stats", e);
-         setDailyRows([]);
-      }
-      try {
-         const lessons = await iseStatsAPI.getLessons();
-         const rows = Array.isArray(lessons?.rows) ? lessons.rows : [];
-
-         // Fetch completion state for each lesson in parallel, but don't fail the whole flow
-         const enriched = await Promise.all(
-            rows.map(async (r) => {
-               try {
-                  const resp = await userLessonAPI.isCompleted(r.lessonId);
-                  return {
-                     ...r,
-                     completedFull: resp?.completed ?? r.completedFull ?? false,
-                     inProgress: resp?.inProgress ?? r.inProgress ?? false,
-                  };
-               } catch (e) {
-                  // If the per-lesson call fails, return original row
-                  return r;
-               }
-            })
-         );
-
-         setLessonRows(enriched);
-      } catch (e) {
-         console.debug("failed lesson stats", e);
-         setLessonRows([]);
-      }
-      try {
-         const tests = await iseStatsAPI.getTests();
-         setTestRows(Array.isArray(tests?.rows) ? tests.rows : []);
-      } catch (e) {
-         console.debug("failed test stats", e);
-         setTestRows([]);
-      }
-      setStatsLoading(false);
-   };
-
-   const fetchProfile = async () => {
-      try {
-         const profile = await profileAPI.get();
-         setProfileData({
-            email: profile.email || "",
-            fullName: profile.fullName || "",
-            avatar: profile.avatar || "",
-            level: profile.level || "Beginner",
-            studyGoal: profile.studyGoal || "30 minutes/day",
-            joinDate:
-               profile.joinDate || getVietnamDateIso(),
-         });
-      } catch (error) {
-         console.error("Error fetching profile:", handleApiError(error));
-      } finally {
-         setLoading(false);
-      }
-   };
-
-   const handleSave = async () => {
-      try {
-         setSaving(true);
-         await profileAPI.update(profileData);
-         setIsEditing(false);
-      } catch (error) {
-         console.error("Error updating profile:", handleApiError(error));
-         alert("Có lỗi xảy ra khi cập nhật thông tin");
-      } finally {
-         setSaving(false);
-      }
-   };
-
-   const stats = {
+   const [summary, setSummary] = useState({
       lessonsCompleted: 0,
       wordsLearned: 0,
-      studyStreak: 0,
-      totalStudyTime: 0,
-      quizScore: 0,
-      flashcardsReviewed: 0,
-   };
+      hskkCount: 0,
+   });
 
    const achievements = [
       {
@@ -241,6 +55,177 @@ const ProfilePage = ({ user }) => {
       },
    ];
 
+   // Helper: get date string 'YYYY-MM-DD' in Vietnam timezone (Asia/Ho_Chi_Minh)
+   const getVietnamDateIso = (d = new Date()) => {
+      try {
+         return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(d);
+      } catch (e) {
+         return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+      }
+   };
+
+   useEffect(() => {
+      fetchProfile();
+      fetchIseStatsToday();
+
+      const handler = (e) => {
+         try {
+            const detail = e?.detail || {};
+            const score = detail.score;
+            const lessonId = detail.lessonId;
+            const includeInDaily = detail.includeInDaily;
+
+            if (includeInDaily && score) {
+               const todayStr = getVietnamDateIso();
+               setDailyRows((prev) => {
+                  const copy = Array.isArray(prev) ? [...prev] : [];
+                  if (copy.length === 0 || copy[0]?.date !== todayStr) {
+                     copy.unshift({ date: todayStr, avgScore: Math.round(score.total_score ?? 0), count: 1 });
+                  } else {
+                     const existing = copy[0];
+                     const prevAvg = Number(existing.avgScore || 0);
+                     const prevCount = Number(existing.count || 0);
+                     const newCount = prevCount + 1;
+                     const newAvg = Math.round((prevAvg * prevCount + (score.total_score ?? 0)) / newCount);
+                     copy[0] = { ...existing, avgScore: newAvg, count: newCount };
+                  }
+                  return copy;
+               });
+            }
+
+            if (lessonId && score) {
+               setLessonRows((prev) => {
+                  const copy = Array.isArray(prev) ? [...prev] : [];
+                  const idx = copy.findIndex((r) => String(r.lessonId) === String(lessonId));
+                  if (idx === -1) {
+                     copy.push({ lessonId, avgScore: Math.round(score.total_score ?? 0), completedFull: false, lessonScore: Math.round(score.total_score ?? 0), attempts: 1 });
+                  } else {
+                     const existing = copy[idx];
+                     const prevAvg = Number(existing.avgScore || 0);
+                     const prevCount = Number(existing.attempts || 1);
+                     const newCount = prevCount + 1;
+                     const newAvg = Math.round((prevAvg * prevCount + (score.total_score ?? 0)) / newCount);
+                     copy[idx] = { ...existing, avgScore: newAvg, attempts: newCount };
+                  }
+                  return copy;
+               });
+            }
+         } catch (err) {
+            console.debug("optimistic stats update failed", err);
+         }
+
+         // reconcile with server state shortly after optimistic update
+         setTimeout(() => fetchIseStatsToday(), 1000);
+      };
+
+      window.addEventListener("ise:score:submitted", handler);
+      return () => window.removeEventListener("ise:score:submitted", handler);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, []);
+
+   const fetchIseStatsToday = async () => {
+      setStatsLoading(true);
+      try {
+         const today = getVietnamDateIso();
+         const daily = await iseStatsAPI.getDaily(today, today);
+         setDailyRows(Array.isArray(daily?.rows) ? daily.rows : []);
+      } catch (e) {
+         console.debug("failed daily stats", e);
+         setDailyRows([]);
+      }
+
+      let enriched = [];
+      try {
+         const lessons = await iseStatsAPI.getLessons();
+         const rows = Array.isArray(lessons?.rows) ? lessons.rows : [];
+
+         enriched = await Promise.all(
+            rows.map(async (r) => {
+               try {
+                  const resp = await userLessonAPI.isCompleted(r.lessonId);
+                  return { ...r, completedFull: resp?.completed ?? r.completedFull ?? false, inProgress: resp?.inProgress ?? r.inProgress ?? false };
+               } catch (e) {
+                  return r;
+               }
+            })
+         );
+
+         setLessonRows(enriched);
+      } catch (e) {
+         console.debug("failed lesson stats", e);
+         setLessonRows([]);
+      }
+
+      let testsRows = [];
+      try {
+         const tests = await iseStatsAPI.getTests();
+         testsRows = Array.isArray(tests?.rows) ? tests.rows : [];
+         setTestRows(testsRows);
+      } catch (e) {
+         console.debug("failed test stats", e);
+         setTestRows([]);
+      }
+
+      // Compute summary
+      try {
+         const lessonsCompleted = Array.isArray(enriched) ? enriched.filter((r) => r.completedFull).length : 0;
+         const hskkCount = Array.isArray(testsRows) ? testsRows.reduce((acc, r) => acc + (Number(r.attempts) || (Array.isArray(r.entries) ? r.entries.length : 0)), 0) : 0;
+
+         // Compute distinct vocabulary across lessons
+         let wordsLearned = 0;
+         try {
+            const lessonIds = (Array.isArray(enriched) ? enriched : []).map((r) => r.lessonId).filter(Boolean);
+            const pronouncedResults = await Promise.all(lessonIds.map((id) => iseStatsAPI.getPronouncedForLesson(id).catch(() => null)));
+            const vocabSet = new Set();
+            for (const pr of pronouncedResults) {
+               const vids = pr?.vocabularyIds || [];
+               if (Array.isArray(vids)) vids.forEach((v) => vocabSet.add(String(v)));
+            }
+            wordsLearned = vocabSet.size;
+         } catch (e) {
+            console.debug('failed to compute distinct vocabulary across lessons', e);
+            wordsLearned = 0;
+         }
+
+         setSummary({ lessonsCompleted, wordsLearned, hskkCount });
+      } catch (e) {
+         console.debug('failed to compute profile summary', e);
+      }
+
+      setStatsLoading(false);
+   };
+
+   const fetchProfile = async () => {
+      try {
+         const profile = await profileAPI.get();
+         setProfileData({
+            email: profile.email || "",
+            fullName: profile.fullName || "",
+            avatar: profile.avatar || "",
+            level: profile.level || "Beginner",
+            studyGoal: profile.studyGoal || "30 minutes/day",
+            joinDate: profile.joinDate || getVietnamDateIso(),
+         });
+      } catch (error) {
+         console.error("Error fetching profile:", handleApiError(error));
+      } finally {
+         setLoading(false);
+      }
+   };
+
+   const handleSave = async () => {
+      try {
+         setSaving(true);
+         await profileAPI.update(profileData);
+         setIsEditing(false);
+      } catch (error) {
+         console.error("Error updating profile:", handleApiError(error));
+         alert("Có lỗi xảy ra khi cập nhật thông tin");
+      } finally {
+         setSaving(false);
+      }
+   };
+
    if (loading) {
       return (
          <div className="container mx-auto px-4 py-8">
@@ -256,9 +241,7 @@ const ProfilePage = ({ user }) => {
          {/* Header */}
          <div className="mb-8">
             <h1 className="text-4xl font-bold mb-4">👤 Hồ sơ cá nhân</h1>
-            <p className="text-lg text-base-content/70">
-               Quản lý thông tin và theo dõi tiến độ học tập
-            </p>
+            <p className="text-lg text-base-content/70">Quản lý thông tin và theo dõi tiến độ học tập</p>
          </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -270,48 +253,20 @@ const ProfilePage = ({ user }) => {
                         <div className="avatar mb-4">
                            <div className="w-24 rounded-full bg-primary text-primary-content">
                               <div className="flex items-center justify-center w-full h-full text-4xl">
-                                 {profileData.fullName?.charAt(0) ||
-                                    profileData.email?.charAt(0) ||
-                                    "U"}
+                                 {profileData.fullName?.charAt(0) || profileData.email?.charAt(0) || "U"}
                               </div>
                            </div>
                         </div>
 
                         {isEditing ? (
                            <div className="space-y-3">
-                              <input
-                                 type="text"
-                                 className="input input-bordered w-full"
-                                 value={profileData.fullName}
-                                 onChange={(e) =>
-                                    setProfileData({
-                                       ...profileData,
-                                       fullName: e.target.value,
-                                    })
-                                 }
-                                 placeholder="Họ và tên"
-                              />
-                              <input
-                                 type="email"
-                                 className="input input-bordered w-full"
-                                 value={profileData.email}
-                                 onChange={(e) =>
-                                    setProfileData({
-                                       ...profileData,
-                                       email: e.target.value,
-                                    })
-                                 }
-                                 placeholder="Email"
-                              />
+                              <input type="text" className="input input-bordered w-full" value={profileData.fullName} onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })} placeholder="Họ và tên" />
+                              <input type="email" className="input input-bordered w-full" value={profileData.email} onChange={(e) => setProfileData({ ...profileData, email: e.target.value })} placeholder="Email" />
                            </div>
                         ) : (
                            <div>
-                              <h2 className="text-2xl font-bold">
-                                 {profileData.fullName || profileData.email}
-                              </h2>
-                              <p className="text-sm text-base-content/60">
-                                 {profileData.email}
-                              </p>
+                              <h2 className="text-2xl font-bold">{profileData.fullName || profileData.email}</h2>
+                              <p className="text-sm text-base-content/60">{profileData.email}</p>
                            </div>
                         )}
                      </div>
@@ -319,9 +274,7 @@ const ProfilePage = ({ user }) => {
                      <div className="space-y-3">
                         <div className="flex justify-between">
                            <span className="font-semibold">Cấp độ:</span>
-                           <span className="badge badge-primary">
-                              {profileData.level}
-                           </span>
+                           <span className="badge badge-primary">{profileData.level}</span>
                         </div>
 
                         <div className="flex justify-between">
@@ -331,39 +284,18 @@ const ProfilePage = ({ user }) => {
 
                         <div className="flex justify-between">
                            <span className="font-semibold">Tham gia:</span>
-                           <span>
-                              {new Date(
-                                 profileData.joinDate
-                              ).toLocaleDateString("vi-VN")}
-                           </span>
+                           <span>{new Date(profileData.joinDate).toLocaleDateString("vi-VN")}</span>
                         </div>
                      </div>
 
                      <div className="card-actions justify-center mt-6">
                         {isEditing ? (
                            <div className="space-x-2">
-                              <button
-                                 className="btn btn-outline"
-                                 onClick={() => setIsEditing(false)}
-                              >
-                                 Hủy
-                              </button>
-                              <button
-                                 className={`btn btn-primary ${saving ? "loading" : ""
-                                    }`}
-                                 onClick={handleSave}
-                                 disabled={saving}
-                              >
-                                 {saving ? "Đang lưu..." : "Lưu"}
-                              </button>
+                              <button className="btn btn-outline" onClick={() => setIsEditing(false)}>Hủy</button>
+                              <button className={`btn btn-primary ${saving ? "loading" : ""}`} onClick={handleSave} disabled={saving}>{saving ? "Đang lưu..." : "Lưu"}</button>
                            </div>
                         ) : (
-                           <button
-                              className="btn btn-outline"
-                              onClick={() => setIsEditing(true)}
-                           >
-                              Chỉnh sửa
-                           </button>
+                           <button className="btn btn-outline" onClick={() => setIsEditing(true)}>Chỉnh sửa</button>
                         )}
                      </div>
                   </div>
@@ -379,31 +311,21 @@ const ProfilePage = ({ user }) => {
 
                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <div className="stat bg-primary/10 rounded-lg">
-                           <div className="stat-title text-xs">Bài học</div>
-                           <div className="stat-value text-primary text-2xl">
-                              {stats.lessonsCompleted}
-                           </div>
-                           <div className="stat-desc text-xs">
-                              Đã hoàn thành
-                           </div>
+                           <div className="stat-title text-xs">Bài Học</div>
+                           <div className="stat-value text-primary text-2xl">{summary.lessonsCompleted}</div>
+                           <div className="stat-desc text-xs">Đã hoàn thành</div>
                         </div>
 
                         <div className="stat bg-secondary/10 rounded-lg">
-                           <div className="stat-title text-xs">Từ vựng</div>
-                           <div className="stat-value text-secondary text-2xl">
-                              {stats.wordsLearned}
-                           </div>
+                           <div className="stat-title text-xs">Từ Vựng</div>
+                           <div className="stat-value text-secondary text-2xl">{summary.wordsLearned}</div>
                            <div className="stat-desc text-xs">Đã học</div>
                         </div>
 
                         <div className="stat bg-accent/10 rounded-lg">
-                           <div className="stat-title text-xs">Chuỗi ngày</div>
-                           <div className="stat-value text-accent text-2xl">
-                              {stats.studyStreak}
-                           </div>
-                           <div className="stat-desc text-xs">
-                              Học liên tiếp
-                           </div>
+                           <div className="stat-title text-xs">HSKK Sơ Cấp</div>
+                           <div className="stat-value text-accent text-2xl">{summary.hskkCount}</div>
+                           <div className="stat-desc text-xs">Đã làm</div>
                         </div>
                      </div>
                   </div>
@@ -415,48 +337,31 @@ const ProfilePage = ({ user }) => {
                      <div className="flex items-start justify-between">
                         <h2 className="card-title mb-2">🔊 Đánh giá phát âm</h2>
                         <div className="space-x-2">
-                           <button
-                              className={`btn btn-sm btn-ghost ${statsLoading ? "loading" : ""
-                                 }`}
-                              onClick={fetchIseStatsToday}
-                           >
-                              Refresh
-                           </button>
+                           <button className={`btn btn-sm btn-ghost ${statsLoading ? "loading" : ""}`} onClick={fetchIseStatsToday}>Refresh</button>
                         </div>
                      </div>
 
                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         <div className="col-span-1">
-                           <div className="card p-3">
-                              <div className="font-semibold mb-2">
-                                 Điểm ngày (Hôm nay)
-                              </div>
-                              {statsLoading ? (
-                                 <div className="text-sm text-gray-500">
-                                    Đang tải...
-                                 </div>
-                              ) : dailyRows.length === 0 ? (
-                                 <div className="text-sm text-gray-500">
-                                    Chưa có lượt hôm nay
-                                 </div>
-                              ) : (
-                                 <div>
-                                    {dailyRows.map((r) => (
-                                       <div
-                                          key={r.date}
-                                          className="flex justify-between text-sm py-1"
-                                       >
-                                          <div>{r.date}</div>
-                                          <div className="font-medium">
-                                             {r.avgScore}%
+                           <div className="grid gap-3">
+                              <div className="card p-3">
+                                 <div className="font-semibold mb-2">Điểm ngày (Hôm nay)</div>
+                                 {statsLoading ? (
+                                    <div className="text-sm text-gray-500">Đang tải...</div>
+                                 ) : dailyRows.length === 0 ? (
+                                    <div className="text-sm text-gray-500">Chưa có lượt hôm nay</div>
+                                 ) : (
+                                    <div>
+                                       {dailyRows.map((r) => (
+                                          <div key={r.date} className="flex justify-between text-sm py-1">
+                                             <div>{r.date}</div>
+                                             <div className="font-medium">{r.avgScore}%</div>
                                           </div>
-                                       </div>
-                                    ))}
-                                    <div className="text-xs text-base-content/60 mt-2">
-                                       Số lượt: {dailyRows[0]?.count ?? 0}
+                                       ))}
+                                       <div className="text-xs text-base-content/60 mt-2">Số lượt: {dailyRows[0]?.count ?? 0}</div>
                                     </div>
-                                 </div>
-                              )}
+                                 )}
+                              </div>
                            </div>
                         </div>
 
@@ -473,30 +378,18 @@ const ProfilePage = ({ user }) => {
                                  <tbody>
                                     {statsLoading ? (
                                        <tr>
-                                          <td
-                                             colSpan={3}
-                                             className="text-sm text-gray-500"
-                                          >
-                                             Đang tải...
-                                          </td>
+                                          <td colSpan={3} className="text-sm text-gray-500">Đang tải...</td>
                                        </tr>
                                     ) : lessonRows.length === 0 ? (
                                        <tr>
-                                          <td
-                                             colSpan={4}
-                                             className="text-sm text-gray-500"
-                                          >
-                                             Không có dữ liệu
-                                          </td>
+                                          <td colSpan={3} className="text-sm text-gray-500">Không có dữ liệu</td>
                                        </tr>
                                     ) : (
                                        lessonRows.map((r) => (
                                           <tr key={r.lessonId}>
                                              <td>{r.lessonId}</td>
                                              <td>{r.avgScore}</td>
-                                             <td>
-                                                {r.completedFull ? "✔" : "✘"}
-                                             </td>
+                                             <td>{r.completedFull ? "✔" : "✘"}</td>
                                           </tr>
                                        ))
                                     )}
@@ -505,9 +398,7 @@ const ProfilePage = ({ user }) => {
                            </div>
 
                            <div className="mt-4">
-                              <div className="font-semibold mb-2">
-                                 Điểm test (Tổng quan)
-                              </div>
+                              <div className="font-semibold mb-2">Điểm test (Tổng quan)</div>
                               <div className="overflow-x-auto">
                                  <table className="table w-full">
                                     <thead>
@@ -520,21 +411,11 @@ const ProfilePage = ({ user }) => {
                                     <tbody>
                                        {statsLoading ? (
                                           <tr>
-                                             <td
-                                                colSpan={3}
-                                                className="text-sm text-gray-500"
-                                             >
-                                                Đang tải...
-                                             </td>
+                                             <td colSpan={3} className="text-sm text-gray-500">Đang tải...</td>
                                           </tr>
                                        ) : testRows.length === 0 ? (
                                           <tr>
-                                             <td
-                                                colSpan={3}
-                                                className="text-sm text-gray-500"
-                                             >
-                                                Không có dữ liệu
-                                             </td>
+                                             <td colSpan={3} className="text-sm text-gray-500">Không có dữ liệu</td>
                                           </tr>
                                        ) : (
                                           testRows.map((r) => (
@@ -550,156 +431,16 @@ const ProfilePage = ({ user }) => {
                               </div>
                            </div>
                         </div>
+
                      </div>
                   </div>
                </div>
 
-               {/* Achievements */}
-               <div className="card bg-base-100 shadow-xl">
-                  <div className="card-body">
-                     <h2 className="card-title mb-4">🏆 Thành tích</h2>
-
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {achievements.map((achievement) => (
-                           <div
-                              key={achievement.id}
-                              className={`card shadow ${achievement.unlocked
-                                 ? "bg-success/10 border border-success/20"
-                                 : "bg-base-200 opacity-60"
-                                 }`}
-                           >
-                              <div className="card-body py-4">
-                                 <div className="flex items-center space-x-3">
-                                    <div className="text-3xl">
-                                       {achievement.icon}
-                                    </div>
-                                    <div className="flex-1">
-                                       <h3 className="font-bold text-sm">
-                                          {achievement.name}
-                                       </h3>
-                                       <p className="text-xs text-base-content/70">
-                                          {achievement.description}
-                                       </p>
-                                    </div>
-                                 </div>
-                              </div>
-
-                              <h2 className="text-xl font-semibold">
-                                 {profileData.fullName || profileData.email}
-                              </h2>
-
-                              <div className="mt-4">
-                                 {!isEditing && (
-                                    <button
-                                       className="btn btn-sm btn-outline"
-                                       onClick={() => setIsEditing(true)}
-                                    >
-                                       Chỉnh sửa
-                                    </button>
-                                 )}
-                              </div>
-
-                              {/* Right column - details */}
-                              <main className="md:w-8/12 p-6">
-                                 {isEditing ? (
-                                    <div className="space-y-4">
-                                       <div>
-                                          <label className="text-sm text-base-content/70">
-                                             Họ và tên
-                                          </label>
-                                          <input
-                                             type="text"
-                                             className="input input-bordered w-full mt-1"
-                                             value={profileData.fullName}
-                                             onChange={(e) =>
-                                                setProfileData({
-                                                   ...profileData,
-                                                   fullName: e.target.value,
-                                                })
-                                             }
-                                             placeholder="Họ và tên"
-                                          />
-                                       </div>
-
-                                       <div>
-                                          <label className="text-sm text-base-content/70">
-                                             Email
-                                          </label>
-                                          <input
-                                             type="email"
-                                             className="input input-bordered w-full mt-1"
-                                             value={profileData.email}
-                                             onChange={(e) =>
-                                                setProfileData({
-                                                   ...profileData,
-                                                   email: e.target.value,
-                                                })
-                                             }
-                                             placeholder="Email"
-                                          />
-                                       </div>
-
-                                       <div className="flex justify-end gap-3">
-                                          <button
-                                             className="btn btn-ghost"
-                                             onClick={() => setIsEditing(false)}
-                                          >
-                                             Hủy
-                                          </button>
-                                          <button
-                                             className={`btn btn-primary ${saving ? "loading" : ""
-                                                }`}
-                                             onClick={handleSave}
-                                             disabled={saving}
-                                          >
-                                             {saving ? "Đang lưu..." : "Lưu"}
-                                          </button>
-                                       </div>
-                                    </div>
-                                 ) : (
-                                    <div className="grid grid-cols-1 gap-4">
-                                       {profileData.level && (
-                                          <div className="flex items-center justify-between px-2 py-3 bg-base-200 rounded">
-                                             <span className="text-sm text-base-content/70">
-                                                Cấp độ
-                                             </span>
-                                             <span className="badge badge-primary">
-                                                {profileData.level}
-                                             </span>
-                                          </div>
-                                       )}
-
-                                       {profileData.studyGoal && (
-                                          <div className="flex items-center justify-between px-2 py-3 bg-base-200 rounded">
-                                             <span className="text-sm text-base-content/70">
-                                                Mục tiêu
-                                             </span>
-                                             <span className="text-sm">
-                                                {profileData.studyGoal}
-                                             </span>
-                                          </div>
-                                       )}
-
-                                       {profileData.joinDate && (
-                                          <div className="flex items-center justify-between px-2 py-3 bg-base-200 rounded">
-                                             <span className="text-sm text-base-content/70">
-                                                Tham gia
-                                             </span>
-                                             <span className="text-sm">
-                                                {new Date(
-                                                   profileData.joinDate
-                                                ).toLocaleDateString("vi-VN")}
-                                             </span>
-                                          </div>
-                                       )}
-                                    </div>
-                                 )}
-                              </main>
-                           </div>
-                        ))}
-                     </div>
-                  </div>
+               {/* Place Daily Leaderboard here as requested */}
+               <div className="mb-4">
+                  <DailyLeaderboard />
                </div>
+
             </div>
          </div>
       </div>

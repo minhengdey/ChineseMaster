@@ -148,39 +148,45 @@ const AlphabetPage = () => {
    const bodyRows = pinyinTable.slice(1) || [];
 
    return (
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 text-lg">
          <div className="mb-6">
-            <h1 className="text-3xl font-bold mb-2 text-center">
+            <h1 className="text-4xl font-bold mb-2 text-center">
                📝 Bảng chữ cái tiếng Trung
             </h1>
-            <p className="text-center text-base-content/70 mb-4">
+            <p className="text-center text-base-content/70 mb-4 text-base">
                Bấm vào từng ô để xem biến thể thanh điệu và luyện phát âm
             </p>
+            <div className="mx-auto max-w-xl text-center mb-4">
+               <p className="text-base text-base-content/60 italic">
+                  <strong className="text-base-content/80">Lưu ý:</strong>{' '}
+                  Những âm không có chữ Hán tương ứng không cần ghi âm đánh giá.
+               </p>
+            </div>
          </div>
 
          <div className="overflow-x-auto bg-white rounded-lg shadow-lg">
-            <table className="w-full border-collapse text-center text-xs">
+            <table className="w-full border-collapse text-center text-sm">
                <thead>
                   <tr>
                      {headers.map((initial, index) => (
                         <th
                            key={index}
-                           className="bg-cyan-400 text-white font-semibold border border-gray-300 sticky top-0 text-xs leading-tight"
+                           className="bg-cyan-400 text-white font-semibold border border-gray-300 sticky top-0 text-lg leading-tight"
                            style={
                               index === 0
                                  ? {
-                                      left: 0,
-                                      zIndex: 20,
-                                      width: "36px",
-                                      height: "28px",
-                                      padding: "2px",
-                                   }
+                                    left: 0,
+                                    zIndex: 20,
+                                    width: "36px",
+                                    height: "28px",
+                                    padding: "2px",
+                                 }
                                  : {
-                                      zIndex: 10,
-                                      width: "36px",
-                                      height: "28px",
-                                      padding: "2px",
-                                   }
+                                    zIndex: 10,
+                                    width: "36px",
+                                    height: "28px",
+                                    padding: "2px",
+                                 }
                            }
                         >
                            {initial}
@@ -198,34 +204,34 @@ const AlphabetPage = () => {
                               style={
                                  cellIndex === 0
                                     ? {
-                                         position: "sticky",
-                                         left: 0,
-                                         zIndex: 10,
-                                         background: "#06b6d4",
-                                         color: "white",
-                                         fontWeight: "600",
-                                         width: "36px",
-                                         height: "28px",
-                                         padding: "1px",
-                                      }
+                                       position: "sticky",
+                                       left: 0,
+                                       zIndex: 10,
+                                       background: "#06b6d4",
+                                       color: "white",
+                                       fontWeight: "700",
+                                       width: "48px",
+                                       height: "40px",
+                                       padding: "4px",
+                                    }
                                     : {
-                                         width: "36px",
-                                         height: "28px",
-                                         padding: "0px",
-                                      }
+                                       width: "48px",
+                                       height: "40px",
+                                       padding: "0px",
+                                    }
                               }
                            >
                               {cellIndex === 0
                                  ? pinyin
                                  : pinyin && (
-                                      <button
-                                         className="w-full h-full hover:bg-blue-100 transition-colors text-blue-600 font-normal text-xs p-0 leading-tight"
-                                         onClick={() => handleCellClick(pinyin)}
-                                         title={`Chi tiết: ${pinyin}`}
-                                      >
-                                         <span>{pinyin}</span>
-                                      </button>
-                                   )}
+                                    <button
+                                       className="w-full h-full hover:bg-blue-100 transition-colors text-blue-600 font-normal text-sm p-0 leading-tight"
+                                       onClick={() => handleCellClick(pinyin)}
+                                       title={`Chi tiết: ${pinyin}`}
+                                    >
+                                       <span>{pinyin}</span>
+                                    </button>
+                                 )}
                            </td>
                         ))}
                      </tr>
@@ -308,7 +314,7 @@ const AlphabetPage = () => {
                                              </button>
                                              {variant.hanzi &&
                                                 variant.hanzi !==
-                                                   variant.pinyin && (
+                                                variant.pinyin && (
                                                    <RecordingButton
                                                       text={variant.pinyin}
                                                       hanzi={variant.hanzi}

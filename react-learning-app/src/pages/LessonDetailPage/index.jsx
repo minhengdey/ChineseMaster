@@ -5,6 +5,7 @@ import ConversationSection from './components/ConversationSection';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import VocabularySection from './components/VocabularySection';
 import LessonProgress from './components/LessonProgress';
+import LessonLeaderboard from '../../components/LessonLeaderboard';
 
 const LessonDetailPage = () => {
   const { curriculumId, lessonId } = useParams();
@@ -178,6 +179,12 @@ const LessonDetailPage = () => {
         >
           � Hội thoại ({lesson.conversations?.length || 0})
         </button>
+        <button
+          className={`tab tab-lg ${activeTab === 'leaderboard' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('leaderboard')}
+        >
+          🏆 BXH theo bài
+        </button>
       </div>
 
       {/* Content */}
@@ -200,13 +207,16 @@ const LessonDetailPage = () => {
             lessonId={lessonId}
           />
         )}
+        {activeTab === 'leaderboard' && (
+          <LessonLeaderboard lessonId={lessonId} />
+        )}
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between items-center mt-12 pt-8 border-t">
+      <div className="flex flex-col md:flex-row justify-between items-center mt-12 pt-8 border-t gap-4">
         <Link
           to={`/curriculum/${curriculumId}/lessons`}
-          className="btn btn-outline"
+          className="btn btn-outline btn-lg text-lg"
         >
           ← Danh sách bài học
         </Link>
@@ -214,15 +224,15 @@ const LessonDetailPage = () => {
         <div className="flex gap-4">
           <Link
             to={`/curriculum/${curriculumId}/lesson/${lessonId}/practice`}
-            className="btn btn-primary"
+            className="btn btn-primary btn-lg text-lg"
           >
-            Luyện tập từ vựng
+            Flashcards
           </Link>
           <Link
             to={`/curriculum/${curriculumId}/lesson/${lessonId}/speaking`}
-            className="btn btn-secondary"
+            className="btn btn-secondary btn-lg text-lg"
           >
-            Luyện phát âm
+            Kiểm tra phát âm
           </Link>
         </div>
       </div>

@@ -77,7 +77,7 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
     const isHighlighted = merged.has(String(vocabulary.externalId)) || merged.has(String(vocabulary.id));
     return (
       <div key={vocabulary.id} className={`card shadow-lg hover:shadow-xl transition-shadow ${isHighlighted ? 'border border-success bg-success/10' : 'bg-base-100'}`}>
-        <div className="card-body p-4">
+        <div className="card-body p-3">
           <div className="relative mb-3">
             <div className="absolute top-0 right-0 flex gap-2">
               {(vocabulary.audioUrl || vocabulary.audioAsset) && (
@@ -93,19 +93,19 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
                 size="xs"
               />
             </div>
-            <div className="w-full text-center py-6">
-              <div className="text-4xl md:text-6xl font-extrabold text-primary leading-tight">{vocabulary.word}</div>
+            <div className="w-full text-center py-4">
+              <div className="text-2xl md:text-3xl font-extrabold text-primary leading-tight">{vocabulary.word}</div>
             </div>
           </div>
 
-          <div className="space-y-2 text-center">
-            {localShowPinyin && <div className="text-xl text-base-content/80">{vocabulary.pinyin}</div>}
+          <div className="space-y-1 text-center">
+            {localShowPinyin && <div className="text-lg text-base-content/80">{vocabulary.pinyin}</div>}
 
             {vocabulary.type && (
               <div className={`mx-auto badge ${getTypeColor(vocabulary.type)} badge-sm`}>{vocabulary.type}</div>
             )}
 
-            <div className="text-xl text-base-content/90 font-medium">{vocabulary.meaning}</div>
+            <div className="text-lg text-base-content/90 font-medium">{vocabulary.meaning}</div>
           </div>
 
           {/* Example sentence for this vocabulary (normalized fields or legacy example) */}
@@ -118,11 +118,11 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
             if (!hasExample) return null;
 
             return (
-              <div className="mt-3 pt-3 border-t">
-                <div className="text-lg text-base-content/70 mb-1 text-center">Ví dụ</div>
-                <div className="text-xl font-medium text-center">{exampleText}</div>
-                {localShowPinyin && examplePinyin && <div className="text-lg text-base-content/70 text-center">{examplePinyin}</div>}
-                {exampleVn && <div className="text-lg text-base-content/70 text-center">{exampleVn}</div>}
+              <div className="mt-2 pt-2 border-t">
+                <div className="text-sm text-base-content/70 mb-1 text-center">Ví dụ</div>
+                <div className="text-lg font-medium text-center">{exampleText}</div>
+                {localShowPinyin && examplePinyin && <div className="text-sm text-base-content/70 text-center">{examplePinyin}</div>}
+                {exampleVn && <div className="text-sm text-base-content/70 text-center">{exampleVn}</div>}
                 {exampleAudio && (
                   <div className="mt-2">
                     <AudioPlayer audioUrl={exampleAudio} size="sm" />
@@ -169,7 +169,7 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
       <div className="flex items-center justify-end mb-3">
         <button className="btn btn-ghost btn-sm" onClick={() => setLocalShowPinyin(s => !s)}>{localShowPinyin ? 'Ẩn pinyin' : 'Hiện pinyin'}</button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {vocabularies.map(renderVocabulary)}
       </div>
     </div>

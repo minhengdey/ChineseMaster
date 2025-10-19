@@ -3,8 +3,8 @@ import axios from "axios";
 // Base API configuration (fallback-safe)
 const API_BASE_URL =
    typeof window !== "undefined" &&
-   window._env_ &&
-   window._env_.VITE_API_BASE_URL
+      window._env_ &&
+      window._env_.VITE_API_BASE_URL
       ? window._env_.VITE_API_BASE_URL
       : import.meta?.env?.VITE_API_BASE_URL || "http://localhost:8080/api";
 
@@ -63,10 +63,17 @@ export const authAPI = {
          password: credentials.password,
       });
 
-      if (response.data.accessToken) {
+      // Backend now returns { accessToken, expiresIn, user: { id, email, name } }
+      if (response.data?.accessToken) {
          localStorage.setItem("accessToken", response.data.accessToken);
-
-         return { token: response.data.accessToken };
+         if (response.data.user) {
+            try {
+               localStorage.setItem("user", JSON.stringify(response.data.user));
+            } catch (e) {
+               console.warn('Failed to save user to localStorage', e);
+            }
+         }
+         return { token: response.data.accessToken, user: response.data.user };
       }
 
       return response.data;
@@ -374,8 +381,8 @@ export const iseAPI = {
          console.error("ISE API Error:", error);
          throw new Error(
             error.response?.data?.message ||
-               error.message ||
-               "Không thể đánh giá phát âm. Vui lòng kiểm tra kết nối mạng và thử lại."
+            error.message ||
+            "Không thể đánh giá phát âm. Vui lòng kiểm tra kết nối mạng và thử lại."
          );
       }
    },
@@ -572,6 +579,17 @@ export const iseStatsAPI = {
       });
       return response.data;
    },
+   // Leaderboard endpoints (optional on backend)
+   getLeaderboardDaily: async () => {
+      const response = await apiClient.get('/ise/stats/leaderboard/daily');
+      return response.data;
+   },
+   getLeaderboardByLesson: async (lessonId) => {
+      const params = {};
+      if (lessonId != null) params.lessonId = lessonId;
+      const response = await apiClient.get('/ise/stats/leaderboard/lesson', { params });
+      return response.data;
+   },
 };
 
 // Pronunciation guide lookup (uses backend /api/pronunciation endpoints)
@@ -628,13 +646,13 @@ export const migrationAPI = {
       // Some deployments use a misspelled path "Lession". Try both gracefully.
       const paths = !lessonId
          ? [
-              "/migration/conversationLineByLessonId",
-              "/migration/conversationLineByLessionId",
-           ]
+            "/migration/conversationLineByLessonId",
+            "/migration/conversationLineByLessionId",
+         ]
          : [
-              `/migration/conversationLineByLessonId/${lessonId}`,
-              `/migration/conversationLineByLessionId/${lessonId}`,
-           ];
+            `/migration/conversationLineByLessonId/${lessonId}`,
+            `/migration/conversationLineByLessionId/${lessonId}`,
+         ];
 
       let lastError;
       for (const p of paths) {

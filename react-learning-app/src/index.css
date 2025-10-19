@@ -3,7 +3,7 @@
 
 /* Increase base font size for the whole app (adjust rem-based Tailwind sizing) */
 html {
-  font-size: 18px;
+  font-size: 24px;
 }
 
 body {
