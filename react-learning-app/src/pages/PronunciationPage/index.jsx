@@ -140,13 +140,9 @@ const PronunciationPage = () => {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {paginatedVocab.map((item) => (
-                <div key={item.id || (item.word + item.pinyin)} className="card bg-base-100 shadow-sm p-3 flex flex-col items-start gap-2">
-                  <div className="w-full flex items-center justify-between">
-                    <div>
-                      <div className="text-lg font-bold">{item.word}</div>
-                      {showPinyin && item.pinyin && <div className="text-sm text-base-content/70">{item.pinyin}</div>}
-                    </div>
-                    <div className="ml-2 flex items-center gap-2">
+                <div key={item.id || (item.word + item.pinyin)} className="card bg-base-100 shadow-sm p-3 flex flex-col gap-2">
+                  <div className="card-body p-4 relative">
+                    <div className="absolute top-2 right-2 flex items-center gap-2">
                       {(item.audioUrl || item.audioAsset) && (
                         <AudioPlayer audioUrl={item.audioUrl} audioAsset={item.audioAsset} size="sm" />
                       )}
@@ -169,13 +165,28 @@ const PronunciationPage = () => {
                         size="xs"
                       />
                     </div>
-                  </div>
 
-                  {item.meaning && <div className="text-xs text-base-content/60">{item.meaning}</div>}
+                    <div className="w-full text-center py-4">
+                      <div className="text-2xl md:text-3xl font-extrabold text-primary leading-tight">{item.word}</div>
+                      {showPinyin && item.pinyin && <div className="text-sm text-base-content/70 mt-1">{item.pinyin}</div>}
+                    </div>
 
-                  <div className="w-full mt-auto flex justify-between items-center pt-2">
-                    <div className="text-xs text-base-content/50">{item.lessonTitle || item.lessonId || ''}</div>
-                    {/* <Link to={`/curriculum/${item.curriculumId || 1}/lesson/${item.lessonId}/practice`} className="btn btn-xs btn-outline">Luyện</Link> */}
+                    {item.type && (
+                      <div className={`mx-auto badge ${(() => {
+                        switch ((item.type || '').toLowerCase()) {
+                          case 'danh từ': return 'badge-primary';
+                          case 'động từ': return 'badge-secondary';
+                          case 'tính từ': return 'badge-accent';
+                          case 'cụm từ': return 'badge-info';
+                          case 'trạng từ': return 'badge-warning';
+                          default: return 'badge-neutral';
+                        }
+                      })()} badge-sm`}>{item.type}</div>
+                    )}
+
+                    {item.meaning && <div className="text-sm text-base-content/90 text-center mt-2">{item.meaning}</div>}
+
+                    <div className="w-full mt-3 text-center text-xs text-base-content/50">{item.lessonTitle || item.lessonId || ''}</div>
                   </div>
                 </div>
               ))}
