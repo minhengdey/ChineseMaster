@@ -20,7 +20,7 @@ public class PronunciationService {
    private final ToneRepository toneRepository;
 
    public PronunciationGuideDto findByInitial(String initial) {
-      Optional<InitialSound> maybe = initialSoundRepository.findByText(initial);
+      Optional<InitialSound> maybe = initialSoundRepository.findFirstByText(initial);
       if (maybe.isEmpty())
          return null;
       InitialSound s = maybe.get();
@@ -33,7 +33,7 @@ public class PronunciationService {
    }
 
    public PronunciationGuideDto findByFinal(String finalText) {
-      Optional<FinalSound> maybe = finalSoundRepository.findByText(finalText);
+      Optional<FinalSound> maybe = finalSoundRepository.findFirstByText(finalText);
       if (maybe.isEmpty())
          return null;
       FinalSound s = maybe.get();

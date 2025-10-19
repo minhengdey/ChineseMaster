@@ -1,0 +1,153 @@
+{
+  "headers": ["", "", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "j", "q", "x", "z", "c", "s", "zh", "ch", "sh", "r"],
+  "rows": [
+    {
+      "final": "i",
+      "cells": ["i", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "zi", "ci", "si", "zhi", "chi", "shi", "ri"]
+    },
+    {
+      "final": "a",
+      "cells": ["a", "a", "ba", "pa", "ma", "fa", "da", "ta", "na", "la", "ga", "ka", "ha", "", "", "", "za", "ca", "sa", "zha", "cha", "sha", ""]
+    },
+    {
+      "final": "ai",
+      "cells": ["ai", "ai", "bai", "pai", "mai", "", "dai", "tai", "nai", "lai", "gai", "kai", "hai", "", "", "", "zai", "cai", "sai", "zhai", "chai", "shai", ""]
+    },
+    {
+      "final": "an",
+      "cells": ["an", "an", "ban", "pan", "man", "fan", "dan", "tan", "nan", "lan", "gan", "kan", "han", "", "", "", "zan", "can", "san", "zhan", "chan", "shan", "ran"]
+    },
+    {
+      "final": "ang",
+      "cells": ["ang", "ang", "bang", "pang", "mang", "fang", "dang", "tang", "nang", "lang", "gang", "kang", "hang", "", "", "", "zang", "cang", "sang", "zhang", "chang", "shang", "rang"]
+    },
+    {
+      "final": "ao",
+      "cells": ["ao", "ao", "bao", "pao", "mao", "", "dao", "tao", "nao", "lao", "gao", "kao", "hao", "", "", "", "zao", "cao", "sao", "zhao", "chao", "shao", "rao"]
+    },
+    {
+      "final": "e",
+      "cells": ["e", "e", "", "", "me", "", "de", "te", "ne", "le", "ge", "ke", "he", "", "", "", "ze", "ce", "se", "zhe", "che", "she", "re"]
+    },
+    {
+      "final": "ei",
+      "cells": ["ei", "ei", "bei", "pei", "mei", "fei", "dei", "", "nei", "lei", "gei", "", "hei", "", "", "", "zei", "", "", "zhei", "", "shei", ""]
+    },
+    {
+      "final": "en",
+      "cells": ["en", "en", "ben", "pen", "men", "fen", "", "", "nen", "", "gen", "ken", "hen", "", "", "", "zen", "cen", "sen", "zhen", "chen", "shen", "ren"]
+    },
+    {
+      "final": "eng",
+      "cells": ["eng", "eng", "beng", "peng", "meng", "feng", "deng", "teng", "neng", "leng", "geng", "keng", "heng", "", "", "", "zeng", "ceng", "seng", "zheng", "cheng", "sheng", "reng"]
+    },
+    {
+      "final": "er",
+      "cells": ["er", "er", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "i",
+      "cells": ["i", "yi", "bi", "pi", "mi", "", "di", "ti", "ni", "li", "", "", "", "ji", "qi", "xi", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "ia",
+      "cells": ["ia", "ya", "", "", "", "", "dia", "", "", "lia", "", "", "", "jia", "qia", "xia", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "ian",
+      "cells": ["ian", "yan", "bian", "pian", "mian", "", "dian", "tian", "nian", "lian", "", "", "", "jian", "qian", "xian", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "iang",
+      "cells": ["iang", "yang", "", "", "", "", "", "", "niang", "liang", "", "", "", "jiang", "qiang", "xiang", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "iao",
+      "cells": ["iao", "yao", "biao", "piao", "miao", "", "diao", "tiao", "niao", "liao", "", "", "", "jiao", "qiao", "xiao", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "ie",
+      "cells": ["ie", "ye", "bie", "pie", "mie", "", "die", "tie", "nie", "lie", "", "", "", "jie", "qie", "xie", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "in",
+      "cells": ["in", "yin", "bin", "pin", "min", "", "", "", "nin", "lin", "", "", "", "jin", "qin", "xin", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "ing",
+      "cells": ["ing", "ying", "bing", "ping", "ming", "", "ding", "ting", "ning", "ling", "", "", "", "jing", "qing", "xing", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "iong",
+      "cells": ["iong", "yong", "", "", "", "", "", "", "", "", "", "", "", "jiong", "qiong", "xiong", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "iu",
+      "cells": ["iu", "you", "", "", "miu", "", "diu", "", "niu", "liu", "", "", "", "jiu", "qiu", "xiu", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "o",
+      "cells": ["o", "o", "bo", "po", "mo", "fo", "", "", "", "lo", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "ong",
+      "cells": ["ong", "", "", "", "", "", "dong", "tong", "nong", "long", "gong", "kong", "hong", "", "", "", "zong", "cong", "song", "zhong", "chong", "", "rong"]
+    },
+    {
+      "final": "ou",
+      "cells": ["ou", "ou", "", "pou", "mou", "fou", "dou", "tou", "", "lou", "gou", "kou", "hou", "", "", "", "zou", "cou", "sou", "zhou", "chou", "shou", "rou"]
+    },
+    {
+      "final": "u",
+      "cells": ["u", "wu", "bu", "pu", "mu", "fu", "du", "tu", "nu", "lu", "gu", "ku", "hu", "", "", "", "zu", "cu", "su", "zhu", "chu", "shu", "ru"]
+    },
+    {
+      "final": "ua",
+      "cells": ["ua", "wa", "", "", "", "", "", "", "", "", "gua", "kua", "hua", "", "", "", "", "", "", "zhua", "", "shua", ""]
+    },
+    {
+      "final": "uai",
+      "cells": ["uai", "wai", "", "", "", "", "", "", "", "", "guai", "kuai", "huai", "", "", "", "", "", "", "zhuai", "chuai", "shuai", ""]
+    },
+    {
+      "final": "uan",
+      "cells": ["uan", "wan", "", "", "", "", "duan", "tuan", "nuan", "luan", "guan", "kuan", "huan", "", "", "", "zuan", "cuan", "suan", "zhuan", "chuan", "shuan", "ruan"]
+    },
+    {
+      "final": "uang",
+      "cells": ["uang", "wang", "", "", "", "", "", "", "", "", "guang", "kuang", "huang", "", "", "", "", "", "", "zhuang", "chuang", "shuang", ""]
+    },
+    {
+      "final": "uei",
+      "cells": ["uei", "wei", "", "", "", "", "dui", "tui", "", "", "gui", "kui", "hui", "", "", "", "zui", "cui", "sui", "zhui", "chui", "shui", "rui"]
+    },
+    {
+      "final": "uen",
+      "cells": ["uen", "wen", "", "", "", "", "dun", "tun", "", "lun", "gun", "kun", "hun", "", "", "", "zun", "cun", "sun", "zhun", "chun", "shun", "run"]
+    },
+    {
+      "final": "ueng",
+      "cells": ["ueng", "weng", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "uo",
+      "cells": ["uo", "wo", "", "", "", "", "duo", "tuo", "nuo", "luo", "guo", "kuo", "huo", "", "", "", "zuo", "cuo", "suo", "zhuo", "chuo", "shuo", "ruo"]
+    },
+    {
+      "final": "ü",
+      "cells": ["ü", "yu", "", "", "", "", "", "", "nü", "lü", "", "", "", "ju", "qu", "xu", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "üan",
+      "cells": ["üan", "yuan", "", "", "", "", "", "", "", "", "", "", "", "juan", "quan", "xuan", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "üe",
+      "cells": ["üe", "yue", "", "", "", "", "", "", "nüe", "lüe", "", "", "", "jue", "que", "xue", "", "", "", "", "", "", ""]
+    },
+    {
+      "final": "ün",
+      "cells": ["ün", "yun", "", "", "", "", "", "", "", "", "", "", "", "jun", "qun", "xun", "", "", "", "", "", "", ""]
+    }
+  ]
+}
