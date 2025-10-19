@@ -35,7 +35,7 @@ const HomePage = () => {
                      >
                         <div className="card-body items-center text-center">
                            <h2 className="card-title text-3xl">📝</h2>
-                           <p className="font-semibold">Bảng chữ cái</p>
+                           <p className="font-semibold">Bảng PINYIN</p>
                            <p className="text-sm text-base-content/70">
                               Pinyin & Hanzi
                            </p>

@@ -141,25 +141,67 @@ const VocabularyPracticePage = () => {
 
                 <div className="card mx-auto shadow-xl rounded-2xl border border-base-200">
                     <div className="card-body p-8 text-center">
-                        <div className="flex justify-between items-start mb-6">
-                            <div className="text-left">
-                                <div className="text-3xl md:text-5xl font-extrabold text-primary leading-tight">{current.word}</div>
-                                {showPinyin && (
-                                    <div className="text-base text-base-content/70 mt-2">{current.pinyin}</div>
-                                )}
-                            </div>
-                            <div className="text-sm text-base-content/60">{index + 1} / {vocabularies.length}</div>
+                        <div className="flex flex-col items-center justify-center text-center mb-6">
+                            <div className="text-5xl md:text-7xl font-extrabold text-primary leading-tight">{current.word}</div>
+                            {showPinyin && (
+                                <div className="text-lg text-base-content/70 mt-2">{current.pinyin}</div>
+                            )}
+                            <div className="text-sm text-base-content/60 mt-2">{index + 1} / {vocabularies.length}</div>
                         </div>
 
-                        {current.audioAsset && (
+                        {(current.audioUrl || current.audioAsset) && (
                             <div className="mb-4 flex justify-center">
-                                <AudioPlayer audioAsset={current.audioAsset} size="lg" />
+                                <AudioPlayer audioUrl={current.audioUrl} audioAsset={current.audioAsset} size="lg" />
                             </div>
                         )}
 
                         <div className="mb-6">
-                            <div className={`mx-auto transition-all duration-300 overflow-hidden ${showMeaning ? 'max-h-40' : 'max-h-0'}`}>
-                                <div className="text-xl font-medium py-2">{current.meaning}</div>
+                            <div className={`mx-auto transition-all duration-300 overflow-hidden ${showMeaning ? 'max-h-96' : 'max-h-0'}`}>
+                                {/* When showing meaning, include pinyin, type badge, meaning and example block similar to VocabularySection */}
+                                {showMeaning && (
+                                    <div className="space-y-3 text-center">
+                                        {showPinyin && current.pinyin && <div className="text-xl text-base-content/80">{current.pinyin}</div>}
+
+                                        {current.type && (
+                                            <div className={`mx-auto badge ${(() => {
+                                                switch ((current.type || '').toLowerCase()) {
+                                                    case 'danh từ': return 'badge-primary';
+                                                    case 'động từ': return 'badge-secondary';
+                                                    case 'tính từ': return 'badge-accent';
+                                                    case 'cụm từ': return 'badge-info';
+                                                    case 'trạng từ': return 'badge-warning';
+                                                    default: return 'badge-neutral';
+                                                }
+                                            })()} badge-sm`}>{current.type}</div>
+                                        )}
+
+                                        <div className="text-xl text-base-content/90 font-medium">{current.meaning}</div>
+
+                                        {/* Example block (follow VocabularySection normalization) */}
+                                        {(() => {
+                                            const exampleText = current.exampleText ?? current.example?.zh ?? null;
+                                            const examplePinyin = current.examplePinyin ?? current.example?.pinyin ?? null;
+                                            const exampleVn = current.exampleVn ?? current.example?.vn ?? null;
+                                            const exampleAudio = current.exampleAudioUrl ?? current.example?.audioUrl ?? null;
+                                            const hasExample = exampleText || examplePinyin || exampleVn || exampleAudio;
+                                            if (!hasExample) return null;
+
+                                            return (
+                                                <div className="mt-3 pt-3 border-t">
+                                                    <div className="text-lg text-base-content/70 mb-1 text-center">Ví dụ</div>
+                                                    <div className="text-xl font-medium text-center">{exampleText}</div>
+                                                    {showPinyin && examplePinyin && <div className="text-lg text-base-content/70 text-center">{examplePinyin}</div>}
+                                                    {exampleVn && <div className="text-lg text-base-content/70 text-center">{exampleVn}</div>}
+                                                    {exampleAudio && (
+                                                        <div className="mt-2 flex justify-center">
+                                                            <AudioPlayer audioUrl={exampleAudio} size="sm" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
                             </div>
                             {!showMeaning && (
                                 <button className="btn btn-outline" onClick={() => setShowMeaning(true)}>Hiện nghĩa</button>

@@ -1,5 +1,11 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+/* Increase base font size for the whole app (adjust rem-based Tailwind sizing) */
+html {
+  font-size: 18px;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -9,4 +15,14 @@ body {
 #root {
   width: 100%;
   min-height: 100vh;
+}
+
+/* Hanzi / Chinese font: prefer SimSun when available, fall back to common CJK fonts */
+.hanzi {
+  font-family: "SimSun", "NSimSun", "Noto Serif SC", "Noto Sans SC", "PingFang SC", "Heiti SC", serif;
+}
+
+/* Apply SimSun (or fallback) for elements declared in Chinese language */
+:lang(zh) {
+  font-family: "SimSun", "NSimSun", "Noto Serif SC", "Noto Sans SC", "PingFang SC", "Heiti SC", serif;
 }
