@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class ConversationLineDto {
     private Long id;
+    private Long externalId;
     private Integer order;
     private String speaker;
     private String zh;

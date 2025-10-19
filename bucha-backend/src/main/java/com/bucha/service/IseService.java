@@ -1413,6 +1413,45 @@ public class IseService {
         out.put("completeness", Math.min(100.0, Math.max(0.0, completeness)));
         out.put("fluency", Math.min(100.0, Math.max(0.0, fluency)));
 
+        // Aggregate initial/final/tone scores from phonemes if available
+        try {
+            double initAcc = 0.0d, finalAcc = 0.0d, toneAcc = 0.0d;
+            int initCount = 0, finalCount = 0, tonePartCount = 0;
+            for (int i = 0; i < phonemeArr.size(); i++) {
+                JSONObject p = phonemeArr.getJSONObject(i);
+                String pn = p.getString("phoneme") == null ? "" : p.getString("phoneme");
+                String isYun = p.getString("is_yun");
+                String monoTone = p.getString("mono_tone");
+                double pScore = p.getDoubleValue("score");
+                double pToneScore = p.getDoubleValue("tone_score");
+
+                boolean isTone = monoTone != null && monoTone.matches(".*\\d.*");
+                boolean isFinal = "1".equals(isYun) || pn.matches(".*[aeiouüAEIOU].*");
+                boolean isInitial = !isFinal && !isTone;
+
+                if (isInitial) {
+                    initAcc += pScore;
+                    initCount++;
+                }
+                if (isFinal) {
+                    finalAcc += pScore;
+                    finalCount++;
+                }
+                if (isTone) {
+                    toneAcc += (pToneScore > 0.0d ? pToneScore : pScore);
+                    tonePartCount++;
+                }
+            }
+            out.put("initial_score", initCount > 0 ? (initAcc / initCount) : 0.0d);
+            out.put("final_score", finalCount > 0 ? (finalAcc / finalCount) : 0.0d);
+            out.put("tone_score", tonePartCount > 0 ? (toneAcc / tonePartCount) : out.getDoubleValue("tone"));
+            out.put("initial_count", initCount);
+            out.put("final_count", finalCount);
+            out.put("tone_count", tonePartCount);
+        } catch (Throwable t) {
+            // best-effort only
+        }
+
         return out;
     }
 
@@ -1545,6 +1584,45 @@ public class IseService {
         out.put("tone", Math.min(100.0, Math.max(0.0, tone)));
         out.put("completeness", Math.min(100.0, Math.max(0.0, completeness)));
         out.put("fluency", Math.min(100.0, Math.max(0.0, fluency)));
+
+        // Aggregate initial/final/tone scores from phonemes
+        try {
+            double initAcc = 0.0d, finalAcc = 0.0d, toneAcc = 0.0d;
+            int initCount = 0, finalCount = 0, toneCount = 0;
+            for (int i = 0; i < phonemeArr.size(); i++) {
+                JSONObject p = phonemeArr.getJSONObject(i);
+                String pn = p.getString("phoneme") == null ? "" : p.getString("phoneme");
+                String isYun = p.getString("is_yun");
+                String monoTone = p.getString("mono_tone");
+                double pScore = p.getDoubleValue("score");
+                double pToneScore = p.getDoubleValue("tone_score");
+
+                boolean isTone = monoTone != null && monoTone.matches(".*\\d.*");
+                boolean isFinal = "1".equals(isYun) || pn.matches(".*[aeiouüAEIOU].*");
+                boolean isInitial = !isFinal && !isTone;
+
+                if (isInitial) {
+                    initAcc += pScore;
+                    initCount++;
+                }
+                if (isFinal) {
+                    finalAcc += pScore;
+                    finalCount++;
+                }
+                if (isTone) {
+                    toneAcc += (pToneScore > 0.0d ? pToneScore : pScore);
+                    toneCount++;
+                }
+            }
+            out.put("initial_score", initCount > 0 ? (initAcc / initCount) : 0.0d);
+            out.put("final_score", finalCount > 0 ? (finalAcc / finalCount) : 0.0d);
+            out.put("tone_score", toneCount > 0 ? (toneAcc / toneCount) : out.getDoubleValue("tone"));
+            out.put("initial_count", initCount);
+            out.put("final_count", finalCount);
+            out.put("tone_count", toneCount);
+        } catch (Throwable t) {
+            // best-effort only
+        }
 
         return out;
     }

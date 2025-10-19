@@ -17,6 +17,7 @@ const ConversationSection = ({
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [activeLineId, setActiveLineId] = useState(null);
   const [localHighlightedLineIds, setLocalHighlightedLineIds] = useState([]);
+  const [showPinyin, setShowPinyin] = useState(true);
 
   const toggleSection = (index) => {
     setExpandedSection(expandedSection === index ? null : index);
@@ -51,12 +52,30 @@ const ConversationSection = ({
     return () => { mounted = false; };
   }, [lessonId]);
 
-  const handlePronunciationScore = async (result, audioBlob, lineId) => {
-    console.log(lineId)
+  const handlePronunciationScore = async (result, audioBlob, returnedLineId, internalLineId, externalLineId) => {
+    // returnedLineId may be externalId or internal id depending on recorder logic.
+    // internalLineId is numeric internal id; externalLineId is the stable external id from content DTO.
+    console.log('handlePronunciationScore ids:', { returnedLineId, internalLineId, externalLineId });
     setPronunciationResult(result);
     setRecordedAudio(audioBlob);
-    setActiveLineId(lineId);
+    // Use externalLineId as active id for highlighting/result-panel so comparisons match line.externalId
+    const activeId = externalLineId != null ? String(externalLineId) : (returnedLineId != null ? String(returnedLineId) : (internalLineId != null ? String(internalLineId) : null));
+    setActiveLineId(activeId);
     setShowPronunciationResult(true);
+
+    // Immediately add this line's external id to local highlighted list so UI updates instantly
+    try {
+      const idStr = externalLineId != null ? String(externalLineId) : (returnedLineId != null ? String(returnedLineId) : (internalLineId != null ? String(internalLineId) : null));
+      if (idStr) {
+        setLocalHighlightedLineIds(prev => {
+          if (!prev || !Array.isArray(prev)) return [idStr];
+          if (prev.map(String).includes(idStr)) return prev;
+          return [...prev, idStr];
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to append to localHighlightedLineIds', e);
+    }
 
     // Refresh pronounced stats so highlighting/progress updates live
     try {
@@ -97,6 +116,9 @@ const ConversationSection = ({
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-end mb-2">
+        <button className="btn btn-ghost btn-sm" onClick={() => setShowPinyin(s => !s)}>{showPinyin ? 'Ẩn pinyin' : 'Hiện pinyin'}</button>
+      </div>
       {conversations.map((conversation, index) => (
         <div key={conversation.id ?? index} className="card bg-base-100 shadow-lg">
           <div className="card-body">
@@ -122,19 +144,20 @@ const ConversationSection = ({
                   const effectiveHighlighted = (localHighlightedLineIds && localHighlightedLineIds.length)
                     ? localHighlightedLineIds
                     : highlightedLineIds || [];
-                  const isHighlighted = (effectiveHighlighted || [])
-                    .map(String)
-                    .includes(String(line.id));
+                  // Build a set of normalized ids (strings) and accept matches against either externalId or internal id
+                  const highlightedSet = new Set((effectiveHighlighted || []).map(String));
+                  const isHighlighted = highlightedSet.has(String(line.externalId)) || highlightedSet.has(String(line.id));
                   // Debug per-line
                   if (process.env.NODE_ENV !== 'production') {
                     try {
-                      console.debug(`[ConversationSection] line ${line.id} highlighted?`, isHighlighted);
+                      console.debug(`[ConversationSection] line ${line.externalId} highlighted?`, isHighlighted);
                     } catch (e) { }
                   }
+                  console.log(line);
 
                   return (
                     <div
-                      key={line.id}
+                      key={line.externalId ?? line.id}
                       className={`p-4 rounded-lg ${isHighlighted ? 'bg-success/10 border border-success' : 'bg-base-200'
                         }`}
                     >
@@ -149,11 +172,12 @@ const ConversationSection = ({
                           <SentenceRecordingButton
                             text={line.pinyin}
                             hanzi={line.zh || line.zhText}
-                            lineId={line.id}
+                            lineId={line.externalId}
                             onScore={(result, audioBlob, returnedLineId) =>
-                              handlePronunciationScore(result, audioBlob, returnedLineId ?? line.id)
+                              // pass returnedLineId (from BE), internal id (line.id), and external id (line.externalId)
+                              handlePronunciationScore(result, audioBlob, returnedLineId, line.id, line.externalId)
                             }
-                            onStartRecording={() => handleStartRecording(line.id)}
+                            onStartRecording={() => handleStartRecording(line.externalId)}
                             size="xs"
                             lessonId={lessonId}
                           />
@@ -162,14 +186,14 @@ const ConversationSection = ({
 
                       <div className="space-y-2">
                         <div className="text-xl font-medium">{line.zh || line.zhText}</div>
-                        <div className="text-base-content/80">{line.pinyin}</div>
+                        {showPinyin && <div className="text-base-content/80">{line.pinyin}</div>}
                         <div className="text-base-content/70 italic">
                           {line.vn || line.vnTranslation}
                         </div>
                       </div>
 
                       {/* Hiển thị kết quả đánh giá phát âm cho line này */}
-                      {showPronunciationResult && activeLineId === line.id && (
+                      {showPronunciationResult && String(activeLineId) === String(line.externalId) && (
                         <div className="mt-4">
                           <SentencePronunciationResult
                             result={pronunciationResult}

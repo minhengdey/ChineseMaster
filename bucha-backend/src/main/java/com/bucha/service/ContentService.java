@@ -58,6 +58,22 @@ public class ContentService {
       return mapLessonDetail(lesson);
    }
 
+   // Debug method: return conversation lines with externalId for a lesson
+   public java.util.List<com.bucha.dto.content.ConversationLineExternalDto> getConversationLinesWithExternalForLesson(
+         Long lessonId) {
+      return conversationRepository.findByLessonIdOrderByOrder(lessonId).stream()
+            .flatMap(conv -> conversationLineRepository.findByConversationIdOrderByOrder(conv.getId()).stream())
+            .map(line -> {
+               com.bucha.dto.content.ConversationLineExternalDto d = new com.bucha.dto.content.ConversationLineExternalDto();
+               d.setId(line.getId());
+               d.setExternalId(line.getExternalId());
+               d.setConversationId(line.getConversation() != null ? line.getConversation().getId() : null);
+               d.setZh(line.getZhText());
+               d.setPinyin(line.getPinyin());
+               return d;
+            }).collect(java.util.stream.Collectors.toList());
+   }
+
    private LessonDto mapLesson(Lesson l) {
       LessonDto dto = new LessonDto();
       dto.setId(l.getId());
@@ -104,6 +120,9 @@ public class ContentService {
    private ConversationLineDto mapConversationLine(ConversationLine line) {
       ConversationLineDto dto = new ConversationLineDto();
       dto.setId(line.getId());
+      // expose external identifier so frontend can reference content by stable
+      // externalId
+      dto.setExternalId(line.getExternalId());
       dto.setOrder(line.getOrder());
       dto.setSpeaker(line.getSpeaker());
       dto.setZh(line.getZhText());
@@ -119,6 +138,8 @@ public class ContentService {
    private VocabularyDto mapVocabulary(Vocabulary v) {
       VocabularyDto dto = new VocabularyDto();
       dto.setId(v.getId());
+      // expose external identifier if present
+      dto.setExternalId(v.getExternalId());
       dto.setOrder(v.getOrder());
       dto.setWord(v.getWord());
       dto.setPinyin(v.getPinyin());
@@ -137,6 +158,8 @@ public class ContentService {
          return null;
       LineDto dto = new LineDto();
       dto.setId(line.getId());
+      // expose external identifier for nested example lines as well
+      dto.setExternalId(line.getExternalId());
       dto.setZh(line.getZhText());
       dto.setPinyin(line.getPinyin());
       dto.setVn(line.getVnTranslation());

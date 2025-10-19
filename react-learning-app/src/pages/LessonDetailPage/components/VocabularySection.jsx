@@ -3,18 +3,39 @@ import AudioPlayer from './AudioPlayer';
 import WordRecordingButton from './WordRecordingButton';
 import WordPronunciationResult from './WordPronunciationResult';
 
-const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refreshPronounced, lessonId }) => {
+const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refreshPronounced, lessonId, showPinyin = true }) => {
+  const [localShowPinyin, setLocalShowPinyin] = useState(showPinyin);
   const [pronunciationResult, setPronunciationResult] = useState(null);
   const [showPronunciationResult, setShowPronunciationResult] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState(null);
   // activeItemKey is a string like 'word-<id>' or 'example-<id>' to support both word and example recordings
   const [activeItemKey, setActiveItemKey] = useState(null);
+  // local highlighted vocabulary ids (stringified) to update UI instantly after scoring
+  const [localHighlightedVocabularyIds, setLocalHighlightedVocabularyIds] = useState([]);
 
-  const handlePronunciationScore = async (result, audioBlob, itemKey) => {
+  const handlePronunciationScore = async (result, audioBlob, returnedKey, internalKey) => {
+    // returnedKey may be something like 'word-<externalId>' or undefined; internalKey is 'word-<internalId>' constructed by the caller
+    const keyToUse = internalKey != null ? internalKey : returnedKey;
     setPronunciationResult(result);
     setRecordedAudio(audioBlob);
-    setActiveItemKey(itemKey);
+    setActiveItemKey(keyToUse);
     setShowPronunciationResult(true);
+
+    // Immediately add this vocabulary id to local highlighted list so UI updates instantly
+    try {
+      const internalIdPart = (keyToUse || '').toString().split('-')[1];
+      if (internalIdPart) {
+        const idStr = String(internalIdPart);
+        setLocalHighlightedVocabularyIds(prev => {
+          if (!prev || !Array.isArray(prev)) return [idStr];
+          if (prev.map(String).includes(idStr)) return prev;
+          return [...prev, idStr];
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to append to localHighlightedVocabularyIds', e);
+    }
+
     try {
       if (typeof refreshPronounced === 'function') await refreshPronounced();
     } catch (e) {
@@ -48,7 +69,11 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
   };
 
   const renderVocabulary = (vocabulary) => {
-    const isHighlighted = (highlightedVocabularyIds || []).map(String).includes(String(vocabulary.id));
+    const effectiveHighlighted = (localHighlightedVocabularyIds && localHighlightedVocabularyIds.length)
+      ? localHighlightedVocabularyIds
+      : highlightedVocabularyIds || [];
+    const highlightedSet = new Set((effectiveHighlighted || []).map(String));
+    const isHighlighted = highlightedSet.has(String(vocabulary.externalId)) || highlightedSet.has(String(vocabulary.id));
     return (
       <div key={vocabulary.id} className={`card shadow-lg hover:shadow-xl transition-shadow ${isHighlighted ? 'border border-success bg-success/10' : 'bg-base-100'}`}>
         <div className="card-body p-4">
@@ -61,9 +86,9 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
               <WordRecordingButton
                 word={vocabulary.word}
                 pinyin={vocabulary.pinyin}
-                vocabularyId={vocabulary.id}
+                vocabularyId={vocabulary.externalId}
                 lessonId={lessonId}
-                onScore={(result, audioBlob, key) => handlePronunciationScore(result, audioBlob, key || `word-${vocabulary.id}`)}
+                onScore={(result, audioBlob, returnedKey) => handlePronunciationScore(result, audioBlob, returnedKey, `word-${vocabulary.id}`)}
                 onStartRecording={() => handleStartRecording(`word-${vocabulary.id}`)}
                 size="xs"
               />
@@ -71,7 +96,7 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
           </div>
 
           <div className="space-y-2">
-            <div className="text-base-content/80">{vocabulary.pinyin}</div>
+            {localShowPinyin && <div className="text-base-content/80">{vocabulary.pinyin}</div>}
 
             {vocabulary.type && (
               <div className={`badge ${getTypeColor(vocabulary.type)} badge-sm`}>{vocabulary.type}</div>
@@ -93,7 +118,7 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
               <div className="mt-3 pt-3 border-t">
                 <div className="text-sm text-base-content/70 mb-1">Ví dụ</div>
                 <div className="text-base font-medium">{exampleText}</div>
-                {examplePinyin && <div className="text-sm text-base-content/70">{examplePinyin}</div>}
+                {localShowPinyin && examplePinyin && <div className="text-sm text-base-content/70">{examplePinyin}</div>}
                 {exampleVn && <div className="text-sm text-base-content/70">{exampleVn}</div>}
                 {exampleAudio && (
                   <div className="mt-2">
@@ -104,9 +129,9 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
                   <WordRecordingButton
                     word={exampleText || vocabulary.word}
                     pinyin={examplePinyin || vocabulary.pinyin}
-                    vocabularyId={vocabulary.id}
+                    vocabularyId={vocabulary.externalId}
                     lessonId={lessonId}
-                    onScore={(result, audioBlob, key) => handlePronunciationScore(result, audioBlob, key || `example-${vocabulary.id}`)}
+                    onScore={(result, audioBlob, returnedKey) => handlePronunciationScore(result, audioBlob, returnedKey, `example-${vocabulary.id}`)}
                     onStartRecording={() => handleStartRecording(`example-${vocabulary.id}`)}
                     size="xs"
                   />
@@ -116,7 +141,7 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
           })()}
 
           {/* Hiển thị kết quả đánh giá phát âm cho word này */}
-          {showPronunciationResult && (activeItemKey === `word-${vocabulary.id}` || activeItemKey === `example-${vocabulary.id}`) && (
+          {showPronunciationResult && (String(activeItemKey) === `word-${vocabulary.id}` || String(activeItemKey) === `example-${vocabulary.id}`) && (
             <WordPronunciationResult result={pronunciationResult} recordedAudio={recordedAudio} onClose={closePronunciationResult} />
           )}
         </div>
@@ -137,8 +162,13 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {vocabularies.map(renderVocabulary)}
+    <div>
+      <div className="flex items-center justify-end mb-3">
+        <button className="btn btn-ghost btn-sm" onClick={() => setLocalShowPinyin(s => !s)}>{localShowPinyin ? 'Ẩn pinyin' : 'Hiện pinyin'}</button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {vocabularies.map(renderVocabulary)}
+      </div>
     </div>
   );
 };
