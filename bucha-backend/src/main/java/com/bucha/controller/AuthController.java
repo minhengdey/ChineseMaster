@@ -43,7 +43,15 @@ public class AuthController {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
         String access = jwtUtil.generateAccessToken(user.getEmail(), user.getId());
-        return ResponseEntity.ok(new AuthResponse(access, 900000));
+        // Return token together with basic user info so frontend can store profile
+        Map<String, Object> out = Map.of(
+                "accessToken", access,
+                "expiresIn", 900000,
+                "user", Map.of(
+                        "id", user.getId(),
+                        "email", user.getEmail(),
+                        "name", user.getName()));
+        return ResponseEntity.ok(out);
     }
 
     @GetMapping("/verify")

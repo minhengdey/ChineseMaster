@@ -1,9 +1,11 @@
 package com.bucha.controller;
 
 import com.bucha.entity.IseScore;
+import com.bucha.entity.UserEntity;
 import com.bucha.entity.UserLesson;
 import com.bucha.repository.*;
 import com.bucha.security.JwtUserPrincipal;
+import com.bucha.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -33,6 +35,7 @@ public class IseStatsController {
         IseLessonEntryRepository iseLessonEntryRepository;
         IseTestEntryRepository iseTestEntryRepository;
         UserLessonRepository userLessonRepository;
+        UserService userService;
         static final Logger logger = LoggerFactory.getLogger(IseStatsController.class);
 
         // Daily performance: return per-day aggregates for a date range (default last
@@ -203,8 +206,113 @@ public class IseStatsController {
                 out.put("distinctVocabularyCount", distinctVocabCount);
                 out.put("pronouncedCount", pronouncedCount);
 
-                logger.info("out: " + out.toString());
-
                 return ResponseEntity.ok(out);
+        }
+
+        // Leaderboard: daily across users (optional endpoint used by frontend)
+        @GetMapping("/leaderboard/daily")
+        public ResponseEntity<?> dailyLeaderboard(
+                        @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+                LocalDate target = (date != null) ? date : LocalDate.now();
+                LocalDateTime start = target.atStartOfDay();
+                LocalDateTime end = target.atTime(LocalTime.MAX);
+
+                // aggregate per user using iseDailyEntryRepository
+                List<com.bucha.entity.IseDailyEntry> entries = iseDailyEntryRepository.findBySessionDateBetween(start,
+                                end);
+
+                // group by user id
+                Map<Long, List<com.bucha.entity.IseDailyEntry>> byUser = entries.stream()
+                                .filter(e -> e.getUser() != null && e.getUser().getId() != null)
+                                .collect(Collectors.groupingBy(e -> e.getUser().getId()));
+
+                List<Map<String, Object>> rows = new ArrayList<>();
+                for (Map.Entry<Long, List<com.bucha.entity.IseDailyEntry>> ent : byUser.entrySet()) {
+                        Long userId = ent.getKey();
+                        List<com.bucha.entity.IseDailyEntry> list = ent.getValue();
+                        double avg = list.stream().mapToDouble(s -> Optional.ofNullable(s.getTotalScore()).orElse(0.0))
+                                        .average().orElse(0.0);
+                        long completionCount = list.size();
+                        // improvement vs yesterday: compute yesterday avg for same user
+                        LocalDate y = target.minusDays(1);
+                        LocalDateTime ys = y.atStartOfDay();
+                        LocalDateTime ye = y.atTime(LocalTime.MAX);
+                        List<com.bucha.entity.IseDailyEntry> yEntries = iseDailyEntryRepository
+                                        .findByUser_IdAndSessionDateBetween(userId, ys, ye);
+                        double yAvg = yEntries.stream()
+                                        .mapToDouble(s -> Optional.ofNullable(s.getTotalScore()).orElse(0.0)).average()
+                                        .orElse(0.0);
+                        double improvement = Math.round((avg - yAvg) * 100.0) / 100.0; // percent points
+                        UserEntity user = userService.findById(userId)
+                                        .orElseThrow(() -> new RuntimeException("user not found"));
+
+                        Map<String, Object> row = new HashMap<>();
+                        row.put("userId", userId);
+                        // try to include display name/avatar if available via userLessonRepository or
+                        // other repo; fallback to id only
+                        row.put("name", user.getName());
+                        row.put("avatar", null);
+                        row.put("avgScore", Math.round(avg * 100.0) / 100.0);
+                        row.put("completionCount", completionCount);
+                        row.put("improvementRate", improvement);
+                        row.put("timestamp", list.stream().map(e -> e.getCreatedAt()).min(LocalDateTime::compareTo)
+                                        .orElse(null));
+                        rows.add(row);
+                }
+
+                return ResponseEntity.ok(Map.of("rows", rows));
+        }
+
+        // Leaderboard for a lesson: top scores per user for the specified lesson and
+        // date
+        @GetMapping("/leaderboard/lesson")
+        public ResponseEntity<?> lessonLeaderboard(@RequestParam(value = "lessonId") Long lessonId,
+                        @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+                if (lessonId == null)
+                        return ResponseEntity.badRequest().body(Map.of("error", "lessonId is required"));
+                LocalDate target = (date != null) ? date : LocalDate.now();
+                LocalDateTime start = target.atStartOfDay();
+                LocalDateTime end = target.atTime(LocalTime.MAX);
+
+                List<com.bucha.entity.IseDailyEntry> entries = iseDailyEntryRepository
+                                .findByLessonIdAndSessionDateBetween(lessonId, start, end);
+
+                // group entries by user to compute metrics: best (max), avg, attempts
+                Map<Long, List<com.bucha.entity.IseDailyEntry>> byUser = entries.stream()
+                                .filter(e -> e.getUser() != null && e.getUser().getId() != null)
+                                .collect(Collectors.groupingBy(e -> e.getUser().getId()));
+
+                List<Map<String, Object>> rows = new ArrayList<>();
+                for (Map.Entry<Long, List<com.bucha.entity.IseDailyEntry>> ent : byUser.entrySet()) {
+                        Long userId = ent.getKey();
+                        List<com.bucha.entity.IseDailyEntry> list = ent.getValue();
+                        if (list == null || list.isEmpty())
+                                continue;
+
+                        double best = list.stream()
+                                        .mapToDouble(s -> Optional.ofNullable(s.getTotalScore()).orElse(0.0))
+                                        .max().orElse(0.0);
+                        double avg = list.stream()
+                                        .mapToDouble(s -> Optional.ofNullable(s.getTotalScore()).orElse(0.0))
+                                        .average().orElse(0.0);
+                        int attempts = list.size();
+
+                        UserEntity user = userService.findById(userId)
+                                        .orElseThrow(() -> new RuntimeException("user not found"));
+                        Map<String, Object> row = new HashMap<>();
+                        row.put("userId", userId);
+                        row.put("name", user.getName());
+                        row.put("score", Math.round(best * 100.0) / 100.0); // best score (original 'score')
+                        row.put("bestScore", Math.round(best * 100.0) / 100.0);
+                        row.put("avgScore", Math.round(avg * 100.0) / 100.0);
+                        row.put("attempts", attempts);
+                        rows.add(row);
+                }
+
+                // sort by best score by default; frontend will compute lesson_score and may
+                // re-sort
+                rows.sort((a, b) -> Double.compare((Double) b.get("score"), (Double) a.get("score")));
+
+                return ResponseEntity.ok(Map.of("rows", rows));
         }
 }

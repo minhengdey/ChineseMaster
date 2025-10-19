@@ -14,6 +14,11 @@ public interface IseDailyEntryRepository extends JpaRepository<IseDailyEntry, Lo
     @Query("SELECT COUNT(DISTINCT e.attemptId) FROM IseDailyEntry e WHERE e.user.id = :userId AND e.lessonId = :lessonId")
     long countDistinctAttemptsByUserAndLesson(@Param("userId") Long userId, @Param("lessonId") Long lessonId);
 
+    List<com.bucha.entity.IseDailyEntry> findBySessionDateBetween(LocalDateTime start, LocalDateTime end);
+
+    List<com.bucha.entity.IseDailyEntry> findByLessonIdAndSessionDateBetween(Long lessonId, LocalDateTime start,
+            LocalDateTime end);
+
     @Query("SELECT DISTINCT e.lineId FROM IseDailyEntry e WHERE e.user.id = :userId AND e.lessonId = :lessonId AND e.lineId IS NOT NULL")
     List<Long> findDistinctLineIdsByUserAndLesson(@Param("userId") Long userId, @Param("lessonId") Long lessonId);
 
