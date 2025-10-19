@@ -10,7 +10,7 @@ const LessonDetailPage = () => {
   const { curriculumId, lessonId } = useParams();
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('conversation');
+  const [activeTab, setActiveTab] = useState('vocabulary');
   const [highlightedLineIds, setHighlightedLineIds] = useState([]);
   const [highlightedVocabularyIds, setHighlightedVocabularyIds] = useState([]);
   const [distinctAttempts, setDistinctAttempts] = useState(0);
@@ -167,16 +167,16 @@ const LessonDetailPage = () => {
       {/* Tabs */}
       <div className="tabs tabs-bordered mb-6">
         <button
-          className={`tab tab-lg ${activeTab === 'conversation' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('conversation')}
-        >
-          💬 Hội thoại ({lesson.conversations?.length || 0})
-        </button>
-        <button
           className={`tab tab-lg ${activeTab === 'vocabulary' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('vocabulary')}
         >
-          📚 Từ vựng ({lesson.vocabularies?.length || 0})
+          � Từ vựng ({lesson.vocabularies?.length || 0})
+        </button>
+        <button
+          className={`tab tab-lg ${activeTab === 'conversation' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('conversation')}
+        >
+          � Hội thoại ({lesson.conversations?.length || 0})
         </button>
       </div>
 

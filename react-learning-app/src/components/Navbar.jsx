@@ -49,7 +49,7 @@ const Navbar = ({ user, onLogout }) => {
                      <Link to="/pronunciation">Phát âm</Link>
                   </li>
                   <li>
-                     <Link to="/alphabet">Bảng chữ cái</Link>
+                     <Link to="/alphabet">Bảng PINYIN</Link>
                   </li>
                </ul>
             </div>
