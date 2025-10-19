@@ -86,7 +86,7 @@ const Navbar = ({ user, onLogout }) => {
                      to="/alphabet"
                      className={isActive("/alphabet") ? "active" : ""}
                   >
-                     📝 Bảng chữ cái
+                     📝 Bảng PINYIN
                   </Link>
                </li>
             </ul>
