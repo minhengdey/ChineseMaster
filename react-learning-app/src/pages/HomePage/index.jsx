@@ -22,7 +22,7 @@ const HomePage = () => {
                      >
                         <div className="card-body items-center text-center">
                            <h2 className="card-title text-3xl">📚</h2>
-                           <p className="font-semibold">Giáo trình</p>
+                           <p className="font-semibold">Bài học</p>
                            <p className="text-sm text-base-content/70">
                               Học theo hệ thống
                            </p>

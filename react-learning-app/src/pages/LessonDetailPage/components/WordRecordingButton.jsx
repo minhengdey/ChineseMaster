@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { iseAPI } from '../../../services/api';
 import { createRecorder, computeSha256Hex, playBlobSafely } from '../../../utils/audioUtils';
 
-const WordRecordingButton = ({ word, pinyin, vocabularyId, lessonId, onScore, onStartRecording, size = 'xs' }) => {
+const WordRecordingButton = ({ word, pinyin, vocabularyId, externalId, lessonId, onScore, onStartRecording, size = 'xs' }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
@@ -65,7 +65,9 @@ const WordRecordingButton = ({ word, pinyin, vocabularyId, lessonId, onScore, on
       const size = blob.size;
       const sha256 = await computeSha256Hex(blob);
       const payload = { text: textToAnalyze, audioFile: blob, mimeType: mime, size: String(size), sha256 };
-      if (vocabularyId != null) payload.vocabularyId = String(vocabularyId);
+      // Prefer explicit externalId (from content.externalId). Fall back to vocabularyId when not provided.
+      const vocabExternal = externalId ?? vocabularyId;
+      if (vocabExternal != null) payload.vocabularyId = String(vocabExternal);
       if (lessonId != null) payload.lessonId = String(lessonId);
       const result = await iseAPI.scoreWord(payload);
       const raw = result?.raw_response ?? result;
@@ -87,7 +89,7 @@ const WordRecordingButton = ({ word, pinyin, vocabularyId, lessonId, onScore, on
           warning: (sent.warning ?? raw.warning ?? null),
         };
       }
-      onScore && onScore(normalized, blob, vocabularyId ? `word-${vocabularyId}` : undefined);
+      onScore && onScore(normalized, blob, vocabExternal ? `word-${vocabExternal}` : undefined);
     } catch (err) {
       console.error('submitForAnalysisWithBlob error', err);
       setError(err.message || 'Không thể đánh giá phát âm. Vui lòng thử lại.');

@@ -19,7 +19,15 @@ const LessonProgress = ({ lessons = [], poll = true }) => {
             if (!id) return false;
             try {
               const resp = await userLessonAPI.isCompleted(id);
-              return !!resp?.completed;
+              // prefer explicit completed flag, otherwise compute from counts
+              if (resp && typeof resp.completed !== 'undefined') return !!resp.completed;
+              const userLines = Number(resp?.userDistinctLineCount ?? resp?.user_distinct_line_count ?? resp?.scoredCount ?? 0);
+              const userVocabs = Number(resp?.userDistinctVocabCount ?? resp?.user_distinct_vocab_count ?? 0);
+              const totalLines = Number(resp?.totalLines ?? resp?.total_lines ?? 0);
+              const totalVocab = Number(resp?.totalVocab ?? resp?.total_vocab ?? 0);
+              const linesComplete = (totalLines === 0) || (userLines >= totalLines);
+              const vocabComplete = (totalVocab === 0) || (userVocabs >= totalVocab);
+              return linesComplete && vocabComplete;
             } catch (e) {
               return !!lesson.completed;
             }

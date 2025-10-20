@@ -200,13 +200,95 @@ public class IseStatsController {
                 int distinctVocabCount = (vocabIds == null) ? 0 : vocabIds.size();
                 int pronouncedCount = distinctLineCount + distinctVocabCount;
 
-                out.put("lineIds", lineIds == null ? Collections.emptyList() : lineIds);
-                out.put("vocabularyIds", vocabIds == null ? Collections.emptyList() : vocabIds);
+                // Return external ids as strings to avoid JavaScript numeric precision loss in
+                // clients
+                List<String> lineIdStrs = (lineIds == null) ? Collections.emptyList()
+                                : lineIds.stream().map(String::valueOf).collect(Collectors.toList());
+                List<String> vocabIdStrs = (vocabIds == null) ? Collections.emptyList()
+                                : vocabIds.stream().map(String::valueOf).collect(Collectors.toList());
+                out.put("lineIds", lineIdStrs);
+                out.put("vocabularyIds", vocabIdStrs);
                 out.put("distinctLineCount", distinctLineCount);
                 out.put("distinctVocabularyCount", distinctVocabCount);
                 out.put("pronouncedCount", pronouncedCount);
 
+                // Compute average per-vocabulary and per-line as requested:
+                // For each distinct vocabulary_id, compute average(total_score) across attempts
+                // for that vocabulary_id;
+                // then avgWordScore = mean of those per-vocabulary averages.
+                // Same for line_id.
+                try {
+                        List<com.bucha.entity.IseLessonEntry> lessonEntriesAll = iseLessonEntryRepository
+                                        .findByUser_IdAndLessonId(userId, lessonId);
+                        // group by vocabularyId and lineId
+                        Map<Long, List<com.bucha.entity.IseLessonEntry>> byVocab = lessonEntriesAll.stream()
+                                        .filter(e -> e.getVocabularyId() != null)
+                                        .collect(Collectors
+                                                        .groupingBy(com.bucha.entity.IseLessonEntry::getVocabularyId));
+
+                        Map<Long, List<com.bucha.entity.IseLessonEntry>> byLine = lessonEntriesAll.stream()
+                                        .filter(e -> e.getLineId() != null)
+                                        .collect(Collectors.groupingBy(com.bucha.entity.IseLessonEntry::getLineId));
+
+                        Double avgWordScore = null;
+                        Double avgSentenceScore = null;
+
+                        if (!byVocab.isEmpty()) {
+                                double sumPerVocabAvg = 0.0;
+                                int vocabCount = 0;
+                                for (Map.Entry<Long, List<com.bucha.entity.IseLessonEntry>> ve : byVocab.entrySet()) {
+                                        List<com.bucha.entity.IseLessonEntry> items = ve.getValue();
+                                        double avgForThisVocab = items.stream().mapToDouble(
+                                                        it -> Optional.ofNullable(it.getTotalScore()).orElse(0.0))
+                                                        .average().orElse(0.0);
+                                        sumPerVocabAvg += avgForThisVocab;
+                                        vocabCount++;
+                                }
+                                if (vocabCount > 0)
+                                        avgWordScore = Math.round((sumPerVocabAvg / vocabCount) * 100.0) / 100.0;
+                        }
+
+                        if (!byLine.isEmpty()) {
+                                double sumPerLineAvg = 0.0;
+                                int lineCount = 0;
+                                for (Map.Entry<Long, List<com.bucha.entity.IseLessonEntry>> le : byLine.entrySet()) {
+                                        List<com.bucha.entity.IseLessonEntry> items = le.getValue();
+                                        double avgForThisLine = items.stream().mapToDouble(
+                                                        it -> Optional.ofNullable(it.getTotalScore()).orElse(0.0))
+                                                        .average().orElse(0.0);
+                                        sumPerLineAvg += avgForThisLine;
+                                        lineCount++;
+                                }
+                                if (lineCount > 0)
+                                        avgSentenceScore = Math.round((sumPerLineAvg / lineCount) * 100.0) / 100.0;
+                        }
+
+                        if (avgWordScore != null)
+                                out.put("avgWordScore", avgWordScore);
+                        if (avgSentenceScore != null)
+                                out.put("avgSentenceScore", avgSentenceScore);
+                } catch (Exception e) {
+                        logger.debug("failed to compute per-item averages for pronouncedForLesson", e);
+                }
+
                 return ResponseEntity.ok(out);
+        }
+
+        // Return distinct vocabulary ids (across all attempts) for the authenticated
+        // user
+        @GetMapping("/distinct-vocab")
+        public ResponseEntity<?> distinctVocabForUser(@AuthenticationPrincipal JwtUserPrincipal principal) {
+                Long userId = principal.id();
+                try {
+                        List<Long> ids = iseRepository.findDistinctVocabularyIdsByUser(userId);
+                        List<String> strIds = (ids == null) ? Collections.emptyList()
+                                        : ids.stream().map(String::valueOf).collect(Collectors.toList());
+                        return ResponseEntity.ok(Map.of("vocabularyIds", strIds, "count", strIds.size()));
+                } catch (Exception e) {
+                        logger.debug("failed to get distinct vocab ids for user {}", userId, e);
+                        return ResponseEntity.status(500)
+                                        .body(Map.of("error", "failed to fetch distinct vocabulary ids"));
+                }
         }
 
         // Leaderboard: daily across users (optional endpoint used by frontend)

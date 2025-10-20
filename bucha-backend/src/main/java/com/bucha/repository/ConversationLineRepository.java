@@ -17,4 +17,7 @@ public interface ConversationLineRepository extends JpaRepository<ConversationLi
    long countByLessonId(@Param("lessonId") Long lessonId);
 
    Optional<ConversationLine> findByExternalId(Long externalId);
+
+   @Query("SELECT cl.externalId FROM ConversationLine cl WHERE cl.conversation.lesson.id = :lessonId")
+   java.util.List<Long> findExternalIdsByLessonId(@Param("lessonId") Long lessonId);
 }

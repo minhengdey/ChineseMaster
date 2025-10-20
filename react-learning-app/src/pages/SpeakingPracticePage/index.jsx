@@ -9,6 +9,8 @@ const SpeakingPracticePage = () => {
     const { curriculumId, lessonId } = useParams();
     const location = useLocation();
     const isDailyMode = location.pathname && location.pathname.includes('/speaking/daily');
+    // Treat '/practice' route as vocabulary pronunciation practice for the lesson
+    const isVocabMode = location.pathname && location.pathname.includes('/practice');
     const navigate = useNavigate();
     const [sentence, setSentence] = useState('');
     const [queue, setQueue] = useState([]);
@@ -30,7 +32,11 @@ const SpeakingPracticePage = () => {
     useEffect(() => {
         // For lesson practice, preload and shuffle the lesson lines; for daily mode, pick random single lines
         if (lessonId && !isDailyMode) {
-            preloadLessonLines(lessonId);
+            if (isVocabMode) {
+                preloadLessonVocabularies(lessonId);
+            } else {
+                preloadLessonLines(lessonId);
+            }
         } else {
             fetchRandomSentence();
         }
@@ -136,6 +142,57 @@ const SpeakingPracticePage = () => {
         } catch (err) {
             console.error(err);
             setError('Không thể lấy câu từ server');
+            setQueue([]);
+            setSentence('');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const preloadLessonVocabularies = async (lessonIdParam) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const lesson = await contentAPI.getLessonDetail(lessonIdParam);
+            const list = lesson.vocabularies || [];
+            const items = [];
+            list.forEach(v => {
+                // prefer externalId when available; fallback to id/_id for display only
+                const externalId = v?.externalId ?? v?.id ?? v?._id ?? null;
+                const internalId = v?.id ?? v?._id ?? null;
+                const text = v?.word || v?.zh || v?.text || v?.chinese || null;
+                if (!text) return;
+                items.push({
+                    // keep internal id for UI keys if present, but expose externalId for backend
+                    id: internalId,
+                    externalId: externalId,
+                    text: text,
+                    pinyin: v?.pinyin || null,
+                    audioAsset: v?.audioAsset || null,
+                    audioUrl: v?.audioUrl || null,
+                    // vocabularyId MUST be the externalId so backend can match external IDs
+                    vocabularyId: externalId,
+                });
+            });
+
+            if (items.length === 0) {
+                setError('Không tìm thấy từ vựng cho bài này');
+                setQueue([]);
+                setSentence('');
+                return;
+            }
+
+            const shuffled = shuffleArray(items);
+            setQueue(shuffled);
+            setQueueIndex(0);
+            setSentence(shuffled[0]?.text || '');
+            setCurrentScored(false);
+            setAudioBlob(null);
+            setResult(null);
+            return;
+        } catch (err) {
+            console.error(err);
+            setError('Không thể lấy từ vựng từ server');
             setQueue([]);
             setSentence('');
         } finally {
@@ -320,20 +377,33 @@ const SpeakingPracticePage = () => {
 
             console.log('Submitting score for', { text: sentence, file, lessonId, isDailyMode, sessionDate });
 
-            const resp = await iseAPI.scoreSentence({
+            const payload = {
                 text: sentence,
                 audioFile: file,
                 sub: 'ise',
                 ent: 'cn_vip',
                 // send current lessonId so backend can associate the score
                 lessonId: lessonId,
-                // if in daily mode, mark includeInDaily true so daily aggregates include it
-                includeInDaily: isDailyMode ? true : false,
+                // Do NOT include lesson/sentence/vocab attempts from this page in daily aggregates.
+                // They should only be persisted to ise_lesson_entry. Keep includeInDaily false.
+                includeInDaily: false,
                 // session timestamp
                 sessionDate: sessionDate,
                 // indicate source so backend can persist lesson entries only for speaking practice
-                source: 'speaking-practice',
-            });
+                source: isVocabMode ? 'vocab-practice' : 'speaking-practice',
+            };
+
+            // when practicing vocabulary, include the vocabularyId for backend association
+            // Always attach both ids when available so backend can migrate later without client changes
+            if (queue && queue[queueIndex]) {
+                // vocabularyId may be present on vocab queue items
+                // prefer externalId fields (vocabularyId or externalId) then fall back to internal id
+                payload.vocabularyId = queue[queueIndex].vocabularyId || queue[queueIndex].externalId || queue[queueIndex].id || null;
+                // prefer explicit lineId for conversation lines; when in vocab mode there may be no lineId
+                payload.lineId = queue[queueIndex].lineId || (isVocabMode ? null : queue[queueIndex].id) || null;
+            }
+
+            const resp = await iseAPI.scoreSentence(payload);
             // Normalize response: move metrics from resp.sentence to top-level for easier UI use
             const sent = resp?.sentence || {};
             const normalized = {
@@ -355,7 +425,7 @@ const SpeakingPracticePage = () => {
             setCurrentScored(true);
             // notify other pages (Profile) to refresh stats for today's data
             try {
-                window.dispatchEvent(new CustomEvent('ise:score:submitted', { detail: { score: normalized, lessonId: lessonId, includeInDaily: isDailyMode ? true : false } }));
+                window.dispatchEvent(new CustomEvent('ise:score:submitted', { detail: { score: normalized, lessonId: lessonId, includeInDaily: false } }));
             } catch (e) { }
             // If this is lesson practice (not daily) and we just scored the last item in the queue,
             // mark the lesson as completed in the backend if not already marked.
@@ -489,7 +559,7 @@ const SpeakingPracticePage = () => {
             ) : (
                 <div className="max-w-2xl mx-auto">
                     <div className="card shadow-md p-6 mb-4">
-                        <div className="text-xl mb-2">Câu cần luyện</div>
+                        <div className="text-xl mb-2">{isVocabMode ? 'Từ cần luyện' : 'Câu cần luyện'}</div>
                         <div className="text-2xl font-semibold break-words whitespace-pre-wrap">{sentence}</div>
                     </div>
 

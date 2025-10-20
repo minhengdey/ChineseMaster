@@ -32,9 +32,9 @@ const CurriculumPage = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">📚 Giáo trình</h1>
+        <h1 className="text-4xl font-bold mb-4">📚 Bài học</h1>
         <p className="text-lg text-base-content/70">
-          Chọn giáo trình phù hợp để bắt đầu hành trình học tiếng Trung của bạn
+          Chọn bài học phù hợp để bắt đầu hành trình học tiếng Trung của bạn
         </p>
       </div>
 

@@ -19,6 +19,8 @@ public class IseLessonEntry {
     Long id;
 
     Long lessonId;
+    Long lineId;
+    Long vocabularyId;
     Double totalScore;
     Double durationSeconds;
 

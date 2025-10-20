@@ -42,11 +42,14 @@ const Navbar = ({ user, onLogout }) => {
                   style={{ position: "absolute" }}
                >
                   <li>
-                     <Link to="/curriculum">Giáo trình</Link>
+                     <Link to="/curriculum">Bài học</Link>
                   </li>
 
                   <li>
                      <Link to="/pronunciation">Phát âm</Link>
+                  </li>
+                  <li>
+                     <Link to="/flashcards">Flash Card</Link>
                   </li>
                   <li>
                      <Link to="/alphabet">Bảng PINYIN</Link>
@@ -65,12 +68,12 @@ const Navbar = ({ user, onLogout }) => {
                      to="/curriculum"
                      className={
                         isActive("/curriculum") ||
-                        location.pathname.startsWith("/curriculum")
+                           location.pathname.startsWith("/curriculum")
                            ? "active"
                            : ""
                      }
                   >
-                     📚 Giáo trình
+                     📚 Bài học
                   </Link>
                </li>
                <li>
@@ -79,6 +82,14 @@ const Navbar = ({ user, onLogout }) => {
                      className={isActive("/pronunciation") ? "active" : ""}
                   >
                      🔊 Phát âm
+                  </Link>
+               </li>
+               <li>
+                  <Link
+                     to="/flashcards"
+                     className={isActive("/flashcards") ? "active" : ""}
+                  >
+                     🃏 Flash Card
                   </Link>
                </li>
                <li>
@@ -115,9 +126,6 @@ const Navbar = ({ user, onLogout }) => {
                         Hồ sơ
                         <span className="badge">Mới</span>
                      </Link>
-                  </li>
-                  <li>
-                     <a>Cài đặt</a>
                   </li>
                   <li>
                      <button onClick={handleLogout}>Đăng xuất</button>
