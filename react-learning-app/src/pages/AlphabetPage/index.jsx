@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import RecordingButton from "./components/RecordingButton";
 import PronunciationResult from "./components/PronunciationResult";
+
 const AlphabetPage = () => {
    const [pinyinTable, setPinyinTable] = useState([]);
    const [alphabetData, setAlphabetData] = useState({});
@@ -66,13 +67,8 @@ const AlphabetPage = () => {
          const filename = `${pinyin}${toneNumber}.mp3`;
 
          // Get Cloudinary base URL from env config
-
          const cloudinaryBaseUrl =
-            typeof window !== "undefined" &&
-            window._env_ &&
-            window._env_.VITE_CLOUDINARY_PINYIN_AUDIO_BASE_URL
-               ? window._env_.VITE_CLOUDINARY_PINYIN_AUDIO_BASE_URL
-               : import.meta?.env?.VITE_CLOUDINARY_PINYIN_AUDIO_BASE_URL;
+            window._env_?.VITE_CLOUDINARY_PINYIN_AUDIO_BASE_URL;
 
          // Construct full audio URL
          // Example: https://res.cloudinary.com/dtshwjjbc/video/upload/v1760853479/chinese-master/pinyin-audio/bi3.mp3
