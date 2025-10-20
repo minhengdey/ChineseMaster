@@ -564,16 +564,38 @@ public class IseService {
                     score.setLessonId(lessonId);
                 if (testId != null)
                     score.setTestId(testId);
+                // Parse incoming item identifiers but only set one on the IseScore.
+                // We want to avoid saving both lineId and vocabularyId simultaneously.
+                Long parsedLineId = null;
+                Long parsedVocabId = null;
                 if (lineId != null) {
                     try {
-                        score.setLineId(Long.parseLong(lineId));
+                        parsedLineId = Long.parseLong(lineId);
                     } catch (Exception ignore) {
                     }
                 }
                 if (vocabularyId != null) {
                     try {
-                        score.setVocabularyId(Long.parseLong(vocabularyId));
+                        parsedVocabId = Long.parseLong(vocabularyId);
                     } catch (Exception ignore) {
+                    }
+                }
+
+                // Decide which id to persist based on the source when provided.
+                if ("vocab-practice".equalsIgnoreCase(String.valueOf(source))) {
+                    score.setVocabularyId(parsedVocabId);
+                    score.setLineId(null);
+                } else if ("speaking-practice".equalsIgnoreCase(String.valueOf(source))) {
+                    score.setLineId(parsedLineId);
+                    score.setVocabularyId(null);
+                } else {
+                    // No explicit source: prefer vocabularyId if available, otherwise lineId.
+                    if (parsedVocabId != null) {
+                        score.setVocabularyId(parsedVocabId);
+                        score.setLineId(null);
+                    } else {
+                        score.setLineId(parsedLineId);
+                        score.setVocabularyId(null);
                     }
                 }
                 if (includeInDaily != null)
@@ -596,12 +618,13 @@ public class IseService {
                 IseScore saved = iseRepository.save(score);
                 // also persist into new summary tables as appropriate
                 try {
-                    // persist daily entry when included in daily
-                    // or when the attempt references a specific line or vocabulary id
-                    // (so item-level attempts are tracked even if client did not set
-                    // includeInDaily)
-                    if (Boolean.TRUE.equals(saved.getIncludeInDaily()) || saved.getLineId() != null
-                            || saved.getVocabularyId() != null) {
+                    // persist daily entry only when the client explicitly requests it
+                    // (includeInDaily == true). Previously we also created daily entries
+                    // for any item-level attempts (lineId/vocabularyId) which caused
+                    // lesson/vocab attempts to appear in daily aggregates. To ensure that
+                    // speaking/vocab practice from the lesson UI are not added to daily
+                    // summaries, require includeInDaily == true.
+                    if (Boolean.TRUE.equals(saved.getIncludeInDaily())) {
                         com.bucha.entity.IseDailyEntry d = new com.bucha.entity.IseDailyEntry();
                         d.setAttemptId(saved.getId());
                         d.setTotalScore(saved.getTotalScore());
@@ -623,8 +646,25 @@ public class IseService {
                             } catch (Exception ignore) {
                             }
                         }
-                        d.setLineId(finalLineId);
-                        d.setVocabularyId(finalVocabId);
+                        // Only persist the id relevant to the practice source to avoid ambiguity.
+                        // If source explicitly indicates vocab or speaking, honor it. Otherwise
+                        // fall back: prefer lineId when present, otherwise use vocabularyId.
+                        if ("vocab-practice".equalsIgnoreCase(String.valueOf(source))) {
+                            d.setVocabularyId(finalVocabId);
+                            d.setLineId(null);
+                        } else if ("speaking-practice".equalsIgnoreCase(String.valueOf(source))) {
+                            d.setLineId(finalLineId);
+                            d.setVocabularyId(null);
+                        } else {
+                            // no explicit source: prefer lineId if present, otherwise vocabularyId
+                            if (finalLineId != null) {
+                                d.setLineId(finalLineId);
+                                d.setVocabularyId(null);
+                            } else {
+                                d.setVocabularyId(finalVocabId);
+                                d.setLineId(null);
+                            }
+                        }
                         if (saved.getUser() != null)
                             d.setUser(saved.getUser());
                         iseDailyEntryRepository.save(d);
@@ -635,13 +675,34 @@ public class IseService {
                     logger.info("[IseService] lesson persist check: saved.lessonId={} source={}", saved.getLessonId(),
                             source);
                     if (saved.getLessonId() != null) {
-                        if ("speaking-practice".equalsIgnoreCase(String.valueOf(source))) {
+                        if ("speaking-practice".equalsIgnoreCase(String.valueOf(source))
+                                || "vocab-practice".equalsIgnoreCase(String.valueOf(source))) {
                             com.bucha.entity.IseLessonEntry le = new com.bucha.entity.IseLessonEntry();
                             le.setAttemptId(saved.getId());
                             le.setLessonId(saved.getLessonId());
                             le.setTotalScore(saved.getTotalScore());
                             le.setDurationSeconds(saved.getDurationSeconds());
                             le.setSessionDate(saved.getSessionDate());
+                            // transfer the relevant item id based on source
+                            if ("vocab-practice".equalsIgnoreCase(String.valueOf(source))) {
+                                if (saved.getVocabularyId() != null)
+                                    le.setVocabularyId(saved.getVocabularyId());
+                                else if (vocabularyId != null) {
+                                    try {
+                                        le.setVocabularyId(Long.parseLong(vocabularyId));
+                                    } catch (Exception ignore) {
+                                    }
+                                }
+                            } else {
+                                if (saved.getLineId() != null)
+                                    le.setLineId(saved.getLineId());
+                                else if (lineId != null) {
+                                    try {
+                                        le.setLineId(Long.parseLong(lineId));
+                                    } catch (Exception ignore) {
+                                    }
+                                }
+                            }
                             if (saved.getUser() != null)
                                 le.setUser(saved.getUser());
                             iseLessonEntryRepository.save(le);
@@ -649,7 +710,7 @@ public class IseService {
                                     saved.getId(), saved.getLessonId());
                         } else {
                             logger.info(
-                                    "[IseService] skipping IseLessonEntry persist because source!='speaking-practice' (source={})",
+                                    "[IseService] skipping IseLessonEntry persist because source not practice type (source={})",
                                     source);
                         }
                     } else {

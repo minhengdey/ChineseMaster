@@ -257,6 +257,7 @@ export const iseAPI = {
       scoreCategory,
       lessonId,
       lineId,
+      vocabularyId,
       source,
       testId,
       includeInDaily,
@@ -301,6 +302,11 @@ export const iseAPI = {
             formData.append(
                "lineId",
                new Blob([String(lineId)], { type: "text/plain;charset=UTF-8" })
+            );
+         if (vocabularyId != null)
+            formData.append(
+               "vocabularyId",
+               new Blob([String(vocabularyId)], { type: "text/plain;charset=UTF-8" })
             );
          if (source != null)
             formData.append(
@@ -577,6 +583,10 @@ export const iseStatsAPI = {
       const response = await apiClient.get("/ise/stats/pronounced", {
          params: { lessonId },
       });
+      return response.data;
+   },
+   getDistinctVocabForUser: async () => {
+      const response = await apiClient.get('/ise/stats/distinct-vocab');
       return response.data;
    },
    // Leaderboard endpoints (optional on backend)

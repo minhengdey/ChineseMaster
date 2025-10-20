@@ -8,8 +8,8 @@ const ProfilePage = ({ user }) => {
       email: "",
       fullName: "",
       avatar: "",
-      level: "Beginner",
-      studyGoal: "30 minutes/day",
+      level: "Sơ Cấp",
+      studyGoal: "30 phút/ngày",
       joinDate: "",
    });
    const [loading, setLoading] = useState(true);
@@ -98,14 +98,36 @@ const ProfilePage = ({ user }) => {
                   const copy = Array.isArray(prev) ? [...prev] : [];
                   const idx = copy.findIndex((r) => String(r.lessonId) === String(lessonId));
                   if (idx === -1) {
-                     copy.push({ lessonId, avgScore: Math.round(score.total_score ?? 0), completedFull: false, lessonScore: Math.round(score.total_score ?? 0), attempts: 1 });
+                     // initialize avgWordScore and avgSentenceScore heuristically from payload
+                     const isVocab = detail?.source === 'vocab-practice' || (detail?.vocabularyId != null);
+                     copy.push({ lessonId, avgScore: Math.round(score.total_score ?? 0), avgWordScore: isVocab ? Math.round(score.total_score ?? 0) : null, avgSentenceScore: isVocab ? null : Math.round(score.total_score ?? 0), completedFull: false, lessonScore: Math.round(score.total_score ?? 0), attempts: 1 });
                   } else {
                      const existing = copy[idx];
                      const prevAvg = Number(existing.avgScore || 0);
                      const prevCount = Number(existing.attempts || 1);
                      const newCount = prevCount + 1;
                      const newAvg = Math.round((prevAvg * prevCount + (score.total_score ?? 0)) / newCount);
-                     copy[idx] = { ...existing, avgScore: newAvg, attempts: newCount };
+                     // update word/sentence averages if we can guess the item type
+                     const isVocab = detail?.source === 'vocab-practice' || (detail?.vocabularyId != null);
+                     let avgWordScore = existing.avgWordScore ?? null;
+                     let avgSentenceScore = existing.avgSentenceScore ?? null;
+                     if (isVocab) {
+                        // update avgWordScore
+                        const prevW = Number(existing.avgWordScore || 0);
+                        const prevWCount = Number(existing.wordAttempts || 0);
+                        const wCount = prevWCount + 1;
+                        const newWAvg = Math.round((prevW * prevWCount + (score.total_score ?? 0)) / wCount);
+                        avgWordScore = newWAvg;
+                        copy[idx].wordAttempts = wCount;
+                     } else {
+                        const prevS = Number(existing.avgSentenceScore || 0);
+                        const prevSCount = Number(existing.sentenceAttempts || 0);
+                        const sCount = prevSCount + 1;
+                        const newSAvg = Math.round((prevS * prevSCount + (score.total_score ?? 0)) / sCount);
+                        avgSentenceScore = newSAvg;
+                        copy[idx].sentenceAttempts = sCount;
+                     }
+                     copy[idx] = { ...existing, avgScore: newAvg, attempts: newCount, avgWordScore, avgSentenceScore };
                   }
                   return copy;
                });
@@ -137,13 +159,113 @@ const ProfilePage = ({ user }) => {
       let enriched = [];
       try {
          const lessons = await iseStatsAPI.getLessons();
+         console.debug("fetched lessons stats", lessons);
          const rows = Array.isArray(lessons?.rows) ? lessons.rows : [];
 
+         // For each lesson, fetch completion state and pronounced entries (ise_lesson_entry) to compute
+         // average vocabulary score and average sentence score.
          enriched = await Promise.all(
             rows.map(async (r) => {
                try {
-                  const resp = await userLessonAPI.isCompleted(r.lessonId);
-                  return { ...r, completedFull: resp?.completed ?? r.completedFull ?? false, inProgress: resp?.inProgress ?? r.inProgress ?? false };
+                  const resp = await userLessonAPI.isCompleted(r.lessonId).catch(() => null);
+                  // pronounce entries API returns entries with fields { lessonId, lineId, vocabularyId, totalScore }
+                  const pronounced = await iseStatsAPI.getPronouncedForLesson(r.lessonId).catch(() => null);
+
+                  // tolerate multiple shapes returned by the backend:
+                  // - an object with .entries (array of entry objects)
+                  // - an object with .rows or .data (array)
+                  // - an array directly
+                  // - an object that already includes aggregated averages (avgWordScore / avg_word_score / avg_sentence_score)
+                  let avgWordScore = null;
+                  let avgSentenceScore = null;
+
+                  if (pronounced) {
+                     // prefer already-aggregated values if present
+                     avgWordScore = pronounced.avgWordScore ?? pronounced.avg_word_score ?? pronounced.avg_word ?? null;
+                     avgSentenceScore = pronounced.avgSentenceScore ?? pronounced.avg_sentence_score ?? pronounced.avg_sentence ?? null;
+
+                     // if aggregated values are strings or numbers, normalize to integer percent
+                     if (avgWordScore != null) {
+                        const n = Number(avgWordScore);
+                        avgWordScore = Number.isFinite(n) ? Math.round(n) : null;
+                     }
+                     if (avgSentenceScore != null) {
+                        const n = Number(avgSentenceScore);
+                        avgSentenceScore = Number.isFinite(n) ? Math.round(n) : null;
+                     }
+
+                     // if aggregated not provided, try to extract raw entries array
+                     if (avgWordScore == null && avgSentenceScore == null) {
+                        let entries = [];
+                        if (Array.isArray(pronounced)) entries = pronounced;
+                        else if (Array.isArray(pronounced.entries)) entries = pronounced.entries;
+                        else if (Array.isArray(pronounced.rows)) entries = pronounced.rows;
+                        else if (Array.isArray(pronounced.data)) entries = pronounced.data;
+
+                        // Group scores by vocabularyId and by lineId. For each distinct id compute the
+                        // average score across attempts, then average those per-item averages.
+                        const vocabMap = new Map(); // id -> { sum, count }
+                        const lineMap = new Map();
+
+                        for (const e of entries) {
+                           if (!e) continue;
+                           const sc = Number(e.totalScore ?? e.total_score ?? e.score ?? e.total ?? 0);
+                           const vid = e.vocabularyId ?? e.vocab_id ?? null;
+                           const lid = e.lineId ?? e.line_id ?? null;
+                           if (vid != null) {
+                              const key = String(vid);
+                              const cur = vocabMap.get(key) || { sum: 0, count: 0 };
+                              cur.sum += sc;
+                              cur.count += 1;
+                              vocabMap.set(key, cur);
+                           }
+                           if (lid != null) {
+                              const key = String(lid);
+                              const cur = lineMap.get(key) || { sum: 0, count: 0 };
+                              cur.sum += sc;
+                              cur.count += 1;
+                              lineMap.set(key, cur);
+                           }
+                        }
+
+                        // compute per-item averages then mean across items
+                        if (vocabMap.size > 0) {
+                           let acc = 0, cnt = 0;
+                           for (const { sum, count } of vocabMap.values()) {
+                              if (count > 0) {
+                                 acc += sum / count;
+                                 cnt += 1;
+                              }
+                           }
+                           if (cnt > 0) avgWordScore = Math.round(acc / cnt);
+                        }
+
+                        if (lineMap.size > 0) {
+                           let acc = 0, cnt = 0;
+                           for (const { sum, count } of lineMap.values()) {
+                              if (count > 0) {
+                                 acc += sum / count;
+                                 cnt += 1;
+                              }
+                           }
+                           if (cnt > 0) avgSentenceScore = Math.round(acc / cnt);
+                        }
+                     }
+                  }
+
+                  // New backend response includes counts: userDistinctLineCount, userDistinctVocabCount, totalLines, totalVocab
+                  let completedFull = resp?.completed ?? r.completedFull ?? false;
+                  if (resp) {
+                     const userLines = Number(resp.userDistinctLineCount ?? resp.user_distinct_line_count ?? resp.scoredCount ?? 0);
+                     const userVocabs = Number(resp.userDistinctVocabCount ?? resp.user_distinct_vocab_count ?? 0);
+                     const totalLinesResp = Number(resp.totalLines ?? resp.total_lines ?? resp.totalLines ?? 0);
+                     const totalVocabResp = Number(resp.totalVocab ?? resp.total_vocab ?? 0);
+                     const linesComplete = (totalLinesResp === 0) || (userLines >= totalLinesResp);
+                     const vocabComplete = (totalVocabResp === 0) || (userVocabs >= totalVocabResp);
+                     completedFull = linesComplete && vocabComplete;
+                  }
+
+                  return { ...r, completedFull, inProgress: resp?.inProgress ?? r.inProgress ?? false, avgWordScore, avgSentenceScore };
                } catch (e) {
                   return r;
                }
@@ -171,19 +293,14 @@ const ProfilePage = ({ user }) => {
          const lessonsCompleted = Array.isArray(enriched) ? enriched.filter((r) => r.completedFull).length : 0;
          const hskkCount = Array.isArray(testsRows) ? testsRows.reduce((acc, r) => acc + (Number(r.attempts) || (Array.isArray(r.entries) ? r.entries.length : 0)), 0) : 0;
 
-         // Compute distinct vocabulary across lessons
+         // Compute distinct vocabulary across all user attempts (SELECT DISTINCT vocabulary_id FROM ise_score)
          let wordsLearned = 0;
          try {
-            const lessonIds = (Array.isArray(enriched) ? enriched : []).map((r) => r.lessonId).filter(Boolean);
-            const pronouncedResults = await Promise.all(lessonIds.map((id) => iseStatsAPI.getPronouncedForLesson(id).catch(() => null)));
-            const vocabSet = new Set();
-            for (const pr of pronouncedResults) {
-               const vids = pr?.vocabularyIds || [];
-               if (Array.isArray(vids)) vids.forEach((v) => vocabSet.add(String(v)));
-            }
-            wordsLearned = vocabSet.size;
+            const distinct = await iseStatsAPI.getDistinctVocabForUser().catch(() => null);
+            const vids = distinct?.vocabularyIds || distinct?.vocabularyIds || [];
+            wordsLearned = Array.isArray(vids) ? vids.length : Number(distinct?.count || 0);
          } catch (e) {
-            console.debug('failed to compute distinct vocabulary across lessons', e);
+            console.debug('failed to fetch distinct vocab for user', e);
             wordsLearned = 0;
          }
 
@@ -202,7 +319,7 @@ const ProfilePage = ({ user }) => {
             email: profile.email || "",
             fullName: profile.fullName || "",
             avatar: profile.avatar || "",
-            level: profile.level || "Beginner",
+            level: profile.level || "Sơ cấp",
             studyGoal: profile.studyGoal || "30 minutes/day",
             joinDate: profile.joinDate || getVietnamDateIso(),
          });
@@ -371,24 +488,26 @@ const ProfilePage = ({ user }) => {
                                  <thead>
                                     <tr>
                                        <th>Bài</th>
-                                       <th>Điểm trung bình</th>
+                                       <th>Điểm trung bình từ</th>
+                                       <th>Điểm trung bình câu</th>
                                        <th>Hoàn thành</th>
                                     </tr>
                                  </thead>
                                  <tbody>
                                     {statsLoading ? (
                                        <tr>
-                                          <td colSpan={3} className="text-sm text-gray-500">Đang tải...</td>
+                                          <td colSpan={4} className="text-sm text-gray-500">Đang tải...</td>
                                        </tr>
                                     ) : lessonRows.length === 0 ? (
                                        <tr>
-                                          <td colSpan={3} className="text-sm text-gray-500">Không có dữ liệu</td>
+                                          <td colSpan={4} className="text-sm text-gray-500">Không có dữ liệu</td>
                                        </tr>
                                     ) : (
                                        lessonRows.map((r) => (
                                           <tr key={r.lessonId}>
-                                             <td>{r.lessonId}</td>
-                                             <td>{r.avgScore}</td>
+                                             <td className="font-medium">{r.lessonId}</td>
+                                             <td>{(r.avgWordScore != null ? `${r.avgWordScore}%` : (r.avgScore != null ? `${Math.round(r.avgScore)}%` : '—'))}</td>
+                                             <td>{(r.avgSentenceScore != null ? `${r.avgSentenceScore}%` : (r.avgScore != null ? `${Math.round(r.avgScore)}%` : '—'))}</td>
                                              <td>{r.completedFull ? "✔" : "✘"}</td>
                                           </tr>
                                        ))

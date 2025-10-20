@@ -14,9 +14,15 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
         const data = await userLessonAPI.isCompleted(lesson.id);
         console.log('Lesson', lesson.id, 'completion status:', data);
         if (!mounted) return;
-        setCompleted(Boolean(data?.completed));
-        // consider inProgress true when some scoredCount exists but not completed
-        setInProgress(!data?.completed && Number(data?.scoredCount) > 0);
+        // New API returns userDistinctLineCount/userDistinctVocabCount and totalLines/totalVocab
+        const userLines = Number(data?.userDistinctLineCount ?? data?.user_distinct_line_count ?? data?.scoredCount ?? 0);
+        const userVocabs = Number(data?.userDistinctVocabCount ?? data?.user_distinct_vocab_count ?? 0);
+        const totalLines = Number(data?.totalLines ?? data?.total_lines ?? 0);
+        const totalVocab = Number(data?.totalVocab ?? data?.total_vocab ?? 0);
+        const linesComplete = (totalLines === 0) || (userLines >= totalLines);
+        const vocabComplete = (totalVocab === 0) || (userVocabs >= totalVocab);
+        setCompleted(linesComplete && vocabComplete);
+        setInProgress(!(linesComplete && vocabComplete) && (userLines > 0 || userVocabs > 0));
       } catch (e) {
         console.debug('Failed to fetch lesson completion', e);
       }

@@ -23,14 +23,19 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
 
     // Immediately add this vocabulary id to local highlighted list so UI updates instantly
     try {
-      const internalIdPart = (keyToUse || '').toString().split('-')[1];
-      if (internalIdPart) {
-        const idStr = String(internalIdPart);
-        setLocalHighlightedVocabularyIds(prev => {
-          if (!prev || !Array.isArray(prev)) return [idStr];
-          if (prev.map(String).includes(idStr)) return prev;
-          return [...prev, idStr];
-        });
+      // Do not add example recordings to the highlighted list. Example keys are prefixed with 'example-'.
+      if (String(keyToUse).startsWith('example-')) {
+        // skip highlighting for example pronunciations
+      } else {
+        const internalIdPart = (keyToUse || '').toString().split('-')[1];
+        if (internalIdPart) {
+          const idStr = String(internalIdPart);
+          setLocalHighlightedVocabularyIds(prev => {
+            if (!prev || !Array.isArray(prev)) return [idStr];
+            if (prev.map(String).includes(idStr)) return prev;
+            return [...prev, idStr];
+          });
+        }
       }
     } catch (e) {
       console.warn('Failed to append to localHighlightedVocabularyIds', e);
@@ -75,6 +80,12 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
     (highlightedVocabularyIds || []).forEach(i => merged.add(String(i)));
     (localHighlightedVocabularyIds || []).forEach(i => merged.add(String(i)));
     const isHighlighted = merged.has(String(vocabulary.externalId)) || merged.has(String(vocabulary.id));
+    // Extract example fields early so they can be used for both the example block
+    // and when showing the pronunciation result for example recordings.
+    const exampleText = vocabulary.exampleText ?? vocabulary.example?.zh ?? null;
+    const examplePinyin = vocabulary.examplePinyin ?? vocabulary.example?.pinyin ?? null;
+    const exampleVn = vocabulary.exampleVn ?? vocabulary.example?.vn ?? null;
+    const exampleAudio = vocabulary.exampleAudioUrl ?? vocabulary.example?.audioUrl ?? null;
     return (
       <div key={vocabulary.id} className={`card shadow-lg hover:shadow-xl transition-shadow ${isHighlighted ? 'border border-success bg-success/10' : 'bg-base-100'}`}>
         <div className="card-body p-3">
@@ -110,10 +121,6 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
 
           {/* Example sentence for this vocabulary (normalized fields or legacy example) */}
           {(() => {
-            const exampleText = vocabulary.exampleText ?? vocabulary.example?.zh ?? null;
-            const examplePinyin = vocabulary.examplePinyin ?? vocabulary.example?.pinyin ?? null;
-            const exampleVn = vocabulary.exampleVn ?? vocabulary.example?.vn ?? null;
-            const exampleAudio = vocabulary.exampleAudioUrl ?? vocabulary.example?.audioUrl ?? null;
             const hasExample = exampleText || examplePinyin || exampleVn || exampleAudio;
             if (!hasExample) return null;
 
@@ -132,8 +139,9 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
                   <WordRecordingButton
                     word={exampleText || vocabulary.word}
                     pinyin={examplePinyin || vocabulary.pinyin}
-                    vocabularyId={vocabulary.externalId}
-                    lessonId={lessonId}
+                    /* Do not pass vocabularyId or lessonId for example pronunciations.
+                       Example assessments are transient: they should not be persisted
+                       to the DB nor mark the word as practiced/highlighted. */
                     onScore={(result, audioBlob, returnedKey) => handlePronunciationScore(result, audioBlob, returnedKey, `example-${vocabulary.id}`)}
                     onStartRecording={() => handleStartRecording(`example-${vocabulary.id}`)}
                     size="xs"
@@ -145,7 +153,12 @@ const VocabularySection = ({ vocabularies, highlightedVocabularyIds = [], refres
 
           {/* Hiển thị kết quả đánh giá phát âm cho word này */}
           {showPronunciationResult && (String(activeItemKey) === `word-${vocabulary.id}` || String(activeItemKey) === `example-${vocabulary.id}`) && (
-            <SentencePronunciationResult result={pronunciationResult} recordedAudio={recordedAudio} onClose={closePronunciationResult} sentenceText={vocabulary.word} />
+            <SentencePronunciationResult
+              result={pronunciationResult}
+              recordedAudio={recordedAudio}
+              onClose={closePronunciationResult}
+              sentenceText={String(activeItemKey) === `example-${vocabulary.id}` ? (exampleText || vocabulary.word) : vocabulary.word}
+            />
           )}
         </div>
       </div>

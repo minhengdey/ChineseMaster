@@ -11,6 +11,8 @@ import CurriculumPage from "./pages/CurriculumPage";
 import LessonsPage from "./pages/LessonsPage";
 import LessonDetailPage from "./pages/LessonDetailPage";
 import VocabularyPracticePage from "./pages/VocabularyPracticePage";
+import FlashcardsIndex, { FlashcardsCurriculum } from "./pages/FlashcardsPage";
+import FlashCardsLessonPage from "./pages/FlashCardsLessonPage";
 import SpeakingPracticePage from "./pages/SpeakingPracticePage";
 import PronunciationPage from "./pages/PronunciationPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -61,6 +63,12 @@ function App() {
                      path="curriculum/:curriculumId/lesson/:lessonId/practice"
                      element={<VocabularyPracticePage />}
                   />
+                  <Route
+                     path="/flashcard/:curriculumId/lesson/:lessonId"
+                     element={<FlashCardsLessonPage />}
+                  />
+                  <Route path="flashcards" element={<FlashcardsIndex />} />
+                  <Route path="flashcards/:curriculumId" element={<FlashcardsCurriculum />} />
                   <Route
                      path="curriculum/:curriculumId/lesson/:lessonId/speaking"
                      element={<SpeakingPracticePage />}
