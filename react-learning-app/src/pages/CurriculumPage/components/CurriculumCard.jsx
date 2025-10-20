@@ -42,9 +42,6 @@ const CurriculumCard = ({ curriculum }) => {
       <div className="card-body">
         <div className="flex justify-between items-start mb-4">
           <h2 className="card-title text-xl">{curriculum.name}</h2>
-          <div className={`badge ${getLevelColor(curriculum.level)}`}>
-            {curriculum.level || 'Unknown'}
-          </div>
         </div>
 
         <p className="text-base-content/70 mb-4">

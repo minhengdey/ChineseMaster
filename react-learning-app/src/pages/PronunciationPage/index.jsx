@@ -149,17 +149,19 @@ const PronunciationPage = () => {
                       <WordRecordingButton
                         word={item.word}
                         pinyin={item.pinyin}
+                        // prefer externalId when available so backend receives externalId instead of internal id
+                        externalId={item.externalId}
                         onStartRecording={() => {
                           // clear previous result for this item
                           setShowPronunciationResult(false);
                           setPronunciationResult(null);
                           setRecordedAudio(null);
-                          setActiveItemKey(`word-${item.id}`);
+                          setActiveItemKey(`word-${item.externalId || item.id}`);
                         }}
                         onScore={(result, audioBlob) => {
                           setPronunciationResult(result);
                           setRecordedAudio(audioBlob);
-                          setActiveItemKey(`word-${item.id}`);
+                          setActiveItemKey(`word-${item.externalId || item.id}`);
                           setShowPronunciationResult(true);
                         }}
                         size="xs"
@@ -212,7 +214,7 @@ const PronunciationPage = () => {
                 result={pronunciationResult}
                 recordedAudio={recordedAudio}
                 sentenceText={(activeItemKey && activeItemKey.startsWith('word-'))
-                  ? (paginatedVocab.find(v => `word-${v.id}` === activeItemKey) || {}).word
+                  ? (paginatedVocab.find(v => `word-${(v.externalId || v.id)}` === activeItemKey) || {}).word
                   : null}
                 onClose={() => {
                   setShowPronunciationResult(false);

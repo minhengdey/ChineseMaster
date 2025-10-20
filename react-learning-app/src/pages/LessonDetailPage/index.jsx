@@ -226,13 +226,13 @@ const LessonDetailPage = () => {
             to={`/curriculum/${curriculumId}/lesson/${lessonId}/practice`}
             className="btn btn-primary btn-lg text-lg"
           >
-            Flashcards
+            Kiểm tra từ vựng
           </Link>
           <Link
             to={`/curriculum/${curriculumId}/lesson/${lessonId}/speaking`}
             className="btn btn-secondary btn-lg text-lg"
           >
-            Kiểm tra phát âm
+            Kiểm tra câu bài khoá
           </Link>
         </div>
       </div>
