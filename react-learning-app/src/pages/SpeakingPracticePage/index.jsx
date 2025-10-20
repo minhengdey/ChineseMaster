@@ -28,14 +28,31 @@ const SpeakingPracticePage = () => {
     const mediaRecorderRef = useRef(null);
     const chunksRef = useRef([]);
     const startTimeRef = useRef(null);
+    // whether to display sentences/vocab in random order (persisted in localStorage)
+    const [shuffleMode, setShuffleMode] = useState(() => {
+        try {
+            const raw = localStorage.getItem('speaking.shuffleMode');
+            return raw ? JSON.parse(raw) : false;
+        } catch (e) {
+            return false;
+        }
+    });
+    // preserve original queue (in-order) so we can toggle shuffle on/off
+    const originalQueueRef = useRef(null);
+    // when entering a lesson (non-vocab, non-daily) show a prompt asking order vs random
+    const [showOrderChoice, setShowOrderChoice] = useState(false);
 
     useEffect(() => {
-        // For lesson practice, preload and shuffle the lesson lines; for daily mode, pick random single lines
+        // For lesson practice, show an order/random prompt before preloading lines.
         if (lessonId && !isDailyMode) {
             if (isVocabMode) {
+                // vocab practice doesn't require the prompt
                 preloadLessonVocabularies(lessonId);
             } else {
-                preloadLessonLines(lessonId);
+                // show prompt to ask whether to practice in-order or random
+                setShowOrderChoice(true);
+                // avoid showing global loading spinner while waiting for the user's choice
+                setLoading(false);
             }
         } else {
             fetchRandomSentence();
@@ -68,6 +85,31 @@ const SpeakingPracticePage = () => {
         };
     }, [lessonId, isDailyMode]);
 
+    // Handler called when user chooses order/random from the pre-entry prompt
+    const handleOrderChoice = async (choiceIsRandom) => {
+        // apply choice to shuffleMode (do not persist unless user toggles elsewhere)
+        setShuffleMode(choiceIsRandom);
+        setShowOrderChoice(false);
+        // now preload based on choice
+        try {
+            if (choiceIsRandom) {
+                // ensure localStorage also reflects the choice for consistency during load
+                try { localStorage.setItem('speaking.shuffleMode', JSON.stringify(true)); } catch (e) { }
+            } else {
+                try { localStorage.setItem('speaking.shuffleMode', JSON.stringify(false)); } catch (e) { }
+            }
+        } catch (e) { }
+
+        // start preload for lesson lines
+        await preloadLessonLines(lessonId);
+    };
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('speaking.shuffleMode', JSON.stringify(shuffleMode));
+        } catch (e) { }
+    }, [shuffleMode]);
+
     // small array shuffle helper (immutable)
     const shuffleArray = (arr) => {
         const a = [...arr];
@@ -76,6 +118,23 @@ const SpeakingPracticePage = () => {
             [a[i], a[j]] = [a[j], a[i]];
         }
         return a;
+    };
+
+    // helper to find index in a queue for a given current item
+    const findIndexForCurrent = (newQueue, currentItem) => {
+        if (!currentItem || !Array.isArray(newQueue)) return 0;
+        const idToMatch = currentItem.externalId ?? currentItem.id ?? null;
+        if (idToMatch != null) {
+            const found = newQueue.findIndex(it => (it && ((it.externalId ?? it.id) === idToMatch)));
+            if (found >= 0) return found;
+        }
+        // fallback to matching by text
+        const txt = currentItem.text ?? currentItem.line ?? null;
+        if (txt != null) {
+            const foundTxt = newQueue.findIndex(it => it && it.text === txt);
+            if (foundTxt >= 0) return foundTxt;
+        }
+        return 0;
     };
 
     const preloadLessonLines = async (lessonIdParam) => {
@@ -105,10 +164,14 @@ const SpeakingPracticePage = () => {
 
                 if (items.length === 0) throw new Error('no lines');
 
-                const shuffled = shuffleArray(items);
-                setQueue(shuffled);
+                // preserve original order
+                originalQueueRef.current = items;
+                // allow toggles during load by checking localStorage first
+                const effectiveShuffle = (() => { try { const raw = localStorage.getItem('speaking.shuffleMode'); return raw !== null ? JSON.parse(raw) : shuffleMode; } catch (e) { return shuffleMode; } })();
+                const toSet = effectiveShuffle ? shuffleArray(items) : items;
+                setQueue(toSet);
                 setQueueIndex(0);
-                setSentence(shuffled[0]?.text || '');
+                setSentence(toSet[0]?.text || '');
                 setCurrentScored(false);
                 setAudioBlob(null);
                 setResult(null);
@@ -130,10 +193,12 @@ const SpeakingPracticePage = () => {
 
                 // Normalize to objects { text }
                 const normalized = lines.map(item => ({ text: item?.line || item?.text || item?.content || item?.conversationLine || (typeof item === 'string' ? item : null) })).filter(i => i.text);
-                const shuffled = shuffleArray(normalized);
-                setQueue(shuffled);
+                originalQueueRef.current = normalized;
+                const effectiveShuffle = (() => { try { const raw = localStorage.getItem('speaking.shuffleMode'); return raw !== null ? JSON.parse(raw) : shuffleMode; } catch (e) { return shuffleMode; } })();
+                const toSet = effectiveShuffle ? shuffleArray(normalized) : normalized;
+                setQueue(toSet);
                 setQueueIndex(0);
-                setSentence(shuffled[0]?.text || '');
+                setSentence(toSet[0]?.text || '');
                 setCurrentScored(false);
                 setAudioBlob(null);
                 setResult(null);
@@ -182,10 +247,12 @@ const SpeakingPracticePage = () => {
                 return;
             }
 
-            const shuffled = shuffleArray(items);
-            setQueue(shuffled);
+            originalQueueRef.current = items;
+            const effectiveShuffle = (() => { try { const raw = localStorage.getItem('speaking.shuffleMode'); return raw !== null ? JSON.parse(raw) : shuffleMode; } catch (e) { return shuffleMode; } })();
+            const toSet = effectiveShuffle ? shuffleArray(items) : items;
+            setQueue(toSet);
             setQueueIndex(0);
-            setSentence(shuffled[0]?.text || '');
+            setSentence(toSet[0]?.text || '');
             setCurrentScored(false);
             setAudioBlob(null);
             setResult(null);
@@ -295,7 +362,8 @@ const SpeakingPracticePage = () => {
     const shuffleQueue = () => {
         if (!currentScored) return; // require scoring before reshuffle
         setQueue(prev => {
-            const shuffled = shuffleArray(prev || []);
+            const base = originalQueueRef.current || prev || [];
+            const shuffled = shuffleMode ? shuffleArray(base) : base.slice();
             setQueueIndex(0);
             setSentence((shuffled[0] && shuffled[0].text) || '');
             setCurrentScored(false);
@@ -519,6 +587,47 @@ const SpeakingPracticePage = () => {
             <div className="mb-6 flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Luyện nói</h1>
                 <div className="flex gap-2 items-center">
+                    {!isVocabMode && !(lessonId && !isDailyMode) && (
+                        <button
+                            className={`btn ${shuffleMode ? 'btn-primary' : 'btn-ghost'}`}
+                            onClick={() => {
+                                const next = !shuffleMode;
+                                try { localStorage.setItem('speaking.shuffleMode', JSON.stringify(next)); } catch (e) { }
+                                setShuffleMode(next);
+
+                                // compute new queue based on originalQueueRef (in-order) and next
+                                const base = (originalQueueRef.current && originalQueueRef.current.length > 0) ? originalQueueRef.current : (Array.isArray(queue) ? queue.slice() : []);
+                                const newQueue = next ? shuffleArray(base) : base.slice();
+
+                                // try preserve current item
+                                const currentItem = (Array.isArray(queue) && queue[queueIndex]) ? queue[queueIndex] : null;
+                                // choose a new index immediately so the displayed sentence changes
+                                let newIndex = findIndexForCurrent(newQueue, currentItem);
+                                if (newQueue && newQueue.length > 0) {
+                                    if (newQueue.length === 1) {
+                                        newIndex = 0;
+                                    } else {
+                                        // pick random index different from current (if possible)
+                                        let rnd = newIndex;
+                                        let attempts = 0;
+                                        while (rnd === newIndex && attempts < 10) {
+                                            rnd = Math.floor(Math.random() * newQueue.length);
+                                            attempts++;
+                                        }
+                                        newIndex = rnd;
+                                    }
+                                }
+
+                                setQueue(newQueue);
+                                setQueueIndex(newIndex);
+                                if (newQueue && newQueue.length > 0) setSentence((newQueue[newIndex] && newQueue[newIndex].text) || '');
+                                // require a new recording for the new sentence
+                                setCurrentScored(false);
+                                setAudioBlob(null);
+                                setResult(null);
+                            }}
+                        >{shuffleMode ? 'Ngẫu nhiên: Bật' : 'Ngẫu nhiên'}</button>
+                    )}
                     {isDailyMode ? (
                         <button
                             className={`btn btn-ghost ${recording ? 'opacity-50 pointer-events-none' : ''}`}
@@ -551,6 +660,21 @@ const SpeakingPracticePage = () => {
                     )}
                 </div>
             </div>
+
+            {/* Pre-entry choice modal: only for lesson lines (non-vocab, non-daily) */}
+            {showOrderChoice && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-base-100 rounded-lg p-6 max-w-md w-full shadow-lg">
+                        <h2 className="text-lg font-bold mb-2">Chọn chế độ luyện</h2>
+                        <p className="mb-4">Bạn muốn luyện theo thứ tự của bài hay ngẫu nhiên?</p>
+                        <div className="flex gap-3 justify-end">
+                            <button className="btn btn-ghost" onClick={() => navigate(-1)}>Hủy</button>
+                            <button className="btn" onClick={() => handleOrderChoice(false)}>Theo thứ tự</button>
+                            <button className="btn btn-primary" onClick={() => handleOrderChoice(true)}>Ngẫu nhiên</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {loading ? (
                 <div className="min-h-48 flex items-center justify-center"><span className="loading loading-spinner loading-lg"></span></div>
