@@ -311,7 +311,7 @@ const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = ""
             )
             return (
               <div className="mb-3 flex items-center justify-between">
-                <div className="text-sm text-base-content/70">Điểm tổng của phần này</div>
+                <div className="text-sm text-base-content/70">Điểm tổng của chữ</div>
                 <div className="text-right">
                   <div className={`text-sm font-medium ${getScoreColor(wordOverall)}`}>{wordOverall}%</div>
                   <div className="mb-1"><Stars percent={wordOverall} /></div>

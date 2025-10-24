@@ -22,7 +22,7 @@ const SpeakingPracticePage = () => {
   const [audioBlob, setAudioBlob] = useState(null)
   const [result, setResult] = useState(null)
   const [currentScored, setCurrentScored] = useState(false)
-  const [dailyRows, setDailyRows] = useState([])
+  const [weeklyRows, setWeeklyRows] = useState([])
   const [lessonRows, setLessonRows] = useState([])
   const [testRows, setTestRows] = useState([])
   const [selectedWord, setSelectedWord] = useState(null)
@@ -308,11 +308,11 @@ const SpeakingPracticePage = () => {
 
   const fetchIseStats = async () => {
     try {
-      const daily = await iseStatsAPI.getDaily()
-      setDailyRows(Array.isArray(daily?.rows) ? daily.rows : [])
+      const weekly = await iseStatsAPI.getWeekly()
+      setWeeklyRows(Array.isArray(weekly?.rows) ? weekly.rows : [])
     } catch (e) {
       // ignore stats errors silently
-      console.debug("daily stats error", e)
+      console.debug("weekly stats error", e)
     }
     try {
       const lessons = await iseStatsAPI.getLessons()
@@ -633,8 +633,8 @@ const SpeakingPracticePage = () => {
             {!isVocabMode && !isDailyMode && !(lessonId && !isDailyMode) && (
               <button
                 className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${shuffleMode
-                    ? "bg-blue-600 text-white shadow-md hover:bg-blue-700"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-blue-600 text-white shadow-md hover:bg-blue-700"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 onClick={() => {
                   const next = !shuffleMode
@@ -805,8 +805,8 @@ const SpeakingPracticePage = () => {
                 <div className="flex justify-center">
                   <button
                     className={`px-12 py-3 rounded-lg font-bold text-white transition-all duration-300 ${!audioBlob || loading || recording
-                        ? "bg-gray-400 cursor-not-allowed opacity-60"
-                        : "bg-gradient-to-r from-green-600 to-green-700 hover:shadow-lg hover:scale-105"
+                      ? "bg-gray-400 cursor-not-allowed opacity-60"
+                      : "bg-gradient-to-r from-green-600 to-green-700 hover:shadow-lg hover:scale-105"
                       }`}
                     onClick={submitScore}
                     disabled={!audioBlob || loading || recording}
