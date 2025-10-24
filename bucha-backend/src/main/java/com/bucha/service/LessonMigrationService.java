@@ -427,6 +427,7 @@ public class LessonMigrationService {
 
    public Curriculum getOrCreateCurriculumFromMetadata(CurriculumMetadataDto metadata) {
       try {
+
          if (metadata == null)
             return null;
 
@@ -435,6 +436,7 @@ public class LessonMigrationService {
             log.warn("Curriculum metadata missing required fields 'order' or 'name'. Skipping.");
             return null;
          }
+         log.info("Upserting curriculum from metadata: {} {}", metadata.getName(), metadata.getId());
          Curriculum curriculum = null;
          if (metadata.getId() != null) {
             curriculum = curriculumRepository.findByExternalId(metadata.getId()).orElse(null);
