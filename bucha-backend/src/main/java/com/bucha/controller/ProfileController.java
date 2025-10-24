@@ -25,18 +25,20 @@ public class ProfileController {
     }
 
     @PostMapping
-    public ResponseEntity<UserProfileDto> updateProfile(@AuthenticationPrincipal JwtUserPrincipal principal,
+    public ResponseEntity<?> updateProfile(@AuthenticationPrincipal JwtUserPrincipal principal,
             @RequestBody UserProfileDto patch) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         System.out.println("auth=" + auth); // hoặc logger
-        var u = userService.findById(principal.id()).orElseThrow();
-        if (patch.name != null)
-            u.setName(patch.name);
-        u.setDarkMode(patch.darkMode);
-        u.setXp(patch.xp);
-        u.setStreak(patch.streak);
-        userService.save(u);
-        return ResponseEntity.ok(toDto(u));
+        try {
+            var u = userService.updateProfile(principal.id(), patch);
+            return ResponseEntity.ok(toDto(u));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", "missing_current_password", "message", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403)
+                    .body(java.util.Map.of("error", "incorrect_current_password", "message", e.getMessage()));
+        }
     }
 
     private UserProfileDto toDto(com.bucha.entity.UserEntity u) {

@@ -19,6 +19,9 @@ public interface IseDailyEntryRepository extends JpaRepository<IseDailyEntry, Lo
     List<com.bucha.entity.IseDailyEntry> findByLessonIdAndSessionDateBetween(Long lessonId, LocalDateTime start,
             LocalDateTime end);
 
+    // fetch all entries for a lesson (no date filtering)
+    List<com.bucha.entity.IseDailyEntry> findByLessonId(Long lessonId);
+
     @Query("SELECT DISTINCT e.lineId FROM IseDailyEntry e WHERE e.user.id = :userId AND e.lessonId = :lessonId AND e.lineId IS NOT NULL")
     List<Long> findDistinctLineIdsByUserAndLesson(@Param("userId") Long userId, @Param("lessonId") Long lessonId);
 

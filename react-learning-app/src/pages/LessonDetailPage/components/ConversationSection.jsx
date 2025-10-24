@@ -1,108 +1,126 @@
-import React, { useState, useEffect } from 'react';
-import AudioPlayer from './AudioPlayer';
-import SentenceRecordingButton from './SentenceRecordingButton';
-import SentencePronunciationResult from './SentencePronunciationResult';
-import { iseStatsAPI } from '../../../services/api';
+"use client"
 
-const ConversationSection = ({
-  conversations = [],
-  lessonId,
-  highlightedLineIds = [],
-  refreshPronounced,
-}) => {
+import { useState, useEffect } from "react"
+import AudioPlayer from "./AudioPlayer"
+import SentenceRecordingButton from "./SentenceRecordingButton"
+import SentencePronunciationResult from "./SentencePronunciationResult"
+import { iseStatsAPI } from "../../../services/api"
 
-  const [expandedSection, setExpandedSection] = useState(null);
-  const [pronunciationResult, setPronunciationResult] = useState(null);
-  const [showPronunciationResult, setShowPronunciationResult] = useState(false);
-  const [recordedAudio, setRecordedAudio] = useState(null);
-  const [activeLineId, setActiveLineId] = useState(null);
-  const [localHighlightedLineIds, setLocalHighlightedLineIds] = useState([]);
-  const [showPinyin, setShowPinyin] = useState(true);
+const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds = [], refreshPronounced }) => {
+  const [expandedSection, setExpandedSection] = useState(null)
+  const [pronunciationResult, setPronunciationResult] = useState(null)
+  const [showPronunciationResult, setShowPronunciationResult] = useState(false)
+  const [recordedAudio, setRecordedAudio] = useState(null)
+  const [activeLineId, setActiveLineId] = useState(null)
+  const [localHighlightedLineIds, setLocalHighlightedLineIds] = useState([])
+  const [showPinyin, setShowPinyin] = useState(true)
 
   const toggleSection = (index) => {
-    setExpandedSection(expandedSection === index ? null : index);
-  };
+    setExpandedSection(expandedSection === index ? null : index)
+  }
 
   // Debug: print highlighted IDs received from backend so we can verify matching
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== "production") {
     try {
-      console.debug('[ConversationSection] highlightedLineIds (from API):', highlightedLineIds, 'local:', localHighlightedLineIds);
+      console.debug(
+        "[ConversationSection] highlightedLineIds (from API):",
+        highlightedLineIds,
+        "local:",
+        localHighlightedLineIds,
+      )
     } catch (e) {
       // ignore
     }
   }
 
   useEffect(() => {
-    let mounted = true;
+    let mounted = true
     const fetchPronounced = async () => {
-      if (!lessonId) return;
+      if (!lessonId) return
       try {
-        const stats = await iseStatsAPI.getPronouncedForLesson(lessonId);
+        const stats = await iseStatsAPI.getPronouncedForLesson(lessonId)
         // stats may contain lineIds (array) or entries; prefer aggregated lineIds
-        const ids = (stats && Array.isArray(stats.lineIds) && stats.lineIds.length)
-          ? stats.lineIds.map(String)
-          : (Array.isArray(stats.entries) ? stats.entries.map(e => String(e.lineId)).filter(Boolean) : []);
-        if (mounted) setLocalHighlightedLineIds(ids);
+        const ids =
+          stats && Array.isArray(stats.lineIds) && stats.lineIds.length
+            ? stats.lineIds.map(String)
+            : Array.isArray(stats.entries)
+              ? stats.entries.map((e) => String(e.lineId)).filter(Boolean)
+              : []
+        if (mounted) setLocalHighlightedLineIds(ids)
       } catch (e) {
-        console.warn('Failed to fetch pronounced stats for lesson', lessonId, e);
+        console.warn("Failed to fetch pronounced stats for lesson", lessonId, e)
       }
-    };
+    }
 
-    fetchPronounced();
-    return () => { mounted = false; };
-  }, [lessonId]);
+    fetchPronounced()
+    return () => {
+      mounted = false
+    }
+  }, [lessonId])
 
   const handlePronunciationScore = async (result, audioBlob, returnedLineId, internalLineId, externalLineId) => {
     // returnedLineId may be externalId or internal id depending on recorder logic.
     // internalLineId is numeric internal id; externalLineId is the stable external id from content DTO.
-    console.log('handlePronunciationScore ids:', { returnedLineId, internalLineId, externalLineId });
-    setPronunciationResult(result);
-    setRecordedAudio(audioBlob);
+    console.log("handlePronunciationScore ids:", { returnedLineId, internalLineId, externalLineId })
+    setPronunciationResult(result)
+    setRecordedAudio(audioBlob)
     // Use externalLineId as active id for highlighting/result-panel so comparisons match line.externalId
-    const activeId = externalLineId != null ? String(externalLineId) : (returnedLineId != null ? String(returnedLineId) : (internalLineId != null ? String(internalLineId) : null));
-    setActiveLineId(activeId);
-    setShowPronunciationResult(true);
+    const activeId =
+      externalLineId != null
+        ? String(externalLineId)
+        : returnedLineId != null
+          ? String(returnedLineId)
+          : internalLineId != null
+            ? String(internalLineId)
+            : null
+    setActiveLineId(activeId)
+    setShowPronunciationResult(true)
 
     // Immediately add this line's external id to local highlighted list so UI updates instantly
     try {
-      const idStr = externalLineId != null ? String(externalLineId) : (returnedLineId != null ? String(returnedLineId) : (internalLineId != null ? String(internalLineId) : null));
+      const idStr =
+        externalLineId != null
+          ? String(externalLineId)
+          : returnedLineId != null
+            ? String(returnedLineId)
+            : internalLineId != null
+              ? String(internalLineId)
+              : null
       if (idStr) {
-        setLocalHighlightedLineIds(prev => {
-          if (!prev || !Array.isArray(prev)) return [idStr];
-          if (prev.map(String).includes(idStr)) return prev;
-          return [...prev, idStr];
-        });
+        setLocalHighlightedLineIds((prev) => {
+          if (!prev || !Array.isArray(prev)) return [idStr]
+          if (prev.map(String).includes(idStr)) return prev
+          return [...prev, idStr]
+        })
       }
     } catch (e) {
-      console.warn('Failed to append to localHighlightedLineIds', e);
+      console.warn("Failed to append to localHighlightedLineIds", e)
     }
 
     // Refresh pronounced stats so highlighting/progress updates live
     try {
-      if (typeof refreshPronounced === 'function') {
-        await refreshPronounced();
+      if (typeof refreshPronounced === "function") {
+        await refreshPronounced()
       }
     } catch (e) {
-      console.warn('Failed to refresh pronounced after score:', e);
+      console.warn("Failed to refresh pronounced after score:", e)
     }
-  };
+  }
 
   const handleStartRecording = (lineId) => {
     // Xóa kết quả cũ khi bắt đầu thu âm mới
-    setShowPronunciationResult(false);
-    setPronunciationResult(null);
-    setRecordedAudio(null);
-    setActiveLineId(lineId);
-  };
+    setShowPronunciationResult(false)
+    setPronunciationResult(null)
+    setRecordedAudio(null)
+    setActiveLineId(lineId)
+  }
 
   const closePronunciationResult = () => {
-    setShowPronunciationResult(false);
-    setPronunciationResult(null);
-    setRecordedAudio(null);
-    setActiveLineId(null);
-  };
-
-
+    setShowPronunciationResult(false)
+    setPronunciationResult(null)
+    setRecordedAudio(null)
+    setActiveLineId(null)
+  }
 
   if (!conversations || conversations.length === 0) {
     return (
@@ -111,58 +129,71 @@ const ConversationSection = ({
         <h3 className="text-xl font-semibold mb-2">Chưa có hội thoại nào</h3>
         <p className="text-base-content/70">Nội dung hội thoại sẽ được cập nhật sớm.</p>
       </div>
-    );
+    )
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-end mb-2">
-        <button className="btn btn-ghost btn-sm" onClick={() => setShowPinyin(s => !s)}>{showPinyin ? 'Ẩn pinyin' : 'Hiện pinyin'}</button>
+        <button
+          className="btn btn-ghost btn-sm hover:bg-gradient-to-r hover:from-purple-100 hover:to-blue-100"
+          onClick={() => setShowPinyin((s) => !s)}
+        >
+          {showPinyin ? "Ẩn pinyin" : "Hiện pinyin"}
+        </button>
       </div>
       {conversations.map((conversation, index) => (
-        <div key={conversation.id ?? index} className="card bg-base-100 shadow-lg">
+        <div
+          key={conversation.id ?? index}
+          className="card bg-gradient-to-br from-white to-purple-50 shadow-lg border border-purple-200"
+        >
           <div className="card-body">
             <div
-              className="flex justify-between items-center cursor-pointer"
+              className="flex justify-between items-center cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => toggleSection(index)}
             >
-              <h3 className="card-title text-2xl md:text-3xl font-extrabold">{`Bài khóa ${conversation.order}: ${conversation.section}`}</h3>
+              <h3 className="card-title text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">{`Bài khóa ${conversation.order}: ${conversation.section}`}</h3>
               <button className="btn btn-ghost btn-sm" type="button">
-                {expandedSection === index ? '▼' : '▶'}
+                {expandedSection === index ? "▼" : "▶"}
               </button>
             </div>
 
             {(conversation.vnTranslation || conversation.vn) && (
-              <p className="text-base-content/70 italic">
-                {conversation.vnTranslation || conversation.vn}
-              </p>
+              <p className="text-base-content/70 italic">{conversation.vnTranslation || conversation.vn}</p>
             )}
 
             {expandedSection === index && (
               <div className="mt-6 space-y-4">
                 {conversation.lines?.map((line) => {
-                  const effectiveHighlighted = (localHighlightedLineIds && localHighlightedLineIds.length)
-                    ? localHighlightedLineIds
-                    : highlightedLineIds || [];
+                  const effectiveHighlighted =
+                    localHighlightedLineIds && localHighlightedLineIds.length
+                      ? localHighlightedLineIds
+                      : highlightedLineIds || []
                   // Build a set of normalized ids (strings) and accept matches against either externalId or internal id
-                  const highlightedSet = new Set((effectiveHighlighted || []).map(String));
-                  const isHighlighted = highlightedSet.has(String(line.externalId)) || highlightedSet.has(String(line.id));
+                  const highlightedSet = new Set((effectiveHighlighted || []).map(String))
+                  const isHighlighted =
+                    highlightedSet.has(String(line.externalId)) || highlightedSet.has(String(line.id))
                   // Debug per-line
-                  if (process.env.NODE_ENV !== 'production') {
+                  if (process.env.NODE_ENV !== "production") {
                     try {
-                      console.debug(`[ConversationSection] line ${line.externalId} highlighted?`, isHighlighted);
-                    } catch (e) { }
+                      console.debug(`[ConversationSection] line ${line.externalId} highlighted?`, isHighlighted)
+                    } catch (e) {}
                   }
-                  console.log(line);
+                  console.log(line)
 
                   return (
                     <div
                       key={line.externalId ?? line.id}
-                      className={`p-4 rounded-lg ${isHighlighted ? 'bg-success/10 border border-success' : 'bg-base-200'
-                        }`}
+                      className={`p-4 rounded-lg transition-all ${
+                        isHighlighted
+                          ? "bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-500 shadow-md"
+                          : "bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200"
+                      }`}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <span className="font-semibold text-primary">{line.speaker}</span>
+                        <span className="font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                          {line.speaker}
+                        </span>
 
                         <div className="flex gap-2">
                           {(line.audioUrl || line.audioAsset) && (
@@ -185,11 +216,11 @@ const ConversationSection = ({
                       </div>
 
                       <div className="space-y-2 text-left">
-                        <div className="text-2xl md:text-3xl font-extrabold text-primary">{line.zh || line.zhText}</div>
-                        {showPinyin && <div className="text-lg text-base-content/80">{line.pinyin}</div>}
-                        <div className="text-base-content/70 italic">
-                          {line.vn || line.vnTranslation}
+                        <div className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                          {line.zh || line.zhText}
                         </div>
+                        {showPinyin && <div className="text-lg text-base-content/80">{line.pinyin}</div>}
+                        <div className="text-base-content/70 italic">{line.vn || line.vnTranslation}</div>
                       </div>
 
                       {/* Hiển thị kết quả đánh giá phát âm cho line này */}
@@ -200,18 +231,13 @@ const ConversationSection = ({
                             recordedAudio={recordedAudio}
                             onClose={closePronunciationResult}
                             sentenceText={
-                              line.zh ||
-                              line.zhText ||
-                              line.pinyin ||
-                              line.text ||
-                              line.conversationLine ||
-                              ''
+                              line.zh || line.zhText || line.pinyin || line.text || line.conversationLine || ""
                             }
                           />
                         </div>
                       )}
                     </div>
-                  );
+                  )
                 })}
               </div>
             )}
@@ -219,7 +245,7 @@ const ConversationSection = ({
         </div>
       ))}
     </div>
-  );
-};
+  )
+}
 
-export default ConversationSection;
+export default ConversationSection

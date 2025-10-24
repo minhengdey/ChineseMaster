@@ -680,9 +680,21 @@ export const migrationAPI = {
 
 // Helper function to handle API errors
 export const handleApiError = (error) => {
-   if (error.response?.data?.error) {
-      return error.response.data.error;
+   // Prefer structured server error messages when available
+   const respData = error.response?.data
+   const serverMessage = respData?.error ?? respData?.message ?? respData
+   // Handle common known backend messages and normalize for UI
+   try {
+      const msgStr = typeof serverMessage === "string" ? serverMessage : JSON.stringify(serverMessage)
+      if (/email already exists/i.test(msgStr)) {
+         return "Email đã tồn tại. Vui lòng dùng email khác hoặc đăng nhập.";
+      }
+      if (serverMessage) return serverMessage
+   } catch (e) {
+      // fallthrough
    }
+
+   // Fallback to the error.message (axios/network) or a generic message
    if (error.message) {
       return error.message;
    }
