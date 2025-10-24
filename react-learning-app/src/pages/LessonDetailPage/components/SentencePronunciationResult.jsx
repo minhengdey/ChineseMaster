@@ -25,9 +25,9 @@ const SentencePronunciationResult = ({
 
   const getScoreColor = (score) => {
     // Ranges: <=60 red, 61-79 yellow, >=80 green
-    if (score >= 80) return "text-success";
-    if (score >= 60) return "text-warning";
-    return "text-error";
+    if (score >= 80) return "text-green-600";
+    if (score >= 60) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getScoreMessage = (score) => {
@@ -102,7 +102,7 @@ const SentencePronunciationResult = ({
     }
 
     return (
-      <div className="mb-2">
+      <div className="mb-2 whitespace-nowrap overflow-x-auto">
         {chars.map((ch, i) => {
           const wordIndex = mapping[i];
           const details =
@@ -122,32 +122,19 @@ const SentencePronunciationResult = ({
               null,
             details: details || null,
           };
-          // Determine wrongness by character index coverage from wrong_words matches
           const isWrong = wrongIndices.has(i);
-          // Compute a numeric score for this word (if available)
           const scoreValue = (details && (details?.overall ?? details?.pronunciation ?? details?.score ?? details?.pronunciationScore)) != null
             ? Number(details?.overall ?? details?.pronunciation ?? details?.score ?? details?.pronunciationScore)
             : null;
           const scoreColorClass = scoreValue != null ? getScoreColor(scoreValue) : "";
-
-          // Apply text color based on score; preserve red background/ring only for low-scoring words
-          // Remove framed background/ring for wrong characters; keep text color and optionally bold for emphasis
           const charClasses = `inline-block mx-0.5 px-1 rounded ${details ? "hover:bg-base-200 cursor-pointer" : "opacity-60"} ${scoreColorClass} ${isWrong ? "font-bold" : ""}`;
-          // Use DaisyUI tooltip if available; fallback to title attribute
+
           return (
-            <div
-              key={`${ch}-${i}`}
-              className="tooltip"
-              data-tip={details ? `Chi tiết từ: ${ch}` : ch}
-            >
-              <button
-                onClick={() => setSelectedWord(normalized)}
-                className={charClasses}
-                title={details ? `Chi tiết từ: ${ch}` : ch}
-              >
+            <span key={`${ch}-${i}`} className="tooltip inline-block" data-tip={details ? `Chi tiết từ: ${ch}` : ch}>
+              <button onClick={() => setSelectedWord(normalized)} className={charClasses} title={details ? `Chi tiết từ: ${ch}` : ch}>
                 {ch}
               </button>
-            </div>
+            </span>
           );
         })}
       </div>
@@ -219,7 +206,7 @@ const SentencePronunciationResult = ({
       </div>
 
       {/* Overall Score */}
-      <div className="card bg-base-200 shadow-sm">
+      <div className="card bg-gray-50 shadow-sm border border-gray-200">
         <div className="card-body p-3">
           <div className="flex items-center justify-between">
             <div>
@@ -243,7 +230,7 @@ const SentencePronunciationResult = ({
 
       {/* Detailed scores grid */}
       <div className="grid grid-cols-2 gap-2">
-        <div className="card bg-base-200">
+        <div className="card bg-gray-50 border border-gray-200">
           <div className="card-body p-2 text-center">
             <h6 className="font-medium text-xs mb-1">Trôi chảy</h6>
             <div className={`text-lg font-bold ${getScoreColor(fluencyScore)}`}>
@@ -253,7 +240,7 @@ const SentencePronunciationResult = ({
           </div>
         </div>
 
-        <div className="card bg-base-200">
+        <div className="card bg-gray-50 border border-gray-200">
           <div className="card-body p-2 text-center">
             <h6 className="font-medium text-xs mb-1">Hoàn thiện</h6>
             <div className={`text-lg font-bold ${getScoreColor(completenessScore)}`}>
@@ -265,7 +252,7 @@ const SentencePronunciationResult = ({
       </div>
 
       {/* Annotated sentence: show whole sentence; click a character to view word details */}
-      <div className="card bg-base-200">
+      <div className="card bg-gray-50 border border-gray-200">
         <div className="card-body p-3">{renderAnnotatedSentence()}</div>
       </div>
 
@@ -317,19 +304,19 @@ const SentencePronunciationResult = ({
           {(selectedWord.details && (selectedWord.details.initial_score != null || selectedWord.details.final_score != null || selectedWord.details.tone_score != null)) || (selectedWord.initial_score != null || selectedWord.final_score != null || selectedWord.tone_score != null) ? (
             <div className="mb-2">
               <div className="grid grid-cols-3 gap-2">
-                <div className="card bg-base-200 p-2 text-center">
+                <div className="card bg-gray-50 border border-gray-200 p-2 text-center">
                   <div className="text-xs">Thanh mẫu</div>
                   <div className={`text-lg font-bold ${getScoreColor(selectedWord.details?.initial_score ?? selectedWord.initial_score ?? 0)}`}>
                     {Math.round(selectedWord.details?.initial_score ?? selectedWord.initial_score ?? 0)}
                   </div>
                 </div>
-                <div className="card bg-base-200 p-2 text-center">
+                <div className="card bg-gray-50 border border-gray-200 p-2 text-center">
                   <div className="text-xs">Vận mẫu</div>
                   <div className={`text-lg font-bold ${getScoreColor(selectedWord.details?.final_score ?? selectedWord.final_score ?? 0)}`}>
                     {Math.round(selectedWord.details?.final_score ?? selectedWord.final_score ?? 0)}
                   </div>
                 </div>
-                <div className="card bg-base-200 p-2 text-center">
+                <div className="card bg-gray-50 border border-gray-200 p-2 text-center">
                   <div className="text-xs">Thanh điệu</div>
                   <div className={`text-lg font-bold ${getScoreColor(selectedWord.details?.tone_score ?? selectedWord.tone_score ?? 0)}`}>
                     {Math.round(selectedWord.details?.tone_score ?? selectedWord.tone_score ?? 0)}
@@ -501,7 +488,7 @@ const SentencePronunciationResult = ({
 
       {/* Playback Controls */}
       {recordedAudio && (
-        <div className="card bg-base-200">
+        <div className="card bg-gray-50 border border-gray-200">
           <div className="card-body p-3">
             <div className="flex items-center justify-between">
               <h5 className="font-medium text-sm">
@@ -518,36 +505,6 @@ const SentencePronunciationResult = ({
         </div>
       )}
 
-      {/* Suggestions based on score */}
-      <div
-        className={`alert ${totalScore >= 80
-          ? "alert-success"
-          : totalScore >= 60
-            ? "alert-warning"
-            : "alert-error"
-          }`}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          className="stroke-current shrink-0 w-4 h-4"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          ></path>
-        </svg>
-        <span className="text-xs">
-          {totalScore >= 80
-            ? "🎉 Phát âm câu rất tốt! Hãy tiếp tục luyện tập."
-            : totalScore >= 60
-              ? "💪 Hãy chú ý đến những từ sai và luyện tập thêm."
-              : "📚 Hãy nghe lại âm mẫu và luyện tập từ từ."}
-        </span>
-      </div>
     </div>
   );
 };

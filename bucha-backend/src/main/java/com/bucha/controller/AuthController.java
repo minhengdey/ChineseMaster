@@ -29,8 +29,13 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
-        UserEntity user = userService.register(req.email(), req.password(), req.name());
-        return ResponseEntity.status(201).body(user.getId());
+        try {
+            UserEntity user = userService.register(req.email(), req.password(), req.name());
+            return ResponseEntity.status(201).body(user.getId());
+        } catch (IllegalArgumentException ex) {
+            // Convert service-level validation into a proper 409 Conflict with a JSON body
+            return ResponseEntity.status(409).body(Map.of("message", ex.getMessage()));
+        }
     }
 
     @PostMapping("/login")

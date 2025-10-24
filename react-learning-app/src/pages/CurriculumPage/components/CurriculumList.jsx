@@ -1,17 +1,14 @@
-import React from 'react';
-import CurriculumCard from './CurriculumCard';
+import CurriculumCard from "./CurriculumCard"
 
 const CurriculumList = ({ curriculums }) => {
   if (curriculums.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-16">
         <div className="text-6xl mb-4">📚</div>
-        <h3 className="text-xl font-semibold mb-2">Chưa có bài học nào</h3>
-        <p className="text-base-content/70">
-          Các bài học sẽ sớm được cập nhật.
-        </p>
+        <h3 className="text-2xl font-bold text-slate-900 mb-2">Chưa có bài học nào</h3>
+        <p className="text-slate-600 text-lg">Các bài học sẽ sớm được cập nhật.</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -20,7 +17,7 @@ const CurriculumList = ({ curriculums }) => {
         <CurriculumCard key={curriculum.id} curriculum={curriculum} />
       ))}
     </div>
-  );
-};
+  )
+}
 
-export default CurriculumList;
+export default CurriculumList

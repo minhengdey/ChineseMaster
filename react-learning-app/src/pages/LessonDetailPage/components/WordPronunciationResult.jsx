@@ -216,36 +216,22 @@ const WordPronunciationResult = ({
          {/* Per-word inline clickable line (single-line text). Click a word to view its detailed info below. */}
          {words && words.length > 0 && (
             <div className="card bg-base-200 mt-2 p-3">
-               <div className="mb-2 text-sm font-medium">
-                  🔎 Điểm chi tiết từng phần
-               </div>
-               <div className="text-lg leading-relaxed flex flex-wrap gap-2">
+               <div className="mb-2 text-sm font-medium">🔎 Điểm chi tiết từng phần</div>
+               <div className="mb-2 whitespace-nowrap overflow-x-auto">
                   {words.map((w, idx) => {
-                     const wordKey = w.word ?? w.text ?? `\u200b${idx}`; // zero-width fallback to keep uniqueness
-                     const isWrong =
-                        wrongWords.has(wordKey) ||
-                        wrongWords.has(w.word) ||
-                        wrongWords.has(w.text);
+                     const wordKey = w.word ?? w.text ?? `\u200b${idx}`;
+                     const isWrong = wrongWords.has(wordKey) || wrongWords.has(w.word) || wrongWords.has(w.text);
                      const display = w.word || w.text || `Âm ${idx + 1}`;
                      return (
-                        <button
-                           key={idx}
-                           onClick={() => setSelectedWordIndex(idx)}
-                           className={`inline-block px-2 py-1 rounded ${
-                              isWrong
-                                 ? "text-red-600 bg-red-100 font-semibold"
-                                 : "hover:bg-base-100"
-                           } ${
-                              selectedWordIndex === idx
-                                 ? "ring-2 ring-primary"
-                                 : ""
-                           }`}
-                           title={
-                              isWrong ? "Đánh dấu sai" : `Chi tiết: ${display}`
-                           }
-                        >
-                           {display}
-                        </button>
+                        <span key={idx} className="inline-block mr-2">
+                           <button
+                              onClick={() => setSelectedWordIndex(idx)}
+                              className={`inline-block px-2 py-1 rounded ${isWrong ? "text-red-600 bg-red-100 font-semibold" : "hover:bg-base-100"} ${selectedWordIndex === idx ? "ring-2 ring-primary" : ""}`}
+                              title={isWrong ? "Đánh dấu sai" : `Chi tiết: ${display}`}
+                           >
+                              {display}
+                           </button>
+                        </span>
                      );
                   })}
                </div>
@@ -278,9 +264,9 @@ const WordPronunciationResult = ({
                            100,
                            Math.round(
                               selected?.overall ??
-                                 selected?.total_score ??
-                                 selected?.totalScore ??
-                                 0
+                              selected?.total_score ??
+                              selected?.totalScore ??
+                              0
                            )
                         )
                      );
@@ -305,6 +291,31 @@ const WordPronunciationResult = ({
                         </div>
                      );
                   })()}
+                  {/* Initial / Final / Tone breakdown if available */}
+                  {(words[selectedWordIndex]?.initial_score != null || words[selectedWordIndex]?.final_score != null || words[selectedWordIndex]?.tone_score != null || (words[selectedWordIndex]?.details && (words[selectedWordIndex].details.initial_score != null || words[selectedWordIndex].details.final_score != null || words[selectedWordIndex].details.tone_score != null))) ? (
+                     <div className="mb-2">
+                        <div className="grid grid-cols-3 gap-2">
+                           <div className="card bg-base-200 p-2 text-center">
+                              <div className="text-xs">Thanh mẫu</div>
+                              <div className={`text-lg font-bold ${getScoreColor(words[selectedWordIndex].details?.initial_score ?? words[selectedWordIndex].initial_score ?? 0)}`}>
+                                 {Math.round(words[selectedWordIndex].details?.initial_score ?? words[selectedWordIndex].initial_score ?? 0)}
+                              </div>
+                           </div>
+                           <div className="card bg-base-200 p-2 text-center">
+                              <div className="text-xs">Vận mẫu</div>
+                              <div className={`text-lg font-bold ${getScoreColor(words[selectedWordIndex].details?.final_score ?? words[selectedWordIndex].final_score ?? 0)}`}>
+                                 {Math.round(words[selectedWordIndex].details?.final_score ?? words[selectedWordIndex].final_score ?? 0)}
+                              </div>
+                           </div>
+                           <div className="card bg-base-200 p-2 text-center">
+                              <div className="text-xs">Thanh điệu</div>
+                              <div className={`text-lg font-bold ${getScoreColor(words[selectedWordIndex].details?.tone_score ?? words[selectedWordIndex].tone_score ?? 0)}`}>
+                                 {Math.round(words[selectedWordIndex].details?.tone_score ?? words[selectedWordIndex].tone_score ?? 0)}
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  ) : null}
                   <div className="overflow-x-auto">
                      <table className="table w-full">
                         <thead>
@@ -346,15 +357,15 @@ const WordPronunciationResult = ({
                                                          if (!query && p.phoneme_display) {
                                                             query =
                                                                typeof p.phoneme_display ===
-                                                               "string"
+                                                                  "string"
                                                                   ? p.phoneme_display
                                                                   : Array.isArray(
-                                                                       p.phoneme_display
-                                                                    )
-                                                                  ? p.phoneme_display.join(" ")
-                                                                  : String(
-                                                                       p.phoneme_display
-                                                                    );
+                                                                     p.phoneme_display
+                                                                  )
+                                                                     ? p.phoneme_display.join(" ")
+                                                                     : String(
+                                                                        p.phoneme_display
+                                                                     );
                                                          }
                                                          // If tone_mark / mono_tone exists and we don't have a match yet,
                                                          // prefer querying by the numeric tone mark (e.g. '3' or '214')
@@ -407,7 +418,7 @@ const WordPronunciationResult = ({
                                     </td>
                                     <td>
                                        {p.mono_tone &&
-                                       String(p.mono_tone).match(/\d+/)
+                                          String(p.mono_tone).match(/\d+/)
                                           ? String(p.mono_tone).match(/\d+/)[0]
                                           : "-"}
                                     </td>
@@ -495,6 +506,13 @@ const WordPronunciationResult = ({
                </div>
             </div>
          )}
+         {/* Suggestions based on score */}
+         <div className={`alert ${overallScore >= 80 ? "alert-success" : overallScore >= 60 ? "alert-warning" : "alert-error"}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-4 h-4">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-xs">{overallScore >= 80 ? "🎉 Phát âm rất tốt! Hãy tiếp tục luyện tập." : overallScore >= 60 ? "💪 Hãy chú ý đến những phần sai và luyện tập thêm." : "📚 Hãy nghe lại âm mẫu và luyện tập từ từ."}</span>
+         </div>
       </div>
    );
 };

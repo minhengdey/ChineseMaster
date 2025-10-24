@@ -352,12 +352,16 @@ public class IseStatsController {
                         @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
                 if (lessonId == null)
                         return ResponseEntity.badRequest().body(Map.of("error", "lessonId is required"));
-                LocalDate target = (date != null) ? date : LocalDate.now();
-                LocalDateTime start = target.atStartOfDay();
-                LocalDateTime end = target.atTime(LocalTime.MAX);
-
-                List<com.bucha.entity.IseDailyEntry> entries = iseDailyEntryRepository
-                                .findByLessonIdAndSessionDateBetween(lessonId, start, end);
+                List<com.bucha.entity.IseDailyEntry> entries;
+                if (date == null) {
+                        // no date provided: return all-time entries for the lesson
+                        entries = iseDailyEntryRepository.findByLessonId(lessonId);
+                } else {
+                        LocalDate target = date;
+                        LocalDateTime start = target.atStartOfDay();
+                        LocalDateTime end = target.atTime(LocalTime.MAX);
+                        entries = iseDailyEntryRepository.findByLessonIdAndSessionDateBetween(lessonId, start, end);
+                }
 
                 // group entries by user to compute metrics: best (max), avg, attempts
                 Map<Long, List<com.bucha.entity.IseDailyEntry>> byUser = entries.stream()

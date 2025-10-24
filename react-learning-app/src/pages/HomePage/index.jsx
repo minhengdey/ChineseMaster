@@ -1,65 +1,92 @@
-import React, { use, useState } from "react";
-import { Link } from "react-router-dom";
-import { useUserStore } from "../../store/UserStore";
+import { Link } from "react-router-dom"
+import { useUserStore } from "../../store/UserStore"
+import { BookOpen, Volume2, Sparkles, Type } from "lucide-react"
+
 const HomePage = () => {
-   const user = useUserStore((state) => state.user);
-   return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10">
-         <div className="hero min-h-screen">
-            <div className="hero-content text-center">
-               <div className="max-w-4xl">
-                  <h1 className="text-5xl font-bold mb-8">
-                     Chào mừng trở lại, {user.name}! 👋
-                  </h1>
-                  <p className="text-lg mb-8">
-                     Hãy tiếp tục hành trình học tiếng Trung của bạn
-                  </p>
+  const user = useUserStore((state) => state.user)
 
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8">
-                     <Link
-                        to="/curriculum"
-                        className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow"
-                     >
-                        <div className="card-body items-center text-center">
-                           <h2 className="card-title text-3xl">📚</h2>
-                           <p className="font-semibold">Bài học</p>
-                           <p className="text-sm text-base-content/70">
-                              Học theo hệ thống
-                           </p>
-                        </div>
-                     </Link>
+  const features = [
+    {
+      icon: BookOpen,
+      title: "Bài học",
+      description: "Học theo hệ thống từ cơ bản đến nâng cao",
+      link: "/curriculum",
+      gradient: "from-purple-500 to-blue-500",
+      bgGradient: "from-purple-50 to-blue-50",
+      iconColor: "text-purple-600",
+    },
+    {
+      icon: Volume2,
+      title: "Phát âm",
+      description: "Luyện phát âm chuẩn với giọng bản ngữ",
+      link: "/pronunciation",
+      gradient: "from-blue-500 to-cyan-500",
+      bgGradient: "from-blue-50 to-cyan-50",
+      iconColor: "text-blue-600",
+    },
+    {
+      icon: Sparkles,
+      title: "Flash Card",
+      description: "Ôn tập từ vựng một cách hiệu quả",
+      link: "/flashcards",
+      gradient: "from-cyan-500 to-teal-500",
+      bgGradient: "from-cyan-50 to-teal-50",
+      iconColor: "text-cyan-600",
+    },
+    {
+      icon: Type,
+      title: "Bảng PINYIN",
+      description: "Học bảng chữ cái và phiên âm Pinyin",
+      link: "/alphabet",
+      gradient: "from-purple-500 to-pink-500",
+      bgGradient: "from-purple-50 to-pink-50",
+      iconColor: "text-purple-600",
+    },
+  ]
 
-                     <Link
-                        to="/alphabet"
-                        className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow"
-                     >
-                        <div className="card-body items-center text-center">
-                           <h2 className="card-title text-3xl">📝</h2>
-                           <p className="font-semibold">Bảng PINYIN</p>
-                           <p className="text-sm text-base-content/70">
-                              Pinyin & Hanzi
-                           </p>
-                        </div>
-                     </Link>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="container-max">
+          <div className="text-center mb-16 slide-in-up">
+            <h1 className="text-5xl sm:text-6xl font-bold mb-6 text-slate-900">
+              Chào mừng trở lại, <span className="gradient-text">{user?.name || "Bạn"}</span>!
+            </h1>
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+              Tiếp tục hành trình học tiếng Trung của bạn với các bài học tương tác, luyện tập phát âm, và ôn tập từ
+              vựng
+            </p>
+          </div>
 
-                     <Link
-                        to="/profile"
-                        className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow"
-                     >
-                        <div className="card-body items-center text-center">
-                           <h2 className="card-title text-3xl">👤</h2>
-                           <p className="font-semibold">Hồ sơ</p>
-                           <p className="text-sm text-base-content/70">
-                              Thông tin cá nhân
-                           </p>
-                        </div>
-                     </Link>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, index) => {
+              const Icon = feature.icon
+              return (
+                <Link key={index} to={feature.link} className="group">
+                  <div
+                    className={`card p-8 h-full card-hover card-interactive bg-gradient-to-br ${feature.bgGradient} border-2 border-transparent hover:border-purple-300`}
+                  >
+                    <div
+                      className={`${feature.iconColor} mb-4 transform group-hover:scale-110 transition-transform duration-300`}
+                    >
+                      <Icon size={40} />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">{feature.title}</h3>
+                    <p className="text-slate-600 text-sm leading-relaxed">{feature.description}</p>
+                    <div
+                      className={`mt-4 flex items-center bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity`}
+                    >
+                      Bắt đầu →
+                    </div>
                   </div>
-               </div>
-            </div>
-         </div>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
       </div>
-   );
-};
+    </div>
+  )
+}
 
-export default HomePage;
+export default HomePage
