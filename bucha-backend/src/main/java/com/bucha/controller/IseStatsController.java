@@ -1,6 +1,6 @@
 package com.bucha.controller;
 
-import com.bucha.entity.IseScore;
+// import com.bucha.entity.IseScore; // no longer used; SQL aggregation is used instead
 import com.bucha.entity.UserEntity;
 import com.bucha.entity.UserLesson;
 import com.bucha.repository.*;
@@ -18,9 +18,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.JdbcTemplate;
+import java.sql.Timestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,6 +40,7 @@ public class IseStatsController {
         IseTestEntryRepository iseTestEntryRepository;
         UserLessonRepository userLessonRepository;
         UserService userService;
+        JdbcTemplate jdbcTemplate;
         static final Logger logger = LoggerFactory.getLogger(IseStatsController.class);
 
         // Daily performance: return per-day aggregates for a date range (default last
@@ -43,7 +48,8 @@ public class IseStatsController {
         @GetMapping("/daily")
         public ResponseEntity<?> dailyStats(@AuthenticationPrincipal JwtUserPrincipal principal,
                         @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-                        @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+                        @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+                        @RequestParam(value = "debug", required = false) Boolean debug) {
                 Long userId = principal.id();
                 LocalDate endDate = (to != null) ? to : LocalDate.now();
                 LocalDate startDate = (from != null) ? from : endDate.minusDays(29);
@@ -51,69 +57,75 @@ public class IseStatsController {
                 LocalDateTime start = startDate.atStartOfDay();
                 LocalDateTime end = endDate.atTime(LocalTime.MAX);
 
-                List<com.bucha.entity.IseDailyEntry> entries = iseDailyEntryRepository
-                                .findByUser_IdAndSessionDateBetween(userId, start, end);
+                // Use SQL aggregation to compute per-day averages/count/duration for the user
+                try {
+                        String sql = "SELECT DATE(session_date) AS day, AVG(total_score) AS avg_score, "
+                                        + "COUNT(DISTINCT attempt_id) AS cnt_attempts, COUNT(*) AS cnt_rows, SUM(duration_seconds) AS duration_sum "
+                                        + "FROM ise_daily_entry ide "
+                                        + "WHERE ide.user_id = ? AND ide.session_date BETWEEN ? AND ? "
+                                        + "GROUP BY DATE(session_date)";
 
-                List<IseScore> scores;
-                if (entries == null || entries.isEmpty()) {
-                        // fallback to previous behavior in case summary entries are not yet present
-                        logger.debug("[IseStatsController] no daily summary entries found for user {} between {} and {}; falling back to ise_score",
-                                        userId, start, end);
-                        scores = iseRepository.findByUser_IdAndIncludeInDailyTrueAndSessionDateBetween(userId, start,
-                                        end);
-                        logger.debug("[IseStatsController] fallback ise_score count={} for user {}",
-                                        scores == null ? 0 : scores.size(), userId);
-                        if (scores != null && scores.size() > 0) {
-                                int sample = Math.min(3, scores.size());
-                                List<String> dates = scores.subList(0, sample).stream()
-                                                .map(s -> s.getSessionDate() == null ? "null"
-                                                                : s.getSessionDate().toString())
-                                                .collect(Collectors.toList());
-                                logger.debug("[IseStatsController] sample sessionDates from ise_score: {}", dates);
+                        List<Map<String, Object>> sqlRows = jdbcTemplate.queryForList(sql,
+                                        userId, Timestamp.valueOf(start), Timestamp.valueOf(end));
+
+                        // convert sqlRows into a map for quick lookup (accept either 'day' or 'date'
+                        // key)
+                        Map<LocalDate, Map<String, Object>> lookup = new HashMap<>();
+                        for (Map<String, Object> r : sqlRows) {
+                                Object dateObj = r.get("day");
+                                if (dateObj == null)
+                                        dateObj = r.get("date");
+                                if (dateObj != null) {
+                                        LocalDate ld = LocalDate.parse(dateObj.toString());
+                                        lookup.put(ld, r);
+                                }
                         }
-                } else {
-                        // convert entries into score-like objects for aggregation compatibility
-                        logger.debug("[IseStatsController] found {} daily summary entries for user {}", entries.size(),
-                                        userId);
-                        int sample = Math.min(3, entries.size());
-                        List<String> dates = entries.subList(0, sample).stream()
-                                        .map(e -> e.getSessionDate() == null ? "null" : e.getSessionDate().toString())
-                                        .collect(Collectors.toList());
-                        logger.debug("[IseStatsController] sample sessionDates from daily entries: {}", dates);
-                        scores = entries.stream().map(e -> {
-                                IseScore s = new IseScore();
-                                s.setTotalScore(e.getTotalScore());
-                                s.setDurationSeconds(e.getDurationSeconds());
-                                s.setSessionDate(e.getSessionDate());
-                                return s;
-                        }).collect(Collectors.toList());
+
+                        List<Map<String, Object>> rows = new ArrayList<>();
+                        LocalDate d = startDate;
+                        while (!d.isAfter(endDate)) {
+                                Map<String, Object> r = lookup.get(d);
+                                if (r == null) {
+                                        Map<String, Object> empty = new HashMap<>();
+                                        empty.put("date", d.toString());
+                                        empty.put("avgScore", 0.0);
+                                        empty.put("count", 0);
+                                        empty.put("durationSeconds", 0);
+                                        rows.add(empty);
+                                } else {
+                                        Map<String, Object> out = new HashMap<>();
+                                        out.put("date", d.toString());
+                                        // safe extraction from SQL result (accept both snake_case and camelCase keys)
+                                        Number avgNum = (Number) (r.getOrDefault("avg_score", r.get("avgScore")));
+                                        double avgVal = (avgNum == null) ? 0.0 : avgNum.doubleValue();
+                                        Number cntAttemptsNum = (Number) (r.getOrDefault("cnt_attempts",
+                                                        r.get("cnt_attempts")));
+                                        Number cntRowsNum = (Number) (r.getOrDefault("cnt_rows", r.get("cnt_rows")));
+                                        int cntVal = 0;
+                                        if (cntAttemptsNum != null)
+                                                cntVal = cntAttemptsNum.intValue();
+                                        else if (cntRowsNum != null)
+                                                cntVal = cntRowsNum.intValue();
+                                        Number durNum = (Number) (r.getOrDefault("duration_sum",
+                                                        r.get("durationSeconds")));
+                                        long durVal = (durNum == null) ? 0L : durNum.longValue();
+                                        out.put("avgScore", Math.round(avgVal * 100.0) / 100.0);
+                                        out.put("count", cntVal);
+                                        out.put("durationSeconds", durVal);
+                                        rows.add(out);
+                                }
+                                d = d.plusDays(1);
+                        }
+
+                        if (Boolean.TRUE.equals(debug)) {
+                                // include raw SQL rows for troubleshooting when debug=true
+                                return ResponseEntity.ok(Map.of("rows", rows, "sqlRows", sqlRows));
+                        }
+                        return ResponseEntity.ok(Map.of("rows", rows));
+                } catch (Exception e) {
+                        logger.debug("failed to compute daily stats by SQL, falling back to in-memory", e);
+                        return ResponseEntity.status(500).body(Map.of("error", "failed to compute daily stats"));
                 }
-
-                // group by date
-                Map<LocalDate, List<IseScore>> grouped = scores.stream()
-                                .collect(Collectors.groupingBy(s -> s.getSessionDate().toLocalDate()));
-
-                List<Map<String, Object>> rows = new ArrayList<>();
-                LocalDate d = startDate;
-                while (!d.isAfter(endDate)) {
-                        List<IseScore> list = grouped.getOrDefault(d, Collections.emptyList());
-                        double avg = list.stream().mapToDouble(s -> Optional.ofNullable(s.getTotalScore()).orElse(0.0))
-                                        .average()
-                                        .orElse(0.0);
-                        int count = list.size();
-                        double duration = list.stream()
-                                        .mapToDouble(s -> Optional.ofNullable(s.getDurationSeconds()).orElse(0.0))
-                                        .sum();
-                        Map<String, Object> row = new HashMap<>();
-                        row.put("date", d.toString());
-                        row.put("avgScore", Math.round(avg * 100.0) / 100.0);
-                        row.put("count", count);
-                        row.put("durationSeconds", Math.round(duration));
-                        rows.add(row);
-                        d = d.plusDays(1);
-                }
-
-                return ResponseEntity.ok(Map.of("rows", rows));
         }
 
         // Lesson completion: return per-lesson averages and completion flag
@@ -343,6 +355,167 @@ public class IseStatsController {
                 }
 
                 return ResponseEntity.ok(Map.of("rows", rows));
+        }
+
+        // Weekly performance: aggregate per-week (Monday start). Default to last 4
+        // weeks
+        @GetMapping("/weekly")
+        public ResponseEntity<?> weeklyStats(@AuthenticationPrincipal JwtUserPrincipal principal,
+                        @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                        @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+                Long userId = principal.id();
+                LocalDate endDate = (to != null) ? to : LocalDate.now();
+                LocalDate startDate = (from != null) ? from : endDate.minusWeeks(3);
+
+                // align startDate to the Monday of that week
+                LocalDate iterStart = startDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                LocalDate iterEnd = endDate;
+
+                LocalDateTime start = iterStart.atStartOfDay();
+                LocalDateTime end = iterEnd.atTime(LocalTime.MAX);
+
+                // Use SQL to get per-day aggregates in range and then fold into weekly buckets
+                // (Monday start)
+                try {
+                        String sql = "SELECT DATE(session_date) AS day, AVG(total_score) AS avg_score, "
+                                        + "COUNT(DISTINCT attempt_id) AS cnt_attempts, COUNT(*) AS cnt_rows, SUM(duration_seconds) AS duration_sum "
+                                        + "FROM ise_daily_entry ide "
+                                        + "WHERE ide.user_id = ? AND ide.session_date BETWEEN ? AND ? "
+                                        + "GROUP BY DATE(session_date)";
+
+                        List<Map<String, Object>> sqlRows = jdbcTemplate.queryForList(sql,
+                                        userId, Timestamp.valueOf(start), Timestamp.valueOf(end));
+
+                        // map day -> {avgScore, count, duration} (use null-safe extraction)
+                        Map<LocalDate, Map<String, Object>> dayMap = new HashMap<>();
+                        for (Map<String, Object> r : sqlRows) {
+                                Object dateObj = r.get("day");
+                                if (dateObj == null)
+                                        dateObj = r.get("date");
+                                if (dateObj == null)
+                                        continue;
+                                LocalDate ld = LocalDate.parse(dateObj.toString());
+                                Map<String, Object> v = new HashMap<>();
+                                Number avgNum = (Number) (r.getOrDefault("avg_score", r.get("avgScore")));
+                                double avgVal = (avgNum == null) ? 0.0 : avgNum.doubleValue();
+                                Number cntAttemptsNum = (Number) (r.getOrDefault("cnt_attempts",
+                                                r.get("cnt_attempts")));
+                                Number cntRowsNum = (Number) (r.getOrDefault("cnt_rows", r.get("cnt_rows")));
+                                int cntVal = 0;
+                                if (cntAttemptsNum != null)
+                                        cntVal = cntAttemptsNum.intValue();
+                                else if (cntRowsNum != null)
+                                        cntVal = cntRowsNum.intValue();
+                                Number durNum = (Number) (r.getOrDefault("duration_sum", r.get("durationSeconds")));
+                                long durVal = (durNum == null) ? 0L : durNum.longValue();
+                                v.put("avg", avgVal);
+                                v.put("count", cntVal);
+                                v.put("duration", durVal);
+                                dayMap.put(ld, v);
+                        }
+
+                        List<Map<String, Object>> rows = new ArrayList<>();
+                        LocalDate d = iterStart.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                        while (!d.isAfter(iterEnd)) {
+                                // collect days in this week
+                                LocalDate weekStart = d;
+                                LocalDate weekEnd = d.plusDays(6);
+                                double sumWeighted = 0.0;
+                                int sumCount = 0;
+                                long sumDuration = 0L;
+                                for (LocalDate day = weekStart; !day.isAfter(weekEnd); day = day.plusDays(1)) {
+                                        Map<String, Object> v = dayMap.get(day);
+                                        if (v != null) {
+                                                double dayAvg = (double) v.get("avg");
+                                                int c = (int) v.get("count");
+                                                long dur = (long) v.get("duration");
+                                                sumWeighted += dayAvg * c;
+                                                sumCount += c;
+                                                sumDuration += dur;
+                                        }
+                                }
+                                double weekAvg = sumCount > 0 ? (sumWeighted / sumCount) : 0.0;
+                                Map<String, Object> row = new HashMap<>();
+                                row.put("weekStart", weekStart.toString());
+                                row.put("avgScore", Math.round(weekAvg * 100.0) / 100.0);
+                                row.put("count", sumCount);
+                                row.put("durationSeconds", sumDuration);
+                                rows.add(row);
+                                d = d.plusWeeks(1);
+                        }
+
+                        return ResponseEntity.ok(Map.of("rows", rows));
+                } catch (Exception e) {
+                        logger.debug("failed to compute weekly stats by SQL, falling back to in-memory", e);
+                        return ResponseEntity.status(500).body(Map.of("error", "failed to compute weekly stats"));
+                }
+        }
+
+        // Leaderboard: weekly across users
+        @GetMapping("/leaderboard/weekly")
+        public ResponseEntity<?> weeklyLeaderboard(
+                        @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+                LocalDate target = (date != null) ? date : LocalDate.now();
+                LocalDate weekStart = target.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                LocalDateTime start = weekStart.atStartOfDay();
+                LocalDateTime end = weekStart.plusDays(6).atTime(LocalTime.MAX);
+
+                try {
+                        String sql = "SELECT ide.user_id as user_id, AVG(ide.total_score) as avg_score, COUNT(*) as cnt, MIN(ide.created_at) as ts "
+                                        + "FROM ise_daily_entry ide "
+                                        + "WHERE ide.session_date BETWEEN ? AND ? "
+                                        + "GROUP BY ide.user_id";
+
+                        List<Map<String, Object>> cur = jdbcTemplate.queryForList(sql, Timestamp.valueOf(start),
+                                        Timestamp.valueOf(end));
+
+                        // previous week
+                        LocalDate prevWeekStart = weekStart.minusWeeks(1);
+                        LocalDateTime pys = prevWeekStart.atStartOfDay();
+                        LocalDateTime pye = prevWeekStart.plusDays(6).atTime(LocalTime.MAX);
+                        List<Map<String, Object>> prev = jdbcTemplate.queryForList(sql, Timestamp.valueOf(pys),
+                                        Timestamp.valueOf(pye));
+
+                        Map<Long, Double> prevAvgByUser = new HashMap<>();
+                        for (Map<String, Object> p : prev) {
+                                Number uid = (Number) p.get("user_id");
+                                Number avg = (Number) p.get("avg_score");
+                                if (uid != null && avg != null)
+                                        prevAvgByUser.put(uid.longValue(), avg.doubleValue());
+                        }
+
+                        List<Map<String, Object>> rows = new ArrayList<>();
+                        for (Map<String, Object> r : cur) {
+                                Number uid = (Number) r.get("user_id");
+                                if (uid == null)
+                                        continue;
+                                Long userId = uid.longValue();
+                                double avg = ((Number) r.get("avg_score")).doubleValue();
+                                long completionCount = ((Number) r.get("cnt")).longValue();
+                                Object tsObj = r.get("ts");
+
+                                double prevAvg = prevAvgByUser.getOrDefault(userId, 0.0);
+                                double improvement = Math.round((avg - prevAvg) * 100.0) / 100.0;
+
+                                UserEntity user = userService.findById(userId)
+                                                .orElseThrow(() -> new RuntimeException("user not found"));
+
+                                Map<String, Object> row = new HashMap<>();
+                                row.put("userId", userId);
+                                row.put("name", user.getName());
+                                row.put("avatar", null);
+                                row.put("avgScore", Math.round(avg * 100.0) / 100.0);
+                                row.put("completionCount", completionCount);
+                                row.put("improvementRate", improvement);
+                                row.put("timestamp", tsObj);
+                                rows.add(row);
+                        }
+
+                        return ResponseEntity.ok(Map.of("rows", rows));
+                } catch (Exception e) {
+                        logger.debug("failed to compute weekly leaderboard by SQL", e);
+                        return ResponseEntity.status(500).body(Map.of("error", "failed to compute weekly leaderboard"));
+                }
         }
 
         // Leaderboard for a lesson: top scores per user for the specified lesson and

@@ -564,11 +564,20 @@ export const iseAPI = {
 
 // ISE stats for frontend displays (daily/lesson/test summaries)
 export const iseStatsAPI = {
-   getDaily: async (fromIsoDate, toIsoDate) => {
+   // Weekly performance: replaced daily with weekly. Keep getDaily as a compatibility alias.
+   getWeekly: async (fromIsoDate, toIsoDate) => {
       const params = {};
       if (fromIsoDate) params.from = fromIsoDate;
       if (toIsoDate) params.to = toIsoDate;
-      const response = await apiClient.get("/ise/stats/daily", { params });
+      const response = await apiClient.get("/ise/stats/weekly", { params });
+      return response.data;
+   },
+   getDaily: async (fromIsoDate, toIsoDate) => {
+      // Call the dedicated daily endpoint which returns per-day aggregates
+      const params = {};
+      if (fromIsoDate) params.from = fromIsoDate;
+      if (toIsoDate) params.to = toIsoDate;
+      const response = await apiClient.get('/ise/stats/daily', { params });
       return response.data;
    },
    getLessons: async () => {
@@ -590,9 +599,13 @@ export const iseStatsAPI = {
       return response.data;
    },
    // Leaderboard endpoints (optional on backend)
-   getLeaderboardDaily: async () => {
-      const response = await apiClient.get('/ise/stats/leaderboard/daily');
+   getLeaderboardWeekly: async () => {
+      const response = await apiClient.get('/ise/stats/leaderboard/weekly');
       return response.data;
+   },
+   getLeaderboardDaily: async () => {
+      // Deprecated alias
+      return iseStatsAPI.getLeaderboardWeekly()
    },
    getLeaderboardByLesson: async (lessonId) => {
       const params = {};

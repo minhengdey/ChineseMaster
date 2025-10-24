@@ -331,14 +331,13 @@ const SentencePronunciationResult = ({
               (selectedWord.details.phonemes ||
                 selectedWord.details.phones)) ? (
             <div>
-              <div className="text-sm text-gray-600 mb-2">Phonemes</div>
               <div className="overflow-x-auto">
                 <table className="table w-full">
                   <thead>
                     <tr>
-                      <th>Phoneme</th>
-                      <th>Score</th>
-                      <th>Tone</th>
+                      <th>Âm</th>
+                      <th>Điểm</th>
+                      <th>Thanh</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { profileAPI, handleApiError, iseStatsAPI, userLessonAPI } from "../../services/api"
 import { useUserStore } from "../../store/UserStore"
-import DailyLeaderboard from "../../components/DailyLeaderboard"
+import WeeklyLeaderboard from "../../components/WeeklyLeaderboard"
 import { User, Mail, BarChart3, Volume2, Star, Flame, BookOpen, Lock } from "lucide-react"
 
 const ProfilePage = ({ user }) => {
@@ -20,7 +20,8 @@ const ProfilePage = ({ user }) => {
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({ currentPassword: "", confirmPassword: "", general: "" })
   const [statsLoading, setStatsLoading] = useState(true)
-  const [dailyRows, setDailyRows] = useState([])
+  const [weeklyRows, setWeeklyRows] = useState([])
+  const [todayStat, setTodayStat] = useState(null)
   const [lessonRows, setLessonRows] = useState([])
   const [testRows, setTestRows] = useState([])
   const [summary, setSummary] = useState({
@@ -68,9 +69,22 @@ const ProfilePage = ({ user }) => {
     }
   }
 
+  const getVietnamWeekStartIso = (d = new Date()) => {
+    try {
+      const date = new Date(d)
+      // JS getDay: 0=Sun,1=Mon,... convert to Monday-based week start
+      const day = date.getDay()
+      const diff = (day + 6) % 7
+      date.setDate(date.getDate() - diff)
+      return getVietnamDateIso(date)
+    } catch (e) {
+      return getVietnamDateIso(d)
+    }
+  }
+
   useEffect(() => {
     fetchProfile()
-    fetchIseStatsToday()
+    fetchIseStatsWeekly()
 
     const handler = (e) => {
       try {
@@ -80,21 +94,19 @@ const ProfilePage = ({ user }) => {
         const includeInDaily = detail.includeInDaily
 
         if (includeInDaily && score) {
-          const todayStr = getVietnamDateIso()
-          setDailyRows((prev) => {
-            const copy = Array.isArray(prev) ? [...prev] : []
-            if (copy.length === 0 || copy[0]?.date !== todayStr) {
-              copy.unshift({ date: todayStr, avgScore: Math.round(score.total_score ?? 0), count: 1 })
-            } else {
-              const existing = copy[0]
-              const prevAvg = Number(existing.avgScore || 0)
-              const prevCount = Number(existing.count || 0)
+          // optimistic update for today's stat
+          try {
+            const today = getVietnamDateIso()
+            setTodayStat((prev) => {
+              const prevCount = Number(prev?.count || 0)
+              const prevAvg = Number(prev?.avgScore || 0)
               const newCount = prevCount + 1
               const newAvg = Math.round((prevAvg * prevCount + (score.total_score ?? 0)) / newCount)
-              copy[0] = { ...existing, avgScore: newAvg, count: newCount }
-            }
-            return copy
-          })
+              return { date: today, avgScore: newAvg, count: newCount }
+            })
+          } catch (e) {
+            console.debug('optimistic todayStat update failed', e)
+          }
         }
 
         if (lessonId && score) {
@@ -145,22 +157,33 @@ const ProfilePage = ({ user }) => {
         console.debug("optimistic stats update failed", err)
       }
 
-      setTimeout(() => fetchIseStatsToday(), 1000)
+      setTimeout(() => fetchIseStatsWeekly(), 1000)
     }
 
     window.addEventListener("ise:score:submitted", handler)
     return () => window.removeEventListener("ise:score:submitted", handler)
   }, [])
 
-  const fetchIseStatsToday = async () => {
+  const fetchIseStatsWeekly = async () => {
     setStatsLoading(true)
     try {
-      const today = getVietnamDateIso()
-      const daily = await iseStatsAPI.getDaily(today, today)
-      setDailyRows(Array.isArray(daily?.rows) ? daily.rows : [])
+      // fetch weekly rows for lesson summary
+      const weekly = await iseStatsAPI.getWeekly()
+      setWeeklyRows(Array.isArray(weekly?.rows) ? weekly.rows : [])
+
+      // fetch today's daily stat (avg for today)
+      const todayIso = getVietnamDateIso()
+      try {
+        const daily = await iseStatsAPI.getDaily(todayIso, todayIso)
+        const rows = Array.isArray(daily?.rows) ? daily.rows : []
+        setTodayStat(rows.length > 0 ? rows[0] : null)
+      } catch (e) {
+        console.debug('failed to fetch today daily stat', e)
+        setTodayStat(null)
+      }
     } catch (e) {
-      console.debug("failed daily stats", e)
-      setDailyRows([])
+      console.debug("failed weekly stats", e)
+      setWeeklyRows([])
     }
 
     let enriched = []
@@ -575,12 +598,6 @@ const ProfilePage = ({ user }) => {
                   <Volume2 size={28} className="text-purple-600" />
                   <h2 className="text-2xl font-bold gradient-text">Đánh giá phát âm</h2>
                 </div>
-                <button
-                  className={`btn btn-sm btn-ghost rounded-lg ${statsLoading ? "loading" : ""}`}
-                  onClick={fetchIseStatsToday}
-                >
-                  Refresh
-                </button>
               </div>
 
               <div className="p-6">
@@ -593,22 +610,15 @@ const ProfilePage = ({ user }) => {
                       </div>
                       {statsLoading ? (
                         <div className="text-sm text-slate-500">Đang tải...</div>
-                      ) : dailyRows.length === 0 ? (
+                      ) : !todayStat ? (
                         <div className="text-sm text-slate-500">Chưa có lượt hôm nay</div>
                       ) : (
                         <div>
-                          {dailyRows.map((r) => (
-                            <div
-                              key={r.date}
-                              className="flex justify-between text-sm py-3 border-b border-slate-200 last:border-0"
-                            >
-                              <div className="text-slate-600 font-medium">{r.date}</div>
-                              <div className="font-bold text-purple-600 text-lg">{r.avgScore}%</div>
-                            </div>
-                          ))}
-                          <div className="text-xs text-slate-500 mt-4 font-semibold">
-                            Số lượt: {dailyRows[0]?.count ?? 0}
+                          <div className="flex justify-between text-sm py-3 border-b border-slate-200 last:border-0">
+                            <div className="text-slate-600 font-medium">{todayStat.date}</div>
+                            <div className="font-bold text-purple-600 text-lg">{todayStat.avgScore}%</div>
                           </div>
+                          <div className="text-xs text-slate-500 mt-4 font-semibold">Số lượt: {todayStat.count ?? 0}</div>
                         </div>
                       )}
                     </div>
@@ -722,7 +732,7 @@ const ProfilePage = ({ user }) => {
             </div>
 
             <div className="mb-4">
-              <DailyLeaderboard />
+              <WeeklyLeaderboard />
             </div>
           </div>
         </div>
