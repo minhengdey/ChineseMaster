@@ -15,7 +15,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableMethodSecurity
@@ -29,15 +31,19 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-            @Value("${app.cors.allowed-origins:http://localhost:5501}") String allowedOrigins) throws Exception {
+            @Value("${app.cors.allowed-origins:https://dingdong.up.railway.app,http://localhost:5501}") String allowedOrigins) throws Exception {
 
         // CORS config
         http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration cfg = new CorsConfiguration();
-            cfg.setAllowedOrigins(List.of(allowedOrigins));
             cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
             cfg.setAllowedHeaders(List.of("*"));
             cfg.setAllowCredentials(true);
+            cfg.setAllowedOrigins(
+                    Arrays.stream(allowedOrigins.split(","))
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .collect(Collectors.toList()));
             return cfg;
         }));
 
