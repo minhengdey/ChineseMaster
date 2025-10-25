@@ -423,3 +423,27 @@ body .modal-box {
   max-width: 90vw !important;
   width: auto !important;
 }
+
+/* Interactive cursor helper
+   Ensure common interactive elements and utility classes show a pointer cursor
+   so users get clear affordance on hover, especially for non-button clickable elements. */
+.interactive-cursor,
+button,
+a,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.btn,
+[role="button"],
+.clickable,
+.icon-button,
+.nav-link,
+.dropdown-item,
+.card-interactive {
+  cursor: pointer;
+}
+
+/* Helper class you can add to any element to mark it as clickable and show pointer */
+.interactive-cursor {
+  cursor: pointer;
+}

@@ -37,7 +37,7 @@ const AudioPlayer = ({ audioUrl, audioAsset, size = "md", onEnded }) => {
           try {
             onEnded()
           } catch (e) {
-            console.debug("onEnded callback failed", e)
+            // console.debug("onEnded callback failed", e)
           }
         }
       })
@@ -45,12 +45,12 @@ const AudioPlayer = ({ audioUrl, audioAsset, size = "md", onEnded }) => {
       audio.addEventListener("error", () => {
         setIsPlaying(false)
         setIsLoading(false)
-        console.error("Error playing audio:", resolvedUrl)
+        // console.error("Error playing audio:", resolvedUrl)
       })
 
       await audio.play()
     } catch (error) {
-      console.error("Error playing audio:", error)
+      // console.error("Error playing audio:", error)
       setIsPlaying(false)
       setIsLoading(false)
     }
@@ -80,11 +80,10 @@ const AudioPlayer = ({ audioUrl, audioAsset, size = "md", onEnded }) => {
 
   return (
     <button
-      className={`btn btn-circle gap-2 shadow-md transition-all ${getButtonSize()} ${
-        isPlaying
+      className={`btn btn-circle gap-2 shadow-md transition-all ${getButtonSize()} ${isPlaying
           ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
           : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
-      } border-0 ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+        } border-0 ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       onClick={isPlaying ? handleStop : handlePlay}
       disabled={disabled}
       title={title}

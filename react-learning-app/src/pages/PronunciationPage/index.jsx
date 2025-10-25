@@ -73,7 +73,7 @@ const PronunciationPage = () => {
 
       setVocabList(allVocab)
     } catch (error) {
-      console.error("Error fetching vocabularies:", error)
+      // console.error("Error fetching vocabularies:", error)
     } finally {
       setVocabLoading(false)
     }

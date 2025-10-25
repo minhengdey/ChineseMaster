@@ -70,7 +70,7 @@ export const authAPI = {
             try {
                localStorage.setItem("user", JSON.stringify(response.data.user));
             } catch (e) {
-               console.warn('Failed to save user to localStorage', e);
+               // console.warn('Failed to save user to localStorage', e);
             }
          }
          return { token: response.data.accessToken, user: response.data.user };
@@ -268,31 +268,23 @@ export const iseAPI = {
       try {
          const formData = new FormData();
          // required parts
-         // Append text parts as Blobs with explicit text/plain content type so Spring's @RequestPart can convert them
-         // Append text as a plain string part — simpler and more compatible with some mobile
-         // WebViews which may treat Blob parts differently. Spring @RequestPart can accept
-         // a simple string for the text part.
          formData.append("text", text ?? "");
+
          // Ensure the audio part includes a filename (some mobile browsers/webviews omit it for plain Blob)
          try {
             let audioPart = audioFile;
-            // If it's a Blob but not a File, wrap it with a filename so Spring's Multipart parsing receives a filename
-            if (typeof File !== 'undefined' && audioFile instanceof Blob && !(audioFile instanceof File)) {
-               audioPart = new File([audioFile], 'recording.webm', { type: audioFile.type || 'audio/webm' });
+            if (typeof File !== "undefined" && audioFile instanceof Blob && !(audioFile instanceof File)) {
+               audioPart = new File([audioFile], "recording.webm", { type: audioFile.type || "audio/webm" });
             }
             formData.append("audio", audioPart);
          } catch (e) {
             // fallback: append as-is
             formData.append("audio", audioFile);
          }
-         formData.append(
-            "sub",
-            new Blob([sub ?? ""], { type: "text/plain;charset=UTF-8" })
-         );
-         formData.append(
-            "ent",
-            new Blob([ent ?? ""], { type: "text/plain;charset=UTF-8" })
-         );
+
+         // append simple string parts for compatibility across mobile WebViews
+         formData.append("sub", String(sub ?? ""));
+         formData.append("ent", String(ent ?? ""));
 
          // optional parts - append as plain strings for better compatibility on mobile
          if (scoreCategory != null) formData.append("scoreCategory", String(scoreCategory));
@@ -306,27 +298,20 @@ export const iseAPI = {
          if (durationSeconds != null) formData.append("durationSeconds", String(durationSeconds));
          if (numSentences != null) formData.append("numSentences", String(numSentences));
 
-         // Debug: log FormData parts (key and type) to help server-side troubleshooting
+         // Debug: list FormData entries (helps verify the file object and parts the browser will send)
          try {
             for (const entry of formData.entries()) {
                const [k, v] = entry;
                if (v instanceof File) {
-                  console.debug(
-                     "[iseAPI] formData entry:",
-                     k,
-                     "File",
-                     v.name,
-                     v.type,
-                     v.size
-                  );
+                  // console.debug("[iseAPI] formData entry:", k, "File", v.name, v.type, v.size);
                } else if (v instanceof Blob) {
-                  console.debug("[iseAPI] formData entry:", k, "Blob", v.type);
+                  // console.debug("[iseAPI] formData entry:", k, "Blob", v.type);
                } else {
-                  console.debug("[iseAPI] formData entry:", k, typeof v, v);
+                  // console.debug("[iseAPI] formData entry:", k, typeof v, v);
                }
             }
          } catch (e) {
-            console.debug("[iseAPI] formData debug failed", e);
+            // console.debug("[iseAPI] formData debug failed", e);
          }
 
          // Do not set Content-Type so the browser can add the multipart boundary automatically.
@@ -339,11 +324,9 @@ export const iseAPI = {
             headers,
          });
 
-         console.log("ISE sentence analysis result (raw):", response.data);
-
          return response.data;
       } catch (error) {
-         console.error("ISE API Error:", error);
+         // console.error("ISE API Error:", error);
          throw new Error(
             error.response?.data?.message ||
             error.message ||
@@ -365,61 +348,51 @@ export const iseAPI = {
          formData.append("audio", audioFileWithName);
          // attach vocabularyId and lessonId when present so backend can attribute attempt
          if (vocabularyId != null) {
-            formData.append(
-               "vocabularyId",
-               new Blob([String(vocabularyId)], {
-                  type: "text/plain;charset=UTF-8",
-               })
-            );
+            formData.append("vocabularyId", String(vocabularyId));
          }
          if (lessonId != null) {
-            formData.append(
-               "lessonId",
-               new Blob([String(lessonId)], {
-                  type: "text/plain;charset=UTF-8",
-               })
-            );
+            formData.append("lessonId", String(lessonId));
          }
 
-         console.log("Sending to ISE Word API:", {
-            text: text,
-            audioFileName: audioFileWithName.name,
-            audioSize: audioFileWithName.size,
-            audioType: audioFileWithName.type,
-            endpoint: "/ise/score",
-         });
+         // console.log("Sending to ISE Word API:", {
+         //    text: text,
+         //    audioFileName: audioFileWithName.name,
+         //    audioSize: audioFileWithName.size,
+         //    audioType: audioFileWithName.type,
+         //    endpoint: "/ise/score",
+         // });
 
          // Debug: list FormData entries (helps verify the file object and parts the browser will send)
          try {
             for (const entry of formData.entries()) {
                const [k, v] = entry;
                if (v instanceof File) {
-                  console.debug(
-                     "[iseAPI.scoreWord] formData entry:",
-                     k,
-                     "File",
-                     v.name,
-                     v.type,
-                     v.size
-                  );
+                  // console.debug(
+                  //       "[iseAPI.scoreWord] formData entry:",
+                  //       k,
+                  //       "File",
+                  //       v.name,
+                  //       v.type,
+                  //       v.size
+                  //    );
                } else if (v instanceof Blob) {
-                  console.debug(
-                     "[iseAPI.scoreWord] formData entry:",
-                     k,
-                     "Blob",
-                     v.type
-                  );
+                  // console.debug(
+                  //    "[iseAPI.scoreWord] formData entry:",
+                  //    k,
+                  //    "Blob",
+                  //    v.type
+                  // );
                } else {
-                  console.debug(
-                     "[iseAPI.scoreWord] formData entry:",
-                     k,
-                     typeof v,
-                     v
-                  );
+                  // console.debug(
+                  //    "[iseAPI.scoreWord] formData entry:",
+                  //    k,
+                  //    typeof v,
+                  //    v
+                  // );
                }
             }
          } catch (e) {
-            console.debug("[iseAPI.scoreWord] formData debug failed", e);
+            // console.debug("[iseAPI.scoreWord] formData debug failed", e);
          }
 
          const response = await apiClient.post("/ise/score", formData);
@@ -436,10 +409,10 @@ export const iseAPI = {
             try {
                result = JSON.parse(result);
             } catch (parseError) {
-               console.warn(
-                  "Failed to parse ISE Word response as JSON:",
-                  parseError
-               );
+               // console.warn(
+               //    "Failed to parse ISE Word response as JSON:",
+               //    parseError
+               // );
                return { raw_response: result };
             }
          }
@@ -497,7 +470,7 @@ export const iseAPI = {
          // Fallback: return as-is if structure unknown
          return { raw_response: result };
       } catch (error) {
-         console.error("ISE Word API Error:", error);
+         // console.error("ISE Word API Error:", error);
 
          // Extract meaningful error message
          let errorMessage = "Không thể đánh giá phát âm từ vựng.";

@@ -56,10 +56,10 @@ const LessonDetailPage = () => {
         setHighlightedLineIds((stats?.lineIds || []).map(String))
         setHighlightedVocabularyIds((stats?.vocabularyIds || []).map(String))
       } catch (e) {
-        console.warn("Failed to fetch pronounced stats:", e)
+        // console.warn("Failed to fetch pronounced stats:", e)
       }
     } catch (error) {
-      console.error("Error fetching lesson:", handleApiError(error))
+      // console.error("Error fetching lesson:", handleApiError(error))
     } finally {
       setLoading(false)
     }
@@ -80,7 +80,7 @@ const LessonDetailPage = () => {
             if (String(e.lessonId) !== String(lessonId)) continue
             if (e?.lineId != null) lineIds.push(String(e.lineId))
             if (e?.vocabularyId != null) vocabularyIds.push(String(e.vocabularyId))
-          } catch (ignored) {}
+          } catch (ignored) { }
         }
         lineIds = Array.from(new Set(lineIds))
         vocabularyIds = Array.from(new Set(vocabularyIds))
@@ -102,7 +102,7 @@ const LessonDetailPage = () => {
         setHighlightedVocabularyIds((stats?.vocabularyIds || []).map(String))
       }
     } catch (e) {
-      console.warn("Failed to refresh pronounced stats:", e)
+      // console.warn("Failed to refresh pronounced stats:", e)
     }
   }
 

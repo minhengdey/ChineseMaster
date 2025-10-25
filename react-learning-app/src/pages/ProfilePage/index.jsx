@@ -105,7 +105,7 @@ const ProfilePage = ({ user }) => {
               return { date: today, avgScore: newAvg, count: newCount }
             })
           } catch (e) {
-            console.debug('optimistic todayStat update failed', e)
+            // console.debug('optimistic todayStat update failed', e)
           }
         }
 
@@ -154,7 +154,7 @@ const ProfilePage = ({ user }) => {
           })
         }
       } catch (err) {
-        console.debug("optimistic stats update failed", err)
+        // console.debug("optimistic stats update failed", err)
       }
 
       setTimeout(() => fetchIseStatsWeekly(), 1000)
@@ -178,11 +178,11 @@ const ProfilePage = ({ user }) => {
         const rows = Array.isArray(daily?.rows) ? daily.rows : []
         setTodayStat(rows.length > 0 ? rows[0] : null)
       } catch (e) {
-        console.debug('failed to fetch today daily stat', e)
+        // console.debug('failed to fetch today daily stat', e)
         setTodayStat(null)
       }
     } catch (e) {
-      console.debug("failed weekly stats", e)
+      // console.debug("failed weekly stats", e)
       setWeeklyRows([])
     }
 
@@ -292,6 +292,7 @@ const ProfilePage = ({ user }) => {
               avgSentenceScore,
             }
           } catch (e) {
+            // console.debug('error enriching lesson', e)
             return r
           }
         }),
@@ -299,7 +300,7 @@ const ProfilePage = ({ user }) => {
 
       setLessonRows(enriched)
     } catch (e) {
-      console.debug("failed lesson stats", e)
+      // console.debug("failed lesson stats", e)
       setLessonRows([])
     }
 
@@ -309,7 +310,7 @@ const ProfilePage = ({ user }) => {
       testsRows = Array.isArray(tests?.rows) ? tests.rows : []
       setTestRows(testsRows)
     } catch (e) {
-      console.debug("failed test stats", e)
+      // console.debug("failed test stats", e)
       setTestRows([])
     }
 
@@ -328,13 +329,13 @@ const ProfilePage = ({ user }) => {
         const vids = distinct?.vocabularyIds || distinct?.vocabularyIds || []
         wordsLearned = Array.isArray(vids) ? vids.length : Number(distinct?.count || 0)
       } catch (e) {
-        console.debug("failed to fetch distinct vocab for user", e)
+        // console.debug("failed to fetch distinct vocab for user", e)
         wordsLearned = 0
       }
 
       setSummary({ lessonsCompleted, wordsLearned, hskkCount })
     } catch (e) {
-      console.debug("failed to compute profile summary", e)
+      // console.debug("failed to compute profile summary", e)
     }
 
     setStatsLoading(false)
@@ -349,7 +350,7 @@ const ProfilePage = ({ user }) => {
         email: profile.email || "",
       }))
     } catch (error) {
-      console.error("Error fetching profile:", handleApiError(error))
+      // console.error("Error fetching profile:", handleApiError(error))
     } finally {
       setLoading(false)
     }
