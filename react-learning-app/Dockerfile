@@ -1,5 +1,5 @@
 # --- Build stage ---
-FROM node:18-alpine AS frontend-build
+FROM node:20-alpine AS frontend-build
 WORKDIR /app
 
 # Copy package.json và package-lock.json rồi cài dependencies
