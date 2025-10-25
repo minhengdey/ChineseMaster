@@ -18,7 +18,7 @@ const SentencePronunciationResult = ({
       const audioUrl = URL.createObjectURL(recordedAudio);
       const audio = new Audio(audioUrl);
       audio.play().catch((error) => {
-        console.error("Error playing audio:", error);
+        // console.error("Error playing audio:", error);
       });
     }
   };
@@ -402,10 +402,10 @@ const SentencePronunciationResult = ({
                                   if (query) res = await pronunciationAPI.lookup(query);
                                   setGuide(res || null);
                                 } catch (err) {
-                                  console.error(
-                                    "Pronunciation guide lookup failed",
-                                    err
-                                  );
+                                  // console.error(
+                                  //   "Pronunciation guide lookup failed",
+                                  //   err
+                                  // );
                                   setGuide(null);
                                 }
                               }}

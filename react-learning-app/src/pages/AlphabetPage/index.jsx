@@ -47,7 +47,7 @@ const AlphabetPage = () => {
         setPinyinTable(tableData)
         setAlphabetData(alphabetLookup)
       } catch (error) {
-        console.error("Error fetching data:", error)
+        // console.error("Error fetching data:", error)
       } finally {
         setLoading(false)
       }
@@ -77,7 +77,7 @@ const AlphabetPage = () => {
       // Example: https://res.cloudinary.com/dtshwjjbc/video/upload/v1760853479/chinese-master/pinyin-audio/bi3.mp3
       const audioUrl = `${cloudinaryBaseUrl}/${filename}`
 
-      console.log("Playing audio from Cloudinary:", audioUrl)
+      // console.log("Playing audio from Cloudinary:", audioUrl)
 
       const audio = new Audio(audioUrl)
       setCurrentAudio(audio)
@@ -88,7 +88,7 @@ const AlphabetPage = () => {
       }
 
       const onError = (e) => {
-        console.error("Error playing audio from Cloudinary:", audioUrl, e)
+        // console.error("Error playing audio from Cloudinary:", audioUrl, e)
         setIsPlaying(false)
         setCurrentAudio(null)
       }
@@ -98,13 +98,13 @@ const AlphabetPage = () => {
 
       await audio.play()
     } catch (error) {
-      console.error("Error playing audio:", error)
+      // console.error("Error playing audio:", error)
       setIsPlaying(false)
     }
   }
 
   const handleCellClick = (pinyin) => {
-    console.log("AlphabetPage: cell clicked", pinyin)
+    // console.log("AlphabetPage: cell clicked", pinyin)
     const item = alphabetData[pinyin] || {
       pinyin: pinyin,
       variants: [],
@@ -120,9 +120,9 @@ const AlphabetPage = () => {
         selectedItem: selectedItem ? { pinyin: selectedItem.pinyin, variantsCount: selectedItem.variants?.length || 0 } : null,
         showPronunciationResult: !!showPronunciationResult,
       }
-      console.log("AlphabetPage state (snapshot):", JSON.stringify(snapshot))
+      // console.log("AlphabetPage state (snapshot):", JSON.stringify(snapshot))
     } catch (err) {
-      console.log("AlphabetPage state: (error stringify)", { showModal, selectedItem, showPronunciationResult })
+      // console.log("AlphabetPage state: (error stringify)", { showModal, selectedItem, showPronunciationResult })
     }
   }, [showModal, selectedItem, showPronunciationResult])
 
@@ -133,13 +133,13 @@ const AlphabetPage = () => {
       const rootModals = Array.from(document.querySelectorAll('body > .modal.modal-open'))
       const backdrops = Array.from(document.querySelectorAll('body .modal-backdrop'))
       const boxes = Array.from(document.querySelectorAll('body .modal-box'))
-      console.log('DOM check: rootModals=', rootModals.length, 'backdrops=', backdrops.length, 'boxes=', boxes.length)
+      // console.log('DOM check: rootModals=', rootModals.length, 'backdrops=', backdrops.length, 'boxes=', boxes.length)
       try {
-        rootModals.forEach((el, i) => console.log(`rootModal[${i}] rect:`, el.getBoundingClientRect()))
-        backdrops.forEach((el, i) => console.log(`backdrop[${i}] rect:`, el.getBoundingClientRect()))
-        boxes.forEach((el, i) => console.log(`box[${i}] rect:`, el.getBoundingClientRect()))
+        // rootModals.forEach((el, i) => console.log(`rootModal[${i}] rect:`, el.getBoundingClientRect()))
+        // backdrops.forEach((el, i) => console.log(`backdrop[${i}] rect:`, el.getBoundingClientRect()))
+        // boxes.forEach((el, i) => console.log(`box[${i}] rect:`, el.getBoundingClientRect()))
       } catch (err) {
-        console.log('DOM check boundingRect error', err)
+        // console.log('DOM check boundingRect error', err)
       }
     }
     // run immediately and after a short delay to catch async mount

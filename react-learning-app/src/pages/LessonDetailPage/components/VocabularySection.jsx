@@ -25,20 +25,20 @@ const VocabularySection = ({
   // Debug: print highlighted IDs received from backend so we can verify matching
   if (process.env.NODE_ENV !== "production") {
     try {
-      console.debug(
-        "[VocabularySection] highlightedVocabularyIds (from API):",
-        highlightedVocabularyIds,
-        "local:",
-        localHighlightedVocabularyIds,
-      )
+      // console.debug(
+      //   "[VocabularySection] highlightedVocabularyIds (from API):",
+      //   highlightedVocabularyIds,
+      //   "local:",
+      //   localHighlightedVocabularyIds,
+      // )
     } catch (e) {
       // ignore
     }
   }
-  
+
   // Debug: log when localHighlightedVocabularyIds changes
   useEffect(() => {
-    console.log("[VocabularySection] localHighlightedVocabularyIds changed:", localHighlightedVocabularyIds)
+    // console.log("[VocabularySection] localHighlightedVocabularyIds changed:", localHighlightedVocabularyIds)
   }, [localHighlightedVocabularyIds])
 
   // Fetch pronounced stats for this lesson (vocabulary ids) so server-side practiced words
@@ -58,7 +58,7 @@ const VocabularySection = ({
               : []
         if (mounted) setLocalHighlightedVocabularyIds(ids)
       } catch (e) {
-        console.warn("Failed to fetch pronounced stats for lesson", lessonId, e)
+        // console.warn("Failed to fetch pronounced stats for lesson", lessonId, e)
       }
     }
 
@@ -90,29 +90,29 @@ const VocabularySection = ({
           const vocabulary = vocabularies?.find(v => String(v.id) === String(vocabularyId))
           if (vocabulary && vocabulary.externalId) {
             const externalIdStr = String(vocabulary.externalId)
-            console.log("[VocabularySection] Adding to highlighted:", externalIdStr, "from vocabulary:", vocabulary)
+            // console.log("[VocabularySection] Adding to highlighted:", externalIdStr, "from vocabulary:", vocabulary)
             setLocalHighlightedVocabularyIds((prev) => {
               if (!prev || !Array.isArray(prev)) return [externalIdStr]
               if (prev.map(String).includes(externalIdStr)) return prev
               return [...prev, externalIdStr]
             })
           } else {
-            console.warn("[VocabularySection] Could not find vocabulary for ID:", vocabularyId)
+            // console.warn("[VocabularySection] Could not find vocabulary for ID:", vocabularyId)
           }
         }
       }
     } catch (e) {
-      console.warn("Failed to append to localHighlightedVocabularyIds", e)
+      // console.warn("Failed to append to localHighlightedVocabularyIds", e)
     }
 
     try {
       if (typeof refreshPronounced === "function") {
-        console.log("[VocabularySection] Calling refreshPronounced...")
+        // console.log("[VocabularySection] Calling refreshPronounced...")
         await refreshPronounced()
-        console.log("[VocabularySection] refreshPronounced completed")
+        // console.log("[VocabularySection] refreshPronounced completed")
       }
     } catch (e) {
-      console.warn("Failed to refresh pronounced after word score:", e)
+      // console.warn("Failed to refresh pronounced after word score:", e)
     }
   }
 
@@ -190,8 +190,8 @@ const VocabularySection = ({
     // Debug per-vocabulary (mirrors ConversationSection debug pattern)
     if (process.env.NODE_ENV !== "production") {
       try {
-        console.debug(`[VocabularySection] vocab ${vocabulary.externalId} highlighted?`, isHighlighted)
-      } catch (e) {}
+        // console.debug(`[VocabularySection] vocab ${vocabulary.externalId} highlighted?`, isHighlighted)
+      } catch (e) { }
     }
     // Extract example fields early so they can be used for both the example block
     // and when showing the pronunciation result for example recordings.
@@ -202,20 +202,20 @@ const VocabularySection = ({
     // Determine score-based class if this active result exists for the card
     const scoreValue = extractScoreForActive(vocabulary)
     const scoreClass = getScoreClass(scoreValue)
-    
+
     // Simple logic: Practice highlighting or default
     let cardHighlightClass = "border-slate-200 bg-white hover:border-purple-300"
-    
+
     if (isHighlighted) {
       // Practice highlighting - green gradient background + green border color + shadow
       cardHighlightClass = "!border-green-500 !bg-gradient-to-br !from-green-100 !to-emerald-100 !shadow-md"
     }
-    
+
     // Debug final card class
     if (process.env.NODE_ENV !== "production") {
       try {
-        console.debug(`[VocabularySection] vocab ${vocabulary.externalId} - isHighlighted:`, isHighlighted, 'cardHighlightClass:', cardHighlightClass)
-      } catch (e) {}
+        // console.debug(`[VocabularySection] vocab ${vocabulary.externalId} - isHighlighted:`, isHighlighted, 'cardHighlightClass:', cardHighlightClass)
+      } catch (e) { }
     }
 
     return (

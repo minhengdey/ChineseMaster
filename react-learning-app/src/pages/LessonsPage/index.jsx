@@ -44,7 +44,7 @@ const LessonsPage = () => {
               const vocabComplete = totalVocab === 0 || userVocabs >= totalVocab
               map[ls.id] = !!(linesComplete && vocabComplete)
             } catch (err) {
-              console.debug("Failed to fetch completion for lesson", ls.id, err)
+              // console.debug("Failed to fetch completion for lesson", ls.id, err)
               map[ls.id] = false
             }
           }),
@@ -52,7 +52,7 @@ const LessonsPage = () => {
         setLessonCompletionMap(map)
       }
     } catch (error) {
-      console.error("Error fetching curriculum lessons:", handleApiError(error))
+      // console.error("Error fetching curriculum lessons:", handleApiError(error))
     } finally {
       setLoading(false)
     }

@@ -26,7 +26,7 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
         setCompleted(linesComplete && vocabComplete)
         setInProgress(!(linesComplete && vocabComplete) && (userLines > 0 || userVocabs > 0))
       } catch (e) {
-        console.debug("Failed to fetch lesson completion", e)
+        // console.debug("Failed to fetch lesson completion", e)
       }
     }
     fetchStatus()
@@ -51,15 +51,14 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
 
   return (
     <div
-      className={`card shadow-lg transition-all duration-300 overflow-hidden border-2 ${
-        isLocked
+      className={`card shadow-lg transition-all duration-300 overflow-hidden border-2 ${isLocked
           ? "bg-slate-100 border-slate-300 opacity-60 cursor-not-allowed"
           : completed
             ? "border-emerald-300 hover:shadow-xl hover:scale-105 bg-white"
             : inProgress
               ? "border-amber-300 hover:shadow-xl hover:scale-105 bg-white"
               : "border-slate-200 hover:shadow-xl hover:scale-105 bg-white"
-      }`}
+        }`}
     >
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
@@ -70,13 +69,12 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
             </div>
           </div>
           <div
-            className={`text-xs font-semibold px-3 py-1 rounded-full ${
-              completed
+            className={`text-xs font-semibold px-3 py-1 rounded-full ${completed
                 ? "bg-emerald-100 text-emerald-700"
                 : inProgress
                   ? "bg-amber-100 text-amber-700"
                   : "bg-slate-100 text-slate-700"
-            }`}
+              }`}
           >
             {getLessonStatusText()}
           </div>

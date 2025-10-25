@@ -31,7 +31,7 @@ const WordRecordingButton = ({
       await rec.start()
       setIsRecording(true)
     } catch (e) {
-      console.error("startRecording failed", e)
+      // console.error("startRecording failed", e)
       setError("Không thể truy cập microphone. Vui lòng cho phép quyền ghi âm.")
     }
   }
@@ -48,7 +48,7 @@ const WordRecordingButton = ({
       setAudioBlob(blob)
       setTimeout(() => submitForAnalysisWithBlob(blob), 150)
     } catch (e) {
-      console.error("stopRecording error", e)
+      // console.error("stopRecording error", e)
       setError("Không thể hoàn tất ghi âm. Vui lòng thử lại.")
     }
   }
@@ -104,7 +104,7 @@ const WordRecordingButton = ({
       }
       onScore && onScore(normalized, blob, vocabExternal ? `word-${vocabExternal}` : undefined)
     } catch (err) {
-      console.error("submitForAnalysisWithBlob error", err)
+      // console.error("submitForAnalysisWithBlob error", err)
       setError(err.message || "Không thể đánh giá phát âm. Vui lòng thử lại.")
     } finally {
       setIsAnalyzing(false)
@@ -114,7 +114,7 @@ const WordRecordingButton = ({
   const playRecordedAudio = () => {
     if (!audioBlob) return
     playBlobSafely(audioBlob).catch((err) => {
-      console.error("playback error", err)
+      // console.error("playback error", err)
       setError("Không thể phát âm thanh đã ghi")
     })
   }

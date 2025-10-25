@@ -28,7 +28,7 @@ const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onSta
       await rec.start()
       setIsRecording(true)
     } catch (error) {
-      console.error("Error starting recording:", error)
+      // console.error("Error starting recording:", error)
       setError("Không thể truy cập microphone. Vui lòng cho phép quyền ghi âm.")
       setIsRecording(false)
     }
@@ -49,7 +49,7 @@ const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onSta
       // Auto analyze shortly after finalization
       setTimeout(() => submitForAnalysisWithBlob(blob), 150)
     } catch (err) {
-      console.error("Error during finalize:", err)
+      // console.error("Error during finalize:", err)
       setError("Không thể hoàn tất ghi âm. Vui lòng thử lại.")
     }
   }
@@ -71,9 +71,9 @@ const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onSta
         throw new Error("Không có text để phân tích")
       }
 
-      console.log("Auto-analyzing sentence:", textToAnalyze)
-      console.log("Audio blob type:", blob.type)
-      console.log("Audio blob size:", blob.size)
+      // console.log("Auto-analyzing sentence:", textToAnalyze)
+      // console.log("Audio blob type:", blob.type)
+      // console.log("Audio blob size:", blob.size)
 
       // Add helpful metadata: mime, size, sha256
       const mime = blob.type || "audio/webm"
@@ -92,7 +92,7 @@ const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onSta
 
       const result = await iseAPI.scoreSentence(payload)
 
-      console.log("Analysis result:", result)
+      // console.log("Analysis result:", result)
 
       if (result && result.success !== false && onScore) {
         onScore(result, blob, lineId)
@@ -100,7 +100,7 @@ const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onSta
         setError(result?.error || result?.message || "Không thể đánh giá phát âm. Vui lòng thử lại.")
       }
     } catch (error) {
-      console.error("Error analyzing audio:", error)
+      // console.error("Error analyzing audio:", error)
       setError(error.message || "Không thể đánh giá phát âm. Vui lòng kiểm tra kết nối mạng và thử lại.")
     } finally {
       setIsAnalyzing(false)
@@ -114,7 +114,7 @@ const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onSta
   const playRecordedAudio = () => {
     if (audioBlob) {
       playBlobSafely(audioBlob).catch((error) => {
-        console.error("Error playing audio:", error)
+        // console.error("Error playing audio:", error)
         setError("Không thể phát âm thanh đã ghi")
       })
     }

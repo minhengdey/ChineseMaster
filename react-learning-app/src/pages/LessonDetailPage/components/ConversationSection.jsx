@@ -22,12 +22,12 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
   // Debug: print highlighted IDs received from backend so we can verify matching
   if (process.env.NODE_ENV !== "production") {
     try {
-      console.debug(
-        "[ConversationSection] highlightedLineIds (from API):",
-        highlightedLineIds,
-        "local:",
-        localHighlightedLineIds,
-      )
+      // console.debug(
+      //   "[ConversationSection] highlightedLineIds (from API):",
+      //   highlightedLineIds,
+      //   "local:",
+      //   localHighlightedLineIds,
+      // )
     } catch (e) {
       // ignore
     }
@@ -48,7 +48,7 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
               : []
         if (mounted) setLocalHighlightedLineIds(ids)
       } catch (e) {
-        console.warn("Failed to fetch pronounced stats for lesson", lessonId, e)
+        // console.warn("Failed to fetch pronounced stats for lesson", lessonId, e)
       }
     }
 
@@ -61,7 +61,7 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
   const handlePronunciationScore = async (result, audioBlob, returnedLineId, internalLineId, externalLineId) => {
     // returnedLineId may be externalId or internal id depending on recorder logic.
     // internalLineId is numeric internal id; externalLineId is the stable external id from content DTO.
-    console.log("handlePronunciationScore ids:", { returnedLineId, internalLineId, externalLineId })
+    // console.log("handlePronunciationScore ids:", { returnedLineId, internalLineId, externalLineId })
     setPronunciationResult(result)
     setRecordedAudio(audioBlob)
     // Use externalLineId as active id for highlighting/result-panel so comparisons match line.externalId
@@ -94,7 +94,7 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
         })
       }
     } catch (e) {
-      console.warn("Failed to append to localHighlightedLineIds", e)
+      // console.warn("Failed to append to localHighlightedLineIds", e)
     }
 
     // Refresh pronounced stats so highlighting/progress updates live
@@ -103,7 +103,7 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
         await refreshPronounced()
       }
     } catch (e) {
-      console.warn("Failed to refresh pronounced after score:", e)
+      // console.warn("Failed to refresh pronounced after score:", e)
     }
   }
 
@@ -176,19 +176,18 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
                   // Debug per-line
                   if (process.env.NODE_ENV !== "production") {
                     try {
-                      console.debug(`[ConversationSection] line ${line.externalId} highlighted?`, isHighlighted)
-                    } catch (e) {}
+                      // console.debug(`[ConversationSection] line ${line.externalId} highlighted?`, isHighlighted)
+                    } catch (e) { }
                   }
-                  console.log(line)
+                  // console.log(line)
 
                   return (
                     <div
                       key={line.externalId ?? line.id}
-                      className={`p-4 rounded-lg transition-all ${
-                        isHighlighted
+                      className={`p-4 rounded-lg transition-all ${isHighlighted
                           ? "bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-500 shadow-md"
                           : "bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200"
-                      }`}
+                        }`}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <span className="font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">

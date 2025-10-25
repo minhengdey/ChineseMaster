@@ -237,7 +237,7 @@ const SpeakingPracticePage = () => {
         return
       }
     } catch (err) {
-      console.error(err)
+      // console.error(err)
       setError("Không thể lấy câu từ server")
       setQueue([])
       setSentence("")
@@ -297,7 +297,7 @@ const SpeakingPracticePage = () => {
       setResult(null)
       return
     } catch (err) {
-      console.error(err)
+      // console.error(err)
       setError("Không thể lấy từ vựng từ server")
       setQueue([])
       setSentence("")
@@ -312,19 +312,19 @@ const SpeakingPracticePage = () => {
       setWeeklyRows(Array.isArray(weekly?.rows) ? weekly.rows : [])
     } catch (e) {
       // ignore stats errors silently
-      console.debug("weekly stats error", e)
+      // console.debug("weekly stats error", e)
     }
     try {
       const lessons = await iseStatsAPI.getLessons()
       setLessonRows(Array.isArray(lessons?.rows) ? lessons.rows : [])
     } catch (e) {
-      console.debug("lesson stats error", e)
+      // console.debug("lesson stats error", e)
     }
     try {
       const tests = await iseStatsAPI.getTests()
       setTestRows(Array.isArray(tests?.rows) ? tests.rows : [])
     } catch (e) {
-      console.debug("test stats error", e)
+      // console.debug("test stats error", e)
     }
   }
 
@@ -375,7 +375,7 @@ const SpeakingPracticePage = () => {
       setAudioBlob(null)
       setResult(null)
     } catch (err) {
-      console.error(err)
+      // console.error(err)
       setError("Không thể lấy câu từ server")
     } finally {
       setLoading(false)
@@ -453,7 +453,6 @@ const SpeakingPracticePage = () => {
       mediaRecorder.start()
       setRecording(true)
     } catch (err) {
-      console.error("getUserMedia error", err)
       setError("Không thể truy cập micro")
     }
   }
@@ -487,7 +486,7 @@ const SpeakingPracticePage = () => {
       const file = new File([audioBlob], "recording.webm", { type: audioBlob.type })
       const sessionDate = new Date().toISOString()
 
-      console.log("Submitting score for", { text: sentence, file, lessonId, isDailyMode, sessionDate })
+      // console.log("Submitting score for", { text: sentence, file, lessonId, isDailyMode, sessionDate })
 
       const payload = {
         text: sentence,
@@ -540,20 +539,19 @@ const SpeakingPracticePage = () => {
             } else {
               await userLessonAPI.complete(lessonId, false)
             }
-            console.debug("Marked lesson completed:", lessonId)
+            // console.debug("Marked lesson completed:", lessonId)
           } catch (e) {
-            console.debug("Failed to mark lesson completed", e)
+            // console.debug("Failed to mark lesson completed", e)
           }
         }
       } catch (e) {
-        console.debug("lesson complete check failed", e)
+        // console.debug("lesson complete check failed", e)
       }
     } catch (err) {
-      console.error("submitScore error", err)
       if (err?.response) {
-        console.error("Response status", err.response.status)
-        console.error("Response headers", err.response.headers)
-        console.error("Response data", err.response.data)
+        // console.error("Response status", err.response.status)
+        // console.error("Response headers", err.response.headers)
+        // console.error("Response data", err.response.data)
       }
       const serverMsg = err?.response?.data?.error || err?.response?.data || err?.message || "Gửi file bị lỗi"
       const displayMsg = typeof serverMsg === "string" ? serverMsg : JSON.stringify(serverMsg)

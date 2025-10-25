@@ -6,7 +6,7 @@ export async function computeSha256Hex(blob) {
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     } catch (e) {
-        console.warn('Failed to compute SHA-256', e);
+        // console.warn('Failed to compute SHA-256', e);
         return null;
     }
 }
@@ -58,7 +58,33 @@ export async function playBlobSafely(blob) {
 
 // Start a recorder that accumulates chunks and returns a stop() Promise that resolves to a complete Blob.
 export async function createRecorder(options = {}) {
-    const { mimeType = 'audio/webm;codecs=opus' } = options;
+    // Choose a safe mimeType. If caller provides mimeType use it; otherwise probe supported types.
+    const { mimeType: requestedMime } = options;
+    let mimeType = requestedMime;
+    try {
+        if (!mimeType && typeof MediaRecorder !== 'undefined' && typeof MediaRecorder.isTypeSupported === 'function') {
+            const candidates = [
+                'audio/webm;codecs=opus',
+                'audio/ogg;codecs=opus',
+                'audio/mp4',
+                'audio/mpeg',
+                'audio/webm'
+            ];
+            for (const c of candidates) {
+                try {
+                    if (MediaRecorder.isTypeSupported(c)) {
+                        mimeType = c;
+                        break;
+                    }
+                } catch (e) {
+                    // ignore probing errors and continue
+                }
+            }
+        }
+    } catch (e) {
+        // guard: if probing throws for any reason, fall back to undefined and let the browser decide
+        mimeType = mimeType || undefined;
+    }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Browser does not support MediaDevices.getUserMedia');
     }
@@ -72,10 +98,21 @@ export async function createRecorder(options = {}) {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     let mediaRecorder;
     try {
-        mediaRecorder = new MediaRecorder(stream, { mimeType });
+        if (mimeType) {
+            // console.debug('createRecorder: using mimeType', mimeType);
+            mediaRecorder = new MediaRecorder(stream, { mimeType });
+        } else {
+            // console.debug('createRecorder: no supported mimeType detected, creating MediaRecorder without explicit mime');
+            mediaRecorder = new MediaRecorder(stream);
+        }
     } catch (e) {
         // fallback without mimeType
-        mediaRecorder = new MediaRecorder(stream);
+        try {
+            mediaRecorder = new MediaRecorder(stream);
+        } catch (err) {
+            // rethrow the original exception as it is more informative
+            throw e;
+        }
     }
 
     const chunks = [];

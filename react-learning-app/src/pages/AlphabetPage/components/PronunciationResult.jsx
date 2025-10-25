@@ -103,7 +103,7 @@ const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = ""
       audioRef.current = new Audio(audioUrlRef.current)
       await audioRef.current.play()
     } catch (err) {
-      console.error("Error playing audio:", err)
+      // console.error("Error playing audio:", err)
     }
   }
 
@@ -394,7 +394,7 @@ const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = ""
                                   }
                                   setGuide(res || null)
                                 } catch (err) {
-                                  console.error("Pronunciation guide lookup failed", err)
+                                  // console.error("Pronunciation guide lookup failed", err)
                                   setGuide(null)
                                 }
                               }}
