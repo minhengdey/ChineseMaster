@@ -11,9 +11,13 @@ const LessonProgress = ({
   if (distinctLineCount != null || distinctVocabularyCount != null) {
     const dl = Number(distinctLineCount || 0)
     const dv = Number(distinctVocabularyCount || 0)
-    numerator = Math.max(0, dl + dv)
+    // raw number of distinct items pronounced
+    const rawNumerator = Math.max(0, dl + dv)
+    // Ensure numerator never exceeds the denominator (total items)
+    // This avoids cases where inconsistent data makes numerator > denominator
+    numerator = Math.min(rawNumerator, denominator)
   } else {
-    numerator = Math.max(0, pronouncedCount || 0)
+    numerator = Math.max(0, Number(pronouncedCount || 0))
   }
   const rawPercent = Math.min(100, Math.round((numerator / denominator) * 100))
 
