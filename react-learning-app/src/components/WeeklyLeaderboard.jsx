@@ -45,7 +45,6 @@ const WeeklyLeaderboard = ({ className }) => {
 
                 setRows(enriched)
             } catch (e) {
-                console.debug("Failed to load weekly leaderboard", e)
                 setError(e?.message || "Không thể tải BXH")
                 setRows([])
             } finally {
