@@ -63,6 +63,12 @@ export async function createRecorder(options = {}) {
         throw new Error('Browser does not support MediaDevices.getUserMedia');
     }
 
+    // getUserMedia requires a secure context (HTTPS) on many mobile browsers (especially
+    // iOS Safari). Provide a clearer error message when running on an insecure origin.
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+        throw new Error('getUserMedia requires a secure context (HTTPS). Please use HTTPS or test locally via localhost.');
+    }
+
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     let mediaRecorder;
     try {
