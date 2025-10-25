@@ -269,11 +269,22 @@ export const iseAPI = {
          const formData = new FormData();
          // required parts
          // Append text parts as Blobs with explicit text/plain content type so Spring's @RequestPart can convert them
-         formData.append(
-            "text",
-            new Blob([text ?? ""], { type: "text/plain;charset=UTF-8" })
-         );
-         formData.append("audio", audioFile);
+         // Append text as a plain string part — simpler and more compatible with some mobile
+         // WebViews which may treat Blob parts differently. Spring @RequestPart can accept
+         // a simple string for the text part.
+         formData.append("text", text ?? "");
+         // Ensure the audio part includes a filename (some mobile browsers/webviews omit it for plain Blob)
+         try {
+            let audioPart = audioFile;
+            // If it's a Blob but not a File, wrap it with a filename so Spring's Multipart parsing receives a filename
+            if (typeof File !== 'undefined' && audioFile instanceof Blob && !(audioFile instanceof File)) {
+               audioPart = new File([audioFile], 'recording.webm', { type: audioFile.type || 'audio/webm' });
+            }
+            formData.append("audio", audioPart);
+         } catch (e) {
+            // fallback: append as-is
+            formData.append("audio", audioFile);
+         }
          formData.append(
             "sub",
             new Blob([sub ?? ""], { type: "text/plain;charset=UTF-8" })
@@ -283,69 +294,17 @@ export const iseAPI = {
             new Blob([ent ?? ""], { type: "text/plain;charset=UTF-8" })
          );
 
-         // optional parts - only append when provided (not null/undefined)
-         if (scoreCategory != null)
-            formData.append(
-               "scoreCategory",
-               new Blob([String(scoreCategory)], {
-                  type: "text/plain;charset=UTF-8",
-               })
-            );
-         if (lessonId != null)
-            formData.append(
-               "lessonId",
-               new Blob([String(lessonId)], {
-                  type: "text/plain;charset=UTF-8",
-               })
-            );
-         if (lineId != null)
-            formData.append(
-               "lineId",
-               new Blob([String(lineId)], { type: "text/plain;charset=UTF-8" })
-            );
-         if (vocabularyId != null)
-            formData.append(
-               "vocabularyId",
-               new Blob([String(vocabularyId)], { type: "text/plain;charset=UTF-8" })
-            );
-         if (source != null)
-            formData.append(
-               "source",
-               new Blob([String(source)], { type: "text/plain;charset=UTF-8" })
-            );
-         if (testId != null)
-            formData.append(
-               "testId",
-               new Blob([String(testId)], { type: "text/plain;charset=UTF-8" })
-            );
-         if (includeInDaily != null)
-            formData.append(
-               "includeInDaily",
-               new Blob([String(includeInDaily)], {
-                  type: "text/plain;charset=UTF-8",
-               })
-            );
-         if (sessionDate != null)
-            formData.append(
-               "sessionDate",
-               new Blob([String(sessionDate)], {
-                  type: "text/plain;charset=UTF-8",
-               })
-            );
-         if (durationSeconds != null)
-            formData.append(
-               "durationSeconds",
-               new Blob([String(durationSeconds)], {
-                  type: "text/plain;charset=UTF-8",
-               })
-            );
-         if (numSentences != null)
-            formData.append(
-               "numSentences",
-               new Blob([String(numSentences)], {
-                  type: "text/plain;charset=UTF-8",
-               })
-            );
+         // optional parts - append as plain strings for better compatibility on mobile
+         if (scoreCategory != null) formData.append("scoreCategory", String(scoreCategory));
+         if (lessonId != null) formData.append("lessonId", String(lessonId));
+         if (lineId != null) formData.append("lineId", String(lineId));
+         if (vocabularyId != null) formData.append("vocabularyId", String(vocabularyId));
+         if (source != null) formData.append("source", String(source));
+         if (testId != null) formData.append("testId", String(testId));
+         if (includeInDaily != null) formData.append("includeInDaily", String(includeInDaily));
+         if (sessionDate != null) formData.append("sessionDate", String(sessionDate));
+         if (durationSeconds != null) formData.append("durationSeconds", String(durationSeconds));
+         if (numSentences != null) formData.append("numSentences", String(numSentences));
 
          // Debug: log FormData parts (key and type) to help server-side troubleshooting
          try {

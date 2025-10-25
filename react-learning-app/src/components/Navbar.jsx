@@ -80,8 +80,8 @@ const Navbar = ({ user, onLogout }) => {
                   key={item.path}
                   to={item.path}
                   className={`px-4 py-2 rounded-lg transition-all font-medium text-sm flex items-center gap-2 ${isActive(item.path)
-                      ? "bg-gradient-to-r from-purple-100 to-blue-100 text-purple-900 shadow-sm"
-                      : "text-slate-700 hover:bg-slate-100"
+                    ? "bg-gradient-to-r from-purple-100 to-blue-100 text-purple-900 shadow-sm"
+                    : "text-slate-700 hover:bg-slate-100"
                     }`}
                 >
                   <IconComponent size={18} />
@@ -137,8 +137,8 @@ const Navbar = ({ user, onLogout }) => {
                   to={item.path}
                   onClick={() => setIsMenuOpen(false)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium ${isActive(item.path)
-                      ? "bg-gradient-to-r from-purple-100 to-blue-100 text-purple-900"
-                      : "text-slate-700 hover:bg-slate-100"
+                    ? "bg-gradient-to-r from-purple-100 to-blue-100 text-purple-900"
+                    : "text-slate-700 hover:bg-slate-100"
                     }`}
                 >
                   <IconComponent size={18} />
@@ -146,6 +146,15 @@ const Navbar = ({ user, onLogout }) => {
                 </Link>
               )
             })}
+            <Link
+              to="/profile"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium text-slate-700 hover:bg-slate-100"
+            >
+              <User size={18} />
+              <span>Hồ sơ</span>
+            </Link>
+
             <button
               onClick={handleLogout}
               className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg mt-2 flex items-center gap-2"
