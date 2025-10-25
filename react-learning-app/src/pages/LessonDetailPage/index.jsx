@@ -228,7 +228,7 @@ const LessonDetailPage = () => {
               to={`/curriculum/${curriculumId}/lesson/${lessonId}/speaking`}
               className="btn-accent rounded-lg px-6 py-3 font-semibold"
             >
-              🎤 Kiểm tra câu bài
+              🎤 Kiểm tra bài khóa
             </Link>
           </div>
         </div>
