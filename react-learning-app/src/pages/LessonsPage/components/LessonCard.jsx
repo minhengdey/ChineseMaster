@@ -8,6 +8,16 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
   const [completed, setCompleted] = useState(Boolean(lesson?.completed))
   const [inProgress, setInProgress] = useState(Boolean(lesson?.inProgress))
 
+  // If parent marks the lesson as locked, keep it locked. Additionally,
+  // enforce a rule: unlock lessons up to `UNLOCK_UP_TO` (inclusive).
+  // Compare `lesson.order` with 12 using parseInt to handle string values.
+  const UNLOCK_UP_TO = 12
+  const lessonOrder = parseInt(lesson?.order, 10) || 0
+  // Default behavior: unlock lessons up to UNLOCK_UP_TO inclusive; lock only
+  // when lessonOrder > UNLOCK_UP_TO. This ignores parent `isLocked` for
+  // lessons within the unlocked range so lesson 1..12 remain accessible.
+  const localIsLocked = lessonOrder > UNLOCK_UP_TO
+
   useEffect(() => {
     let mounted = true
     const fetchStatus = async () => {
@@ -36,14 +46,14 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
   }, [lesson?.id])
 
   const getLessonStatusIcon = () => {
-    if (isLocked) return "🔒"
+    if (localIsLocked) return "🔒"
     if (completed) return "✅"
     if (inProgress) return "📖"
     return "📝"
   }
 
   const getLessonStatusText = () => {
-    if (isLocked) return "Đã khóa"
+    if (localIsLocked) return "Đã khóa"
     if (completed) return "Hoàn thành"
     if (inProgress) return "Đang học"
     return "Chưa bắt đầu"
@@ -51,13 +61,13 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
 
   return (
     <div
-      className={`card shadow-lg transition-all duration-300 overflow-hidden border-2 ${isLocked
-          ? "bg-slate-100 border-slate-300 opacity-60 cursor-not-allowed"
-          : completed
-            ? "border-emerald-300 hover:shadow-xl hover:scale-105 bg-white"
-            : inProgress
-              ? "border-amber-300 hover:shadow-xl hover:scale-105 bg-white"
-              : "border-slate-200 hover:shadow-xl hover:scale-105 bg-white"
+      className={`card shadow-lg transition-all duration-300 overflow-hidden border-2 ${localIsLocked
+        ? "bg-slate-100 border-slate-300 opacity-60 cursor-not-allowed"
+        : completed
+          ? "border-emerald-300 hover:shadow-xl hover:scale-105 bg-white"
+          : inProgress
+            ? "border-amber-300 hover:shadow-xl hover:scale-105 bg-white"
+            : "border-slate-200 hover:shadow-xl hover:scale-105 bg-white"
         }`}
     >
       <div className="p-6">
@@ -70,10 +80,10 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
           </div>
           <div
             className={`text-xs font-semibold px-3 py-1 rounded-full ${completed
-                ? "bg-emerald-100 text-emerald-700"
-                : inProgress
-                  ? "bg-amber-100 text-amber-700"
-                  : "bg-slate-100 text-slate-700"
+              ? "bg-emerald-100 text-emerald-700"
+              : inProgress
+                ? "bg-amber-100 text-amber-700"
+                : "bg-slate-100 text-slate-700"
               }`}
           >
             {getLessonStatusText()}
@@ -91,7 +101,7 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
         )}
 
         <div className="flex justify-end">
-          {isLocked ? (
+          {localIsLocked ? (
             <button className="px-4 py-2 bg-slate-300 text-slate-600 font-semibold rounded-lg cursor-not-allowed opacity-50">
               Hoàn thành bài trước
             </button>
