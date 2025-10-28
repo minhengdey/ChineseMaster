@@ -214,7 +214,12 @@ const ProfilePage = ({ user }) => {
                 avgSentenceScore = Number.isFinite(n) ? Math.round(n) : null
               }
 
-              if (avgWordScore == null && avgSentenceScore == null) {
+              // If either avgWordScore or avgSentenceScore is missing, try to
+              // compute the missing one(s) from raw entries. Previously we
+              // only computed when both were missing which caused one to be
+              // left empty and the UI to fall back to `avgScore` (often a
+              // word-based score). Compute any missing averages from entries.
+              if (avgWordScore == null || avgSentenceScore == null) {
                 let entries = []
                 if (Array.isArray(pronounced)) entries = pronounced
                 else if (Array.isArray(pronounced.entries)) entries = pronounced.entries
@@ -245,6 +250,8 @@ const ProfilePage = ({ user }) => {
                   }
                 }
 
+                // Compute averages independently. Only set avgWordScore if
+                // it was missing; same for avgSentenceScore.
                 if (vocabMap.size > 0) {
                   let acc = 0,
                     cnt = 0
@@ -254,7 +261,7 @@ const ProfilePage = ({ user }) => {
                       cnt += 1
                     }
                   }
-                  if (cnt > 0) avgWordScore = Math.round(acc / cnt)
+                  if (cnt > 0 && avgWordScore == null) avgWordScore = Math.round(acc / cnt)
                 }
 
                 if (lineMap.size > 0) {
@@ -266,7 +273,7 @@ const ProfilePage = ({ user }) => {
                       cnt += 1
                     }
                   }
-                  if (cnt > 0) avgSentenceScore = Math.round(acc / cnt)
+                  if (cnt > 0 && avgSentenceScore == null) avgSentenceScore = Math.round(acc / cnt)
                 }
               }
             }
@@ -284,12 +291,18 @@ const ProfilePage = ({ user }) => {
               completedFull = linesComplete && vocabComplete
             }
 
+            // If the user has word scores but no sentence scores, show 0 for
+            // sentence column instead of leaving it blank or falling back to
+            // the overall avg. This reflects "chưa làm phần câu" as 0.
+            const finalAvgSentenceScore =
+              avgSentenceScore != null ? avgSentenceScore : avgWordScore != null ? 0 : null
+
             return {
               ...r,
               completedFull,
               inProgress: resp?.inProgress ?? r.inProgress ?? false,
               avgWordScore,
-              avgSentenceScore,
+              avgSentenceScore: finalAvgSentenceScore,
             }
           } catch (e) {
             // console.debug('error enriching lesson', e)
