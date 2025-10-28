@@ -494,6 +494,38 @@ export const iseAPI = {
    },
 };
 
+export const adminAPI = {
+   getUsers: async () => {
+      const response = await apiClient.get('/admin/users');
+      return response.data;
+   },
+   whoami: async () => {
+      const response = await apiClient.get('/admin/whoami');
+      return response.data;
+   }
+};
+// admin management endpoints
+adminAPI.changeUserRole = async (userId, role) => {
+   const response = await apiClient.post(`/admin/users/${userId}/role`, { role });
+   return response.data;
+}
+adminAPI.createClass = async ({ name, description }) => {
+   const response = await apiClient.post('/admin/classes', { name, description });
+   return response.data;
+}
+adminAPI.listClasses = async () => {
+   const response = await apiClient.get('/admin/classes');
+   return response.data;
+}
+adminAPI.addMember = async (classId, { userId, email }) => {
+   const response = await apiClient.post(`/admin/classes/${classId}/members`, { userId, email });
+   return response.data;
+}
+adminAPI.removeMember = async (classId, userId) => {
+   const response = await apiClient.delete(`/admin/classes/${classId}/members/${userId}`);
+   return response.data;
+}
+
 // ISE stats for frontend displays (daily/lesson/test summaries)
 export const iseStatsAPI = {
    // Weekly performance: replaced daily with weekly. Keep getDaily as a compatibility alias.

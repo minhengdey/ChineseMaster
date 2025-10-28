@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+// no React hooks used directly here; routes rely on global store
 import {
    BrowserRouter as Router,
    Routes,
@@ -18,85 +18,94 @@ import PronunciationPage from "./pages/PronunciationPage";
 import ProfilePage from "./pages/ProfilePage";
 import AlphabetPage from "./pages/AlphabetPage";
 import Login from "./pages/LoginPage/index";
+import AdminDashboard from "./pages/AdminDashboard";
 
 import "./App.css";
 import { authAPI } from "./services/api";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+import { useUserStore } from "./store/UserStore";
+
 function App() {
-   const [user, setUser] = useState(null);
-   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-   useEffect(() => {
-      // Check if user is logged in
-      const token = localStorage.getItem("accessToken");
-      const userData = localStorage.getItem("user");
-
-      if (token && userData) {
-         setUser(JSON.parse(userData));
-         setIsAuthenticated(true);
-      }
-   }, []);
+   // Use global user store so admin role is available immediately
+   const storeUser = useUserStore((s) => s.user);
+   const user = storeUser; // keep compatible name used by ProfilePage prop
 
    return (
       <Router>
          <div className="min-h-screen bg-base-100">
             <Routes>
-               <Route
-                  element={
-                     <ProtectedRoute>
-                        <Navbar />
-                     </ProtectedRoute>
-                  }
-               >
-                  <Route index element={<HomePage />} />
-                  <Route path="curriculum" element={<CurriculumPage />} />
+               {/* If admin, expose only admin routes */}
+               {user && user.role === "ROLE_ADMIN" ? (
                   <Route
-                     path="curriculum/:curriculumId/lessons"
-                     element={<LessonsPage />}
-                  />
-                  <Route
-                     path="curriculum/:curriculumId/lesson/:lessonId"
-                     element={<LessonDetailPage />}
-                  />
-                  <Route
-                     path="curriculum/:curriculumId/lesson/:lessonId/practice"
-                     element={<VocabularyPracticePage />}
-                  />
-                  <Route
-                     path="/flashcard/:curriculumId/lesson/:lessonId"
-                     element={<FlashCardsLessonPage />}
-                  />
-                  <Route path="flashcards" element={<FlashcardsIndex />} />
-                  <Route path="flashcards/:curriculumId" element={<FlashcardsCurriculum />} />
-                  <Route
-                     path="curriculum/:curriculumId/lesson/:lessonId/speaking"
-                     element={<SpeakingPracticePage />}
-                  />
-                  {/* Legacy routes */}
-                  <Route
-                     path="lessons"
-                     element={<Navigate to="/curriculum" replace />}
-                  />
-                  <Route
-                     path="lesson/:id"
                      element={
-                        <Navigate to="/curriculum/1/lesson/:id" replace />
+                        <ProtectedRoute>
+                           <Navbar />
+                        </ProtectedRoute>
                      }
-                  />
-                  <Route path="pronunciation" element={<PronunciationPage />} />
-                  <Route path="alphabet" element={<AlphabetPage />} />
-                  <Route path="profile" element={<ProfilePage user={user} />} />
+                  >
+                     <Route index element={<AdminDashboard />} />
+                     <Route path="admin" element={<AdminDashboard />} />
+                     <Route path="profile" element={<ProfilePage user={user} />} />
+                  </Route>
+               ) : (
                   <Route
-                     path="/curriculum/:curriculumId/lesson/:lessonId/speaking"
-                     element={<SpeakingPracticePage />}
-                  />
-                  {/* Daily mixed speaking practice (from Pronunciation tab) */}
-                  <Route
-                     path="/speaking/daily"
-                     element={<SpeakingPracticePage />}
-                  />
-               </Route>
+                     element={
+                        <ProtectedRoute>
+                           <Navbar />
+                        </ProtectedRoute>
+                     }
+                  >
+                     <Route index element={<HomePage />} />
+                     <Route path="curriculum" element={<CurriculumPage />} />
+                     <Route
+                        path="curriculum/:curriculumId/lessons"
+                        element={<LessonsPage />}
+                     />
+                     <Route
+                        path="curriculum/:curriculumId/lesson/:lessonId"
+                        element={<LessonDetailPage />}
+                     />
+                     <Route
+                        path="curriculum/:curriculumId/lesson/:lessonId/practice"
+                        element={<VocabularyPracticePage />}
+                     />
+                     <Route
+                        path="/flashcard/:curriculumId/lesson/:lessonId"
+                        element={<FlashCardsLessonPage />}
+                     />
+                     <Route path="flashcards" element={<FlashcardsIndex />} />
+                     <Route path="flashcards/:curriculumId" element={<FlashcardsCurriculum />} />
+                     <Route
+                        path="curriculum/:curriculumId/lesson/:lessonId/speaking"
+                        element={<SpeakingPracticePage />}
+                     />
+                     {/* Legacy routes */}
+                     <Route
+                        path="lessons"
+                        element={<Navigate to="/curriculum" replace />}
+                     />
+                     <Route
+                        path="lesson/:id"
+                        element={
+                           <Navigate to="/curriculum/1/lesson/:id" replace />
+                        }
+                     />
+                     <Route path="pronunciation" element={<PronunciationPage />} />
+                     <Route path="alphabet" element={<AlphabetPage />} />
+                     <Route path="profile" element={<ProfilePage user={user} />} />
+                     <Route path="admin" element={<AdminDashboard />} />
+                     <Route
+                        path="/curriculum/:curriculumId/lesson/:lessonId/speaking"
+                        element={<SpeakingPracticePage />}
+                     />
+                     {/* Daily mixed speaking practice (from Pronunciation tab) */}
+                     <Route
+                        path="/speaking/daily"
+                        element={<SpeakingPracticePage />}
+                     />
+                  </Route>
+               )}
 
                <Route path="/login" element={<Login />} />
                <Route path="*" element={<Navigate to="/" replace />} />

@@ -13,6 +13,8 @@ const Navbar = ({ user, onLogout }) => {
   const storeUser = useUserStore((state) => state.user)
   const setUser = useUserStore((state) => state.setUser)
 
+  const isAdmin = storeUser?.role === "ROLE_ADMIN" || user?.role === "ROLE_ADMIN"
+
   useEffect(() => {
     if (storeUser) return
 
@@ -72,24 +74,26 @@ const Navbar = ({ user, onLogout }) => {
             <span>Chinese Master</span>
           </Link>
 
-          <div className="hidden lg:flex items-center gap-1">
-            {navItems.map((item) => {
-              const IconComponent = item.icon
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`px-4 py-2 rounded-lg transition-all font-medium text-sm flex items-center gap-2 ${isActive(item.path)
-                    ? "bg-gradient-to-r from-purple-100 to-blue-100 text-purple-900 shadow-sm"
-                    : "text-slate-700 hover:bg-slate-100"
-                    }`}
-                >
-                  <IconComponent size={18} />
-                  {item.label}
-                </Link>
-              )
-            })}
-          </div>
+          {!isAdmin && (
+            <div className="hidden lg:flex items-center gap-1">
+              {navItems.map((item) => {
+                const IconComponent = item.icon
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`px-4 py-2 rounded-lg transition-all font-medium text-sm flex items-center gap-2 ${isActive(item.path)
+                      ? "bg-gradient-to-r from-purple-100 to-blue-100 text-purple-900 shadow-sm"
+                      : "text-slate-700 hover:bg-slate-100"
+                      }`}
+                  >
+                    <IconComponent size={18} />
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </div>
+          )}
 
           <div className="flex items-center gap-4">
             <div className="relative group hidden sm:block">

@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.Optional;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -28,11 +28,17 @@ public class UserService {
         u.setEmail(email);
         u.setPassword(encoder.encode(password));
         u.setName(name);
+        // default role for new registrants
+        u.setRole("ROLE_USER");
         return repo.save(u);
     }
 
     public Optional<UserEntity> findByEmail(String email) {
         return repo.findByEmail(email);
+    }
+
+    public List<UserEntity> findAll() {
+        return repo.findAll();
     }
 
     public Optional<UserEntity> findById(Long id) {
@@ -41,6 +47,16 @@ public class UserService {
 
     public UserEntity save(UserEntity user) {
         return repo.save(user);
+    }
+
+    public UserEntity setRole(Long id, String role) {
+        var u = repo.findById(id).orElseThrow();
+        u.setRole(role);
+        return repo.save(u);
+    }
+
+    public void deleteById(Long id) {
+        repo.deleteById(id);
     }
 
     public UserEntity updateProfile(Long id, com.bucha.dto.UserProfileDto patch) {

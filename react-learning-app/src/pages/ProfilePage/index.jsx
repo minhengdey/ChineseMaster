@@ -8,6 +8,33 @@ import { User, Mail, BarChart3, Volume2, Star, Flame, BookOpen, Lock } from "luc
 
 const ProfilePage = ({ user }) => {
   const [isEditing, setIsEditing] = useState(false)
+  const storeUser = useUserStore((s) => s.user)
+  const me = storeUser || user
+
+  // If admin, render a minimal admin-only profile view
+  if (me && me.role === "ROLE_ADMIN") {
+    return (
+      <div className="p-8">
+        <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md border border-slate-200 p-6">
+          <h1 className="text-2xl font-bold mb-4">Admin Profile</h1>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full avatar-gradient flex items-center justify-center text-white font-bold text-xl">
+              {((me.name || me.email || "A").charAt(0) || "A").toUpperCase()}
+            </div>
+            <div>
+              <div className="text-lg font-semibold">{me.name || "Administrator"}</div>
+              <div className="text-sm text-slate-600">{me.email}</div>
+              <div className="mt-2 inline-block px-2 py-1 text-xs bg-amber-100 text-amber-800 rounded">ROLE_ADMIN</div>
+            </div>
+          </div>
+
+          <div className="mt-6 text-sm text-slate-700">
+            <p>This account has administrative access to the system. Use the Admin Dashboard to manage users and view statistics.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
   // Simplified user model: name, email, password fields
   const [profileData, setProfileData] = useState({
     name: "",
