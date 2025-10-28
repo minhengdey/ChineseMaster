@@ -10,8 +10,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class VocabularyMigrationDTO {
+   private Long id;
    private String word;
    private String pinyin;
    private String type;
    private String meaning;
+   private LineMigrationDTO example;
+   private Integer order;
 }

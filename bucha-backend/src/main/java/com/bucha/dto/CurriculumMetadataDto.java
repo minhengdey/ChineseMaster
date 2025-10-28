@@ -5,6 +5,7 @@ import java.util.List;
 
 @Data
 public class CurriculumMetadataDto {
+   private Long id;
    private String name;
    private String description;
    private String level;

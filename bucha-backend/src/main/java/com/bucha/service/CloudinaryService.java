@@ -57,6 +57,7 @@ public class CloudinaryService {
 
     private Long getLatestVersionForRaw(String publicId) {
         try {
+
             @SuppressWarnings("rawtypes")
             Map res = cloudinary.api().resource(stripJsonExt(publicId),
                     ObjectUtils.asMap("resource_type", "raw", "type", "upload"));
@@ -104,6 +105,18 @@ public class CloudinaryService {
             return Json.mapper().readValue(json, LessonMigrationDTO.class);
         } catch (Exception e) {
             log.error("Failed to fetch/parse LessonMigrationDTO for publicId={}", publicId, e);
+            return null;
+        }
+    }
+
+    public com.bucha.dto.migration.pronunciation.PronunciationDto fetchPronunciationDto(String publicId) {
+        try {
+            String url = getRawFileUrlLatest(publicId);
+            log.info("Fetching pronunciation JSON (latest) from URL: {}", url);
+            String json = restTemplate.getForObject(url, String.class);
+            return Json.mapper().readValue(json, com.bucha.dto.migration.pronunciation.PronunciationDto.class);
+        } catch (Exception e) {
+            log.error("Failed to fetch/parse PronunciationDto for publicId={}", publicId, e);
             return null;
         }
     }

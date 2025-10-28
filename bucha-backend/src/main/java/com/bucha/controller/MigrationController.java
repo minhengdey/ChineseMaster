@@ -24,6 +24,18 @@ public class MigrationController {
       return ResponseEntity.ok(migrationService.getAllConversationLines(lesstionId));
    }
 
+   /**
+    * Return all conversation lines across all lessons when no lessonId is
+    * provided.
+    * Frontend daily mixed practice calls
+    * /api/migration/conversationLineByLessionId (no path param)
+    * so provide this mapping to keep compatibility.
+    */
+   @GetMapping({ "/conversationLineByLessionId", "/conversationLineByLessionId/" })
+   public ResponseEntity<?> conversationLineAll() {
+      return ResponseEntity.ok(migrationService.getAllConversationLines());
+   }
+
    @GetMapping("/status")
    public ResponseEntity<?> getMigrationStatus() {
       return ResponseEntity.ok(Map.of(

@@ -4,7 +4,9 @@ import com.bucha.dto.UserProfileDto;
 import com.bucha.security.JwtUserPrincipal;
 import com.bucha.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,16 +25,20 @@ public class ProfileController {
     }
 
     @PostMapping
-    public ResponseEntity<UserProfileDto> updateProfile(@AuthenticationPrincipal JwtUserPrincipal principal,
+    public ResponseEntity<?> updateProfile(@AuthenticationPrincipal JwtUserPrincipal principal,
             @RequestBody UserProfileDto patch) {
-        var u = userService.findById(principal.id()).orElseThrow();
-        if (patch.name != null)
-            u.setName(patch.name);
-        u.setDarkMode(patch.darkMode);
-        u.setXp(patch.xp);
-        u.setStreak(patch.streak);
-        userService.save(u);
-        return ResponseEntity.ok(toDto(u));
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("auth=" + auth); // hoặc logger
+        try {
+            var u = userService.updateProfile(principal.id(), patch);
+            return ResponseEntity.ok(toDto(u));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", "missing_current_password", "message", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403)
+                    .body(java.util.Map.of("error", "incorrect_current_password", "message", e.getMessage()));
+        }
     }
 
     private UserProfileDto toDto(com.bucha.entity.UserEntity u) {
@@ -46,4 +52,5 @@ public class ProfileController {
         dto.badges = u.getBadges();
         return dto;
     }
+
 }

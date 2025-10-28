@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LessonMigrationDTO {
+   private Long id;
    private Integer order;
    private String title;
    private List<ConversationMigrationDTO> conversations;

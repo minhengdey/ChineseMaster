@@ -34,6 +34,8 @@ public class Curriculum {
     @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Lesson> lessons = new ArrayList<>();
 
+    private Long externalId; // ID from external system, if applicable
+
     // Constructors
     public Curriculum() {
     }

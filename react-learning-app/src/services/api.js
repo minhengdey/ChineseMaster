@@ -1,13 +1,15 @@
 import axios from "axios";
 // import "window._env_";
-// Base API configuration
-const API_BASE_URL = window._env_.VITE_API_BASE_URL;
+// Base API configuration (fallback-safe)
+const API_BASE_URL =
+   typeof window !== "undefined" &&
+      window._env_ &&
+      window._env_.VITE_API_BASE_URL
+      ? window._env_.VITE_API_BASE_URL
+      : import.meta?.env?.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 const apiClient = axios.create({
    baseURL: API_BASE_URL,
-   headers: {
-      "Content-Type": "application/json",
-   },
 });
 
 // Request interceptor to add auth token
@@ -38,7 +40,12 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
    }
 );
-
+export const userAPI = {
+   getProfile: async () => {
+      const response = await apiClient.get("/profile");
+      return response.data;
+   },
+};
 // Authentication APIs
 export const authAPI = {
    register: async (userData) => {
@@ -52,30 +59,21 @@ export const authAPI = {
 
    login: async (credentials) => {
       const response = await apiClient.post("/auth/login", {
-         email: credentials.email || credentials.username,
+         email: credentials.email,
          password: credentials.password,
       });
 
-      if (response.data.accessToken) {
+      // Backend now returns { accessToken, expiresIn, user: { id, email, name } }
+      if (response.data?.accessToken) {
          localStorage.setItem("accessToken", response.data.accessToken);
-         localStorage.setItem("refreshToken", response.data.refreshToken);
-
-         // Get user profile after login
-         const profileResponse = await apiClient.get("/profile", {
-            headers: {
-               Authorization: `Bearer ${response.data.accessToken}`,
-            },
-         });
-
-         const userData = {
-            id: profileResponse.data.id,
-            username: profileResponse.data.name,
-            email: profileResponse.data.email,
-            ...profileResponse.data,
-         };
-
-         localStorage.setItem("user", JSON.stringify(userData));
-         return { token: response.data.accessToken, user: userData };
+         if (response.data.user) {
+            try {
+               localStorage.setItem("user", JSON.stringify(response.data.user));
+            } catch (e) {
+               // console.warn('Failed to save user to localStorage', e);
+            }
+         }
+         return { token: response.data.accessToken, user: response.data.user };
       }
 
       return response.data;
@@ -83,8 +81,15 @@ export const authAPI = {
 
    logout: () => {
       localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
+   },
+
+   verifyToken: async (token) => {
+      // If token is passed explicitly, send it in Authorization header;
+      // otherwise apiClient will add accessToken from localStorage via interceptor
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await apiClient.get("/auth/verify", { headers });
+      return response.data;
    },
 };
 
@@ -153,10 +158,14 @@ export const practiceAPI = {
          formData.append("lessonId", lessonId.toString());
       }
 
+      // Do not set Content-Type so the browser can add the multipart boundary automatically.
+      // Only pass Authorization header when available.
+      const token = localStorage.getItem("accessToken");
+      const headers = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+
       const response = await apiClient.post("/practice/score", formData, {
-         headers: {
-            "Content-Type": "multipart/form-data",
-         },
+         headers,
       });
       return response.data;
    },
@@ -197,6 +206,10 @@ export const contentAPI = {
 
    // Get lesson detail with conversations and vocabulary
    getLessonDetail: async (lessonId) => {
+      if (lessonId == null || lessonId === "") {
+         // Defensive: avoid sending requests like /content/lessons/undefined to the server
+         throw new Error("getLessonDetail requires a valid lessonId");
+      }
       const response = await apiClient.get(`/content/lessons/${lessonId}`);
       return response.data;
    },
@@ -204,50 +217,126 @@ export const contentAPI = {
 
 // Audio APIs
 export const audioAPI = {
+   // Resolve an audio URL from either a full URL or a backend filename.
+   // If `filename` is already an absolute URL, return it (after normalizing known typos).
+   // Otherwise, build a URL using the API base path.
    getAudioUrl: (filename) => {
+      if (!filename) return null;
+      try {
+         if (
+            typeof filename === "string" &&
+            (filename.startsWith("http://") || filename.startsWith("https://"))
+         ) {
+            // Fix a common path typo observed in some cloudinary assets
+            return filename.replace("/curriculumn/", "/curriculum/");
+         }
+      } catch (e) {
+         // fallthrough to default behavior
+      }
       return `${API_BASE_URL}/audio/${filename}`;
    },
 
    playAudio: (filename) => {
-      const audio = new Audio(`${API_BASE_URL}/audio/${filename}`);
+      const url = audioAPI.getAudioUrl(filename);
+      if (!url)
+         return Promise.reject(new Error("no audio filename/url provided"));
+      const audio = new Audio(url);
       return audio.play();
    },
 };
 
 // ISE (pronunciation scoring) APIs
 export const iseAPI = {
-   // Existing scoreSentence for conversations
-   scoreSentence: async ({ text, audioFile, sub = "ise", ent = "cn_vip" }) => {
+   // scoreSentence should post multipart/form-data matching backend signature
+   // Supports optional parts: scoreCategory, lessonId, testId, includeInDaily, sessionDate, durationSeconds, numSentences
+   scoreSentence: async ({
+      text,
+      audioFile,
+      sub = "ise",
+      ent = "cn_vip",
+      scoreCategory,
+      lessonId,
+      lineId,
+      vocabularyId,
+      source,
+      testId,
+      includeInDaily,
+      sessionDate,
+      durationSeconds,
+      numSentences,
+   }) => {
       try {
          const formData = new FormData();
-         formData.append("text", text);
+         // required parts
+         formData.append("text", text ?? "");
 
-         const audioFileWithName = new File([audioFile], "recording.webm", {
-            type: audioFile.type || "audio/webm",
-         });
-         formData.append("audio", audioFileWithName);
-         formData.append("sub", sub);
-         formData.append("ent", ent);
+         // Ensure the audio part includes a filename (some mobile browsers/webviews omit it for plain Blob)
+         try {
+            let audioPart = audioFile;
+            if (typeof File !== "undefined" && audioFile instanceof Blob && !(audioFile instanceof File)) {
+               audioPart = new File([audioFile], "recording.webm", { type: audioFile.type || "audio/webm" });
+            }
+            formData.append("audio", audioPart);
+         } catch (e) {
+            // fallback: append as-is
+            formData.append("audio", audioFile);
+         }
+
+         // append simple string parts for compatibility across mobile WebViews
+         formData.append("sub", String(sub ?? ""));
+         formData.append("ent", String(ent ?? ""));
+
+         // optional parts - append as plain strings for better compatibility on mobile
+         if (scoreCategory != null) formData.append("scoreCategory", String(scoreCategory));
+         if (lessonId != null) formData.append("lessonId", String(lessonId));
+         if (lineId != null) formData.append("lineId", String(lineId));
+         if (vocabularyId != null) formData.append("vocabularyId", String(vocabularyId));
+         if (source != null) formData.append("source", String(source));
+         if (testId != null) formData.append("testId", String(testId));
+         if (includeInDaily != null) formData.append("includeInDaily", String(includeInDaily));
+         if (sessionDate != null) formData.append("sessionDate", String(sessionDate));
+         if (durationSeconds != null) formData.append("durationSeconds", String(durationSeconds));
+         if (numSentences != null) formData.append("numSentences", String(numSentences));
+
+         // Debug: list FormData entries (helps verify the file object and parts the browser will send)
+         try {
+            for (const entry of formData.entries()) {
+               const [k, v] = entry;
+               if (v instanceof File) {
+                  // console.debug("[iseAPI] formData entry:", k, "File", v.name, v.type, v.size);
+               } else if (v instanceof Blob) {
+                  // console.debug("[iseAPI] formData entry:", k, "Blob", v.type);
+               } else {
+                  // console.debug("[iseAPI] formData entry:", k, typeof v, v);
+               }
+            }
+         } catch (e) {
+            // console.debug("[iseAPI] formData debug failed", e);
+         }
+
+         // Do not set Content-Type so the browser can add the multipart boundary automatically.
+         // Only pass Authorization header when available.
+         const token = localStorage.getItem("accessToken");
+         const headers = {};
+         if (token) headers.Authorization = `Bearer ${token}`;
 
          const response = await apiClient.post("/ise/score", formData, {
-            headers: {
-               "Content-Type": "multipart/form-data",
-            },
+            headers,
          });
 
          return response.data;
       } catch (error) {
-         console.error("ISE API Error:", error);
+         // console.error("ISE API Error:", error);
          throw new Error(
             error.response?.data?.message ||
-               error.message ||
-               "Không thể đánh giá phát âm. Vui lòng kiểm tra kết nối mạng và thử lại."
+            error.message ||
+            "Không thể đánh giá phát âm. Vui lòng kiểm tra kết nối mạng và thử lại."
          );
       }
    },
 
    // NEW: scoreWord for vocabulary using the new IseWordController
-   scoreWord: async ({ text, audioFile }) => {
+   scoreWord: async ({ text, audioFile, vocabularyId, lessonId }) => {
       try {
          const formData = new FormData();
          formData.append("text", text);
@@ -257,39 +346,131 @@ export const iseAPI = {
             type: audioFile.type || "audio/webm",
          });
          formData.append("audio", audioFileWithName);
+         // attach vocabularyId and lessonId when present so backend can attribute attempt
+         if (vocabularyId != null) {
+            formData.append("vocabularyId", String(vocabularyId));
+         }
+         if (lessonId != null) {
+            formData.append("lessonId", String(lessonId));
+         }
 
-         console.log("Sending to ISE Word API:", {
-            text: text,
-            audioFileName: audioFileWithName.name,
-            audioSize: audioFileWithName.size,
-            audioType: audioFileWithName.type,
-            endpoint: "/ise/score/word",
-         });
+         // console.log("Sending to ISE Word API:", {
+         //    text: text,
+         //    audioFileName: audioFileWithName.name,
+         //    audioSize: audioFileWithName.size,
+         //    audioType: audioFileWithName.type,
+         //    endpoint: "/ise/score",
+         // });
 
-         const response = await apiClient.post("/ise/score/word", formData, {
-            headers: {
-               "Content-Type": "multipart/form-data",
-            },
-         });
+         // Debug: list FormData entries (helps verify the file object and parts the browser will send)
+         try {
+            for (const entry of formData.entries()) {
+               const [k, v] = entry;
+               if (v instanceof File) {
+                  // console.debug(
+                  //       "[iseAPI.scoreWord] formData entry:",
+                  //       k,
+                  //       "File",
+                  //       v.name,
+                  //       v.type,
+                  //       v.size
+                  //    );
+               } else if (v instanceof Blob) {
+                  // console.debug(
+                  //    "[iseAPI.scoreWord] formData entry:",
+                  //    k,
+                  //    "Blob",
+                  //    v.type
+                  // );
+               } else {
+                  // console.debug(
+                  //    "[iseAPI.scoreWord] formData entry:",
+                  //    k,
+                  //    typeof v,
+                  //    v
+                  // );
+               }
+            }
+         } catch (e) {
+            // console.debug("[iseAPI.scoreWord] formData debug failed", e);
+         }
 
-         // IseWordController returns JSON string, parse it
+         const response = await apiClient.post("/ise/score", formData);
+
+         // IseWordController may return different shapes:
+         // - a JSON string
+         // - an object like { result: { ... } } or { data: { ... } }
+         // - an array [ {...} ]
+         // Normalize into a consistent scoring object when possible.
          let result = response.data;
+
+         // If it's a string, try to parse it as JSON
          if (typeof result === "string") {
             try {
                result = JSON.parse(result);
             } catch (parseError) {
-               console.warn(
-                  "Failed to parse ISE Word response as JSON:",
-                  parseError
-               );
+               // console.warn(
+               //    "Failed to parse ISE Word response as JSON:",
+               //    parseError
+               // );
                return { raw_response: result };
             }
          }
 
-         console.log("ISE Word API result:", result);
-         return result;
+         // If wrapped in { result: ... } or { data: ... }, unwrap it
+         if (result && typeof result === "object") {
+            if (result.result && typeof result.result === "object") {
+               result = result.result;
+            } else if (result.data && typeof result.data === "object") {
+               result = result.data;
+            }
+         }
+
+         // If it's an array, take the first element
+         if (Array.isArray(result)) {
+            result = result.length > 0 ? result[0] : { raw_response: [] };
+         }
+
+         // Build a normalized object exactly like scoreSentence normalization
+         if (result && typeof result === "object") {
+            const sent = result.sentence || {};
+            const normalized = {
+               total_score:
+                  sent.total_score ??
+                  result.total_score ??
+                  result.totalScore ??
+                  result.overall ??
+                  null,
+               fluency:
+                  sent.fluency ?? result.fluency ?? result.fluencyScore ?? null,
+               completeness:
+                  sent.completeness ??
+                  result.completeness ??
+                  result.completenessScore ??
+                  null,
+               wrong_words:
+                  sent.wrong_words ??
+                  result.wrong_words ??
+                  result.wrongWords ??
+                  result.wrong ??
+                  [],
+               sid: sent.sid ?? result.sid ?? null,
+               status: sent.status ?? result.status ?? null,
+               raw_xml:
+                  sent.raw_xml ??
+                  result.raw_xml ??
+                  result.rawXml ??
+                  result.rawXML ??
+                  null,
+               words: result.words ?? sent.words ?? [],
+            };
+            return normalized;
+         }
+
+         // Fallback: return as-is if structure unknown
+         return { raw_response: result };
       } catch (error) {
-         console.error("ISE Word API Error:", error);
+         // console.error("ISE Word API Error:", error);
 
          // Extract meaningful error message
          let errorMessage = "Không thể đánh giá phát âm từ vựng.";
@@ -313,27 +494,152 @@ export const iseAPI = {
    },
 };
 
-// Migration/content helper APIs
-export const migrationAPI = {
-   getConversationLinesByLesson: async (lessonId) => {
-      if (!lessonId) {
-         const response = await apiClient.get(
-            "/migration/conversationLineByLessionId"
-         );
+// ISE stats for frontend displays (daily/lesson/test summaries)
+export const iseStatsAPI = {
+   // Weekly performance: replaced daily with weekly. Keep getDaily as a compatibility alias.
+   getWeekly: async (fromIsoDate, toIsoDate) => {
+      const params = {};
+      if (fromIsoDate) params.from = fromIsoDate;
+      if (toIsoDate) params.to = toIsoDate;
+      const response = await apiClient.get("/ise/stats/weekly", { params });
+      return response.data;
+   },
+   getDaily: async (fromIsoDate, toIsoDate) => {
+      // Call the dedicated daily endpoint which returns per-day aggregates
+      const params = {};
+      if (fromIsoDate) params.from = fromIsoDate;
+      if (toIsoDate) params.to = toIsoDate;
+      const response = await apiClient.get('/ise/stats/daily', { params });
+      return response.data;
+   },
+   getLessons: async () => {
+      const response = await apiClient.get("/ise/stats/lessons");
+      return response.data;
+   },
+   getTests: async () => {
+      const response = await apiClient.get("/ise/stats/tests");
+      return response.data;
+   },
+   getPronouncedForLesson: async (lessonId) => {
+      const response = await apiClient.get("/ise/stats/pronounced", {
+         params: { lessonId },
+      });
+      return response.data;
+   },
+   getDistinctVocabForUser: async () => {
+      const response = await apiClient.get('/ise/stats/distinct-vocab');
+      return response.data;
+   },
+   // Leaderboard endpoints (optional on backend)
+   getLeaderboardWeekly: async () => {
+      const response = await apiClient.get('/ise/stats/leaderboard/weekly');
+      return response.data;
+   },
+   getLeaderboardDaily: async () => {
+      // Deprecated alias
+      return iseStatsAPI.getLeaderboardWeekly()
+   },
+   getLeaderboardByLesson: async (lessonId) => {
+      const params = {};
+      if (lessonId != null) params.lessonId = lessonId;
+      const response = await apiClient.get('/ise/stats/leaderboard/lesson', { params });
+      return response.data;
+   },
+};
+
+// Pronunciation guide lookup (uses backend /api/pronunciation endpoints)
+export const pronunciationAPI = {
+   // New unified lookup endpoint. Pass `q` which may be an initial, final or tone.
+   lookup: async (q) => {
+      if (!q) return null;
+      try {
+         const response = await apiClient.get("/pronunciation", {
+            params: { q },
+         });
          return response.data;
+      } catch (err) {
+         if (err.response && err.response.status === 404) return null;
+         throw err;
       }
+   },
+
+   // Backwards-compatible wrappers (optional)
+   getByInitial: async (initial) => {
+      return pronunciationAPI.lookup(initial);
+   },
+   getByFinal: async (finalText) => {
+      return pronunciationAPI.lookup(finalText);
+   },
+   getByTone: async (name) => {
+      return pronunciationAPI.lookup(name);
+   },
+};
+
+export const userLessonAPI = {
+   complete: async (lessonId, completed) => {
+      const response = await apiClient.post(
+         `/user-lessons/${lessonId}/complete`,
+         { params: { completed } }
+      );
+      return response.data;
+   },
+   getUserLesson: async (lessonId) => {
+      const response = await apiClient.get(`/user-lessons/${lessonId}`);
+      return response.data;
+   },
+   isCompleted: async (lessonId) => {
       const response = await apiClient.get(
-         `/migration/conversationLineByLessionId/${lessonId}`
+         `/user-lessons/${lessonId}/isCompleted`
       );
       return response.data;
    },
 };
 
+// Migration/content helper APIs
+export const migrationAPI = {
+   getConversationLinesByLesson: async (lessonId) => {
+      // Some deployments use a misspelled path "Lession". Try both gracefully.
+      const paths = !lessonId
+         ? [
+            "/migration/conversationLineByLessonId",
+            "/migration/conversationLineByLessionId",
+         ]
+         : [
+            `/migration/conversationLineByLessonId/${lessonId}`,
+            `/migration/conversationLineByLessionId/${lessonId}`,
+         ];
+
+      let lastError;
+      for (const p of paths) {
+         try {
+            const response = await apiClient.get(p);
+            return response.data;
+         } catch (e) {
+            lastError = e;
+            // try next path
+         }
+      }
+      throw lastError || new Error("Không thể lấy dữ liệu hội thoại từ server");
+   },
+};
+
 // Helper function to handle API errors
 export const handleApiError = (error) => {
-   if (error.response?.data?.error) {
-      return error.response.data.error;
+   // Prefer structured server error messages when available
+   const respData = error.response?.data
+   const serverMessage = respData?.error ?? respData?.message ?? respData
+   // Handle common known backend messages and normalize for UI
+   try {
+      const msgStr = typeof serverMessage === "string" ? serverMessage : JSON.stringify(serverMessage)
+      if (/email already exists/i.test(msgStr)) {
+         return "Email đã tồn tại. Vui lòng dùng email khác hoặc đăng nhập.";
+      }
+      if (serverMessage) return serverMessage
+   } catch (e) {
+      // fallthrough
    }
+
+   // Fallback to the error.message (axios/network) or a generic message
    if (error.message) {
       return error.message;
    }

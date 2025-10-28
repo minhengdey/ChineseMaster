@@ -7,6 +7,11 @@ import com.bucha.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpHeaders;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,20 +29,51 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
-        UserEntity user = userService.register(req.email(), req.password(), req.name());
-        return ResponseEntity.status(201).body(user.getId());
+        try {
+            UserEntity user = userService.register(req.email(), req.password(), req.name());
+            return ResponseEntity.status(201).body(user.getId());
+        } catch (IllegalArgumentException ex) {
+            // Convert service-level validation into a proper 409 Conflict with a JSON body
+            return ResponseEntity.status(409).body(Map.of("message", ex.getMessage()));
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         var opt = userService.findByEmail(req.email());
-        if (opt.isEmpty()) return ResponseEntity.status(401).body("Invalid credentials");
+        if (opt.isEmpty())
+            return ResponseEntity.status(401).body("Invalid credentials");
         var user = opt.get();
         if (!passwordEncoder.matches(req.password(), user.getPassword())) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
         String access = jwtUtil.generateAccessToken(user.getEmail(), user.getId());
-        String refresh = jwtUtil.generateRefreshToken(user.getEmail(), user.getId());
-        return ResponseEntity.ok(new AuthResponse(access, refresh, 900000));
+        // Return token together with basic user info so frontend can store profile
+        Map<String, Object> out = Map.of(
+                "accessToken", access,
+                "expiresIn", 900000,
+                "user", Map.of(
+                        "id", user.getId(),
+                        "email", user.getEmail(),
+                        "name", user.getName()));
+        return ResponseEntity.ok(out);
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<?> verify(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body(Map.of("error", "Missing Authorization header"));
+        }
+        String token = authHeader.substring(7);
+        try {
+            // parse claims but ignore expiration check so callers can validate older tokens
+            Jws<Claims> claims = jwtUtil.validateToken(token);
+            String username = claims.getBody().getSubject();
+            Long uid = claims.getBody().get("uid", Long.class);
+            return ResponseEntity.ok(Map.of("username", username, "uid", uid));
+        } catch (Exception ex) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
+        }
     }
 }

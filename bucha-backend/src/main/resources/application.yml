@@ -24,11 +24,12 @@ app:
       allowed-origins: ${ALLOW_ORIGINS}
    data:
       initializer:
-         enabled: {{DATA_INITIALIZER_ENABLED}}
+         enabled: ${DATA_INITIALIZER_ENABLED}
          source: CLOUDINARY
 logging:
    level:
       root: ERROR
+      com.bucha.service.CloudinaryService: DEBUG
       # org.springframework: DEBUG
       com.bucha: DEBUG
 
