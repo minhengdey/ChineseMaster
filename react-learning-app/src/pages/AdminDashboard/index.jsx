@@ -30,10 +30,14 @@ export default function AdminDashboard() {
         (async () => {
             try {
                 await adminAPI.whoami()
-                // fetch users, weekly leaderboard and per-lesson leaderboards for lessons 1..8
-                const [u, weekly, lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, lesson8] = await Promise.all([
+                // Calculate date for week 1 (current week) - week 1 = today, so no days to subtract
+                const today = new Date()
+                const dateStr = today.toISOString().split('T')[0]
+                
+                // fetch users, weekly leaderboard and per-lesson leaderboards for lessons 1..12
+                const [u, weekly, lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, lesson8, lesson9, lesson10, lesson11, lesson12] = await Promise.all([
                     adminAPI.getUsers(),
-                    iseStatsAPI.getLeaderboardWeekly(),
+                    iseStatsAPI.getLeaderboardWeekly(dateStr),
                     iseStatsAPI.getLeaderboardByLesson(1),
                     iseStatsAPI.getLeaderboardByLesson(2),
                     iseStatsAPI.getLeaderboardByLesson(3),
@@ -42,11 +46,15 @@ export default function AdminDashboard() {
                     iseStatsAPI.getLeaderboardByLesson(6),
                     iseStatsAPI.getLeaderboardByLesson(7),
                     iseStatsAPI.getLeaderboardByLesson(8),
+                    iseStatsAPI.getLeaderboardByLesson(9),
+                    iseStatsAPI.getLeaderboardByLesson(10),
+                    iseStatsAPI.getLeaderboardByLesson(11),
+                    iseStatsAPI.getLeaderboardByLesson(12),
                 ])
                 setUsers(u || [])
                 // build a lessonScores map: { userId: { l1:score, l2:score, ... } }
                 const lessonRowsMap = {}
-                    ;[lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, lesson8].forEach((lr, idx) => {
+                    ;[lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, lesson8, lesson9, lesson10, lesson11, lesson12].forEach((lr, idx) => {
                         if (!lr || !lr.rows) return
                         lr.rows.forEach((r) => {
                             const uid = r.userId
@@ -56,24 +64,16 @@ export default function AdminDashboard() {
                         })
                     })
                 setLessons({ rows: lessonRowsMap })
-                setTests({ rows: weekly?.rows || [] })
+                // Tests tab will show default 0 scores, no data fetching needed
+                setTests({ rows: [] })
 
-                // Process weekly data with score computation
+                // Process weekly data - điểm tuần = avgScore từ ise_lesson_entry
                 const weeklyRows = Array.isArray(weekly?.rows) ? weekly.rows : []
                 console.log('Weekly data from API:', weeklyRows)
-                const maxCompletion = weeklyRows.reduce((m, r) => Math.max(m, Number(r.completionCount || 0)), 0) || 1
-                console.log('Max completion:', maxCompletion)
-                const enrichedWeekly = weeklyRows.map((r) => {
-                    const avg = Number(r.avgScore ?? 0)
-                    const completionCount = Number(r.completionCount ?? 0)
-                    const completionRate = maxCompletion > 0 ? Math.min(100, (completionCount / maxCompletion) * 100) : 0
-                    const improvementRate = Number(r.improvementRate ?? 0)
-                    const weeklyScore = 0.7 * avg + 0.2 * completionRate + 0.1 * improvementRate
-                    return {
-                        ...r,
-                        weeklyScore: Math.round(Math.max(0, Math.min(100, weeklyScore)) * 10) / 10
-                    }
-                })
+                const enrichedWeekly = weeklyRows.map((r) => ({
+                    ...r,
+                    weeklyScore: Math.round((Number(r.avgScore ?? 0)) * 10) / 10
+                }))
                 enrichedWeekly.sort((a, b) => {
                     if (b.weeklyScore !== a.weeklyScore) return b.weeklyScore - a.weeklyScore
                     if ((b.improvementRate ?? 0) !== (a.improvementRate ?? 0)) return (b.improvementRate ?? 0) - (a.improvementRate ?? 0)
@@ -116,38 +116,28 @@ export default function AdminDashboard() {
         }
     }
 
-    // Compute weekly score using provided formula with normalization for completion count
-    const computeWeeklyScore = (entry, maxCompletion) => {
-        const avg = Number(entry.avgScore ?? 0) // assumed 0-100
-        const completionCount = Number(entry.completionCount ?? 0)
-        // normalize completionCount to 0-100 using maxCompletion (avoid div0)
-        const completionRate = maxCompletion > 0 ? Math.min(100, (completionCount / maxCompletion) * 100) : 0
-        const improvementRate = Number(entry.improvementRate ?? 0)
-
-        const weeklyScore = 0.7 * avg + 0.2 * completionRate + 0.1 * improvementRate
-        return Math.round(Math.max(0, Math.min(100, weeklyScore)) * 10) / 10 // one decimal
-    }
-
     // Load weekly leaderboard by week number
     const loadWeeklyLeaderboard = async (weekNumber) => {
         try {
             console.log('Loading weekly leaderboard for week:', weekNumber)
-            // TODO: Replace with actual API call when backend supports week parameter
-            // For now, using the weekly endpoint (assuming it returns current week)
-            const data = await iseStatsAPI.getLeaderboardWeekly()
+            // Calculate date for the selected week (counting backwards from today)
+            const today = new Date()
+            const daysToSubtract = (weekNumber - 1) * 7
+            const targetDate = new Date(today.getTime() - daysToSubtract * 24 * 60 * 60 * 1000)
+            const dateStr = targetDate.toISOString().split('T')[0]
+
+            console.log('Fetching data for date:', dateStr)
+            const data = await iseStatsAPI.getLeaderboardWeekly(dateStr)
             console.log('Weekly leaderboard API response:', data)
             const rows = Array.isArray(data?.rows) ? data.rows : []
 
-            // Find max completion count for normalization
-            const maxCompletion = rows.reduce((m, r) => Math.max(m, Number(r.completionCount || 0)), 0) || 1
-
-            // Compute weekly score for each entry
+            // Điểm tuần = avgScore từ ise_lesson_entry
             const enriched = rows.map((r) => ({
                 ...r,
-                weeklyScore: computeWeeklyScore(r, maxCompletion),
+                weeklyScore: Math.round((Number(r.avgScore ?? 0)) * 10) / 10,
             }))
 
-            // Sort by weeklyScore descending, then by improvementRate, then completionCount, then timestamp
+            // Sort by weeklyScore descending
             enriched.sort((a, b) => {
                 if (b.weeklyScore !== a.weeklyScore) return b.weeklyScore - a.weeklyScore
                 if ((b.improvementRate ?? 0) !== (a.improvementRate ?? 0)) return (b.improvementRate ?? 0) - (a.improvementRate ?? 0)
@@ -155,7 +145,7 @@ export default function AdminDashboard() {
                 return (a.timestamp || 0) - (b.timestamp || 0)
             })
 
-            console.log('Enriched weekly data in loadWeeklyLeaderboard:', enriched)
+            console.log('Enriched weekly data:', enriched)
             setWeeklyData({ rows: enriched })
         } catch (err) {
             console.error('Failed to load weekly leaderboard', err)
@@ -163,12 +153,12 @@ export default function AdminDashboard() {
         }
     }
 
-    // Load weekly data when selectedWeek changes or on initial load
+    // Load weekly data when selectedWeek changes
     useEffect(() => {
-        if (user) {
+        if (user && activeTab === 'weekly') {
             loadWeeklyLeaderboard(selectedWeek)
         }
-    }, [selectedWeek, user])
+    }, [selectedWeek, user, activeTab])
 
     const handleCreateClass = async () => {
         if (!newClassName || newClassName.trim() === "") {
@@ -289,12 +279,14 @@ export default function AdminDashboard() {
                                         <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 2</th>
                                         <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 3</th>
                                         <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 4</th>
-                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Test 1</th>
                                         <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 5</th>
                                         <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 6</th>
                                         <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 7</th>
                                         <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 8</th>
-                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Test 2</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 9</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 10</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 11</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 12</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -316,9 +308,6 @@ export default function AdminDashboard() {
                                                     <ScoreCell score={scores.l4} maxScore={100} />
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
-                                                    <ScoreCell score={null} maxScore={100} label="Test 1" />
-                                                </td>
-                                                <td className="px-4 py-3 text-center">
                                                     <ScoreCell score={scores.l5} maxScore={100} />
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
@@ -331,7 +320,16 @@ export default function AdminDashboard() {
                                                     <ScoreCell score={scores.l8} maxScore={100} />
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
-                                                    <ScoreCell score={null} maxScore={100} label="Test 2" />
+                                                    <ScoreCell score={scores.l9} maxScore={100} />
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={scores.l10} maxScore={100} />
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={scores.l11} maxScore={100} />
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={scores.l12} maxScore={100} />
                                                 </td>
                                             </tr>
                                         )
@@ -357,7 +355,7 @@ export default function AdminDashboard() {
                                             <td className="px-4 py-3 text-slate-700">{idx + 1}</td>
                                             <td className="px-4 py-3 font-medium text-slate-800">{u.name || u.email}</td>
                                             <td className="px-4 py-3 text-center">
-                                                <ScoreCell score={(tests.rows.find(r => r.userId === u.id) || {}).avgScore} maxScore={100} />
+                                                <ScoreCell score={null} maxScore={100} />
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <ScoreCell score={null} maxScore={100} />
@@ -371,15 +369,13 @@ export default function AdminDashboard() {
                         {/* BXH theo tuần */}
                         {activeTab === "weekly" && (
                             <div>
-                                {/* Debug Info */}
-                                <div className="px-6 py-2 bg-blue-50 border-b border-blue-200 text-sm text-blue-800">
-                                    Debug: {weeklyData.rows?.length || 0} records loaded
-                                </div>
-
                                 {/* Week Selector */}
                                 <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className="font-medium text-slate-700">Chọn tuần:</span>
+                                        <span className="text-sm text-slate-500">
+                                            ({weeklyData.rows?.length || 0} học viên)
+                                        </span>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {[...Array(12)].map((_, idx) => {
@@ -389,8 +385,8 @@ export default function AdminDashboard() {
                                                     key={weekNum}
                                                     onClick={() => setSelectedWeek(weekNum)}
                                                     className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${selectedWeek === weekNum
-                                                        ? 'bg-red-600 text-white shadow-md'
-                                                        : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'
+                                                            ? 'bg-red-600 text-white shadow-md'
+                                                            : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'
                                                         }`}
                                                 >
                                                     Tuần {weekNum}

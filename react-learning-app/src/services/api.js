@@ -563,8 +563,10 @@ export const iseStatsAPI = {
       return response.data;
    },
    // Leaderboard endpoints (optional on backend)
-   getLeaderboardWeekly: async () => {
-      const response = await apiClient.get('/ise/stats/leaderboard/weekly');
+   getLeaderboardWeekly: async (date) => {
+      const params = {};
+      if (date) params.date = date;
+      const response = await apiClient.get('/ise/stats/leaderboard/weekly', { params });
       return response.data;
    },
    getLeaderboardDaily: async () => {

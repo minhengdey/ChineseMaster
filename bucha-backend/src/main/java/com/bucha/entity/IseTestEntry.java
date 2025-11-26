@@ -18,13 +18,22 @@ public class IseTestEntry {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    @Column(name = "test_id")
     Long testId;
+    
+    @Column(name = "total_score")
     Double totalScore;
+    
+    @Column(name = "duration_seconds")
     Double durationSeconds;
 
+    @Column(name = "attempt_id")
     Long attemptId;
 
+    @Column(name = "session_date")
     LocalDateTime sessionDate;
+    
+    @Column(name = "created_at")
     LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne

@@ -27,4 +27,13 @@ public interface IseDailyEntryRepository extends JpaRepository<IseDailyEntry, Lo
 
     @Query("SELECT DISTINCT e.vocabularyId FROM IseDailyEntry e WHERE e.user.id = :userId AND e.lessonId = :lessonId AND e.vocabularyId IS NOT NULL")
     List<Long> findDistinctVocabularyIdsByUserAndLesson(@Param("userId") Long userId, @Param("lessonId") Long lessonId);
+
+    @Query("SELECT DATE(e.sessionDate) as day, AVG(e.totalScore) as avgScore, " +
+            "COUNT(DISTINCT e.attemptId) as cntAttempts, COUNT(e) as cntRows, SUM(e.durationSeconds) as durationSum " +
+            "FROM IseDailyEntry e " +
+            "WHERE e.user.id = :userId AND e.sessionDate BETWEEN :start AND :end " +
+            "GROUP BY DATE(e.sessionDate)")
+    List<Object[]> getDailyStatsGrouped(@Param("userId") Long userId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end);
 }
