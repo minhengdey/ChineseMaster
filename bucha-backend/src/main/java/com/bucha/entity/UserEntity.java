@@ -42,6 +42,11 @@ public class UserEntity {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // Role for authorization. Stored as Spring Security authority string (e.g.
+    // ROLE_USER, ROLE_ADMIN)
+    @Column(nullable = false)
+    private String role = "ROLE_USER";
+
     // getters/setters
     public UserEntity() {
     }

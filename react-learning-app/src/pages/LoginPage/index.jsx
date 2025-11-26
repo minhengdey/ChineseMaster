@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [activeTab, setActiveTab] = useState("login")
 
   const onLogin = () => {
+    // default redirect after login (non-admin)
     window.location.href = "/"
   }
 
@@ -39,7 +40,18 @@ export default function LoginPage() {
 
               {/* Form Content */}
               <div className="p-8 sm:p-10 fade-in">
-                {activeTab === "login" ? <LoginForm onLogin={onLogin} /> : <RegisterForm onRegister={onLogin} />}
+                {activeTab === "login" ? <LoginForm onLogin={(user) => {
+                  // If backend returns role, redirect admin users to admin dashboard
+                  try {
+                    if (user && user.role === "ROLE_ADMIN") {
+                      window.location.href = "/admin"
+                      return
+                    }
+                  } catch (e) {
+                    // fallback to root
+                  }
+                  window.location.href = "/"
+                }} /> : <RegisterForm onRegister={onLogin} />}
               </div>
             </div>
 

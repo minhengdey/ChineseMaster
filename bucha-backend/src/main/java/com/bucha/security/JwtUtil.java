@@ -24,11 +24,16 @@ public class JwtUtil {
     }
 
     public String generateAccessToken(String username, Long userId) {
+        return generateAccessToken(username, userId, "ROLE_USER");
+    }
+
+    public String generateAccessToken(String username, Long userId, String role) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + accessTokenValidityMs);
         return Jwts.builder()
                 .setSubject(username)
                 .claim("uid", userId)
+                .claim("role", role)
                 .setIssuedAt(now)
                 .setExpiration(exp)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -36,11 +41,16 @@ public class JwtUtil {
     }
 
     public String generateRefreshToken(String username, Long userId) {
+        return generateRefreshToken(username, userId, "ROLE_USER");
+    }
+
+    public String generateRefreshToken(String username, Long userId, String role) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + refreshTokenValidityMs);
         return Jwts.builder()
                 .setSubject(username)
                 .claim("uid", userId)
+                .claim("role", role)
                 .setIssuedAt(now)
                 .setExpiration(exp)
                 .signWith(key, SignatureAlgorithm.HS256)

@@ -47,7 +47,7 @@ public class AuthController {
         if (!passwordEncoder.matches(req.password(), user.getPassword())) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
-        String access = jwtUtil.generateAccessToken(user.getEmail(), user.getId());
+        String access = jwtUtil.generateAccessToken(user.getEmail(), user.getId(), user.getRole());
         // Return token together with basic user info so frontend can store profile
         Map<String, Object> out = Map.of(
                 "accessToken", access,
@@ -55,7 +55,8 @@ public class AuthController {
                 "user", Map.of(
                         "id", user.getId(),
                         "email", user.getEmail(),
-                        "name", user.getName()));
+                        "name", user.getName(),
+                        "role", user.getRole()));
         return ResponseEntity.ok(out);
     }
 

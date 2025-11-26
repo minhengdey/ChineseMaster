@@ -30,7 +30,8 @@ const LoginForm = ({ onLogin }) => {
     try {
       const result = await authAPI.login(formData)
       if (result.token) {
-        onLogin()
+        // Pass user info back to caller so it can redirect appropriately
+        onLogin(result.user)
       }
     } catch (error) {
       setError(handleApiError(error))
