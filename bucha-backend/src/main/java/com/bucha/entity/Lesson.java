@@ -1,8 +1,8 @@
 package com.bucha.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,45 +13,39 @@ import java.util.List;
 @Table(name = "lessons", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "curriculum_id", "lesson_order" })
 })
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@NoArgsConstructor
+@AllArgsConstructor
 public class Lesson {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @Column(name = "external_id")
-    private Long externalId;
+    Long externalId;
 
     @Column(nullable = false)
-    private String title; // e.g., "Bài 1 你好"
+    String title;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "curriculum_id")
-    private Curriculum curriculum;
+    Curriculum curriculum;
 
     @Column(name = "lesson_order")
-    private Integer order; // Thứ tự bài học trong giáo trình
+    Integer order;
 
     @Column()
-    private String level;
+    String level;
 
     @Column(name = "content_hash", length = 64)
-    private String contentHash;
+    String contentHash;
 
     @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Conversation> conversations = new ArrayList<>();
+    List<Conversation> conversations = new ArrayList<>();
 
     @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Vocabulary> vocabularies = new ArrayList<>();
+    List<Vocabulary> vocabularies = new ArrayList<>();
 
     @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserLesson> userLessons = new ArrayList<>();
-
-    public Lesson() {
-    }
-
-    public Lesson(String title, Curriculum curriculum, Integer order) {
-        this.title = title;
-        this.curriculum = curriculum;
-        this.order = order;
-    }
+    List<UserLesson> userLessons = new ArrayList<>();
 }

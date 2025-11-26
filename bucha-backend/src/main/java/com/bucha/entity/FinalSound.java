@@ -1,33 +1,34 @@
 package com.bucha.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
 @Entity
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "final_sounds")
 public class FinalSound {
    @Id
    @GeneratedValue(strategy = GenerationType.IDENTITY)
-   private Long id;
+   Long id;
 
-   private String category;
+   String category;
 
    @Column(name = "text")
-   private String text;
+   String text;
 
-   private String ipa;
+   String ipa;
 
    @Column(length = 2000)
-   private String pronunciation;
+   String pronunciation;
 
    @Column(name = "external_id")
-   private Long externalId;
+   Long externalId;
 
    @Column(name = "content_hash", length = 64)
-   private String contentHash;
+   String contentHash;
 }

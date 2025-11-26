@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react"
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom"
 import { iseAPI, migrationAPI, contentAPI } from "../../services/api"
 import { iseStatsAPI } from "../../services/api"
+import adaptIseScore from "../../utils/iseScoreAdapter"
+import LeaderboardTable from "../../components/LeaderboardTable"
 import SentencePronunciationResult from "../LessonDetailPage/components/SentencePronunciationResult"
 
 const SpeakingPracticePage = () => {
@@ -22,9 +24,11 @@ const SpeakingPracticePage = () => {
   const [audioBlob, setAudioBlob] = useState(null)
   const [result, setResult] = useState(null)
   const [currentScored, setCurrentScored] = useState(false)
-  const [weeklyRows, setWeeklyRows] = useState([])
+  const [weeklyRows, setWeeklyRows] = useState([]) // period stats (weekly performance rows)
   const [lessonRows, setLessonRows] = useState([])
   const [testRows, setTestRows] = useState([])
+  const [dailyLeaderboard, setDailyLeaderboard] = useState([])
+  const [weeklyLeaderboard, setWeeklyLeaderboard] = useState([])
   const [selectedWord, setSelectedWord] = useState(null)
   const mediaRecorderRef = useRef(null)
   const chunksRef = useRef([])
@@ -308,21 +312,28 @@ const SpeakingPracticePage = () => {
 
   const fetchIseStats = async () => {
     try {
-      const weekly = await iseStatsAPI.getWeekly()
-      setWeeklyRows(Array.isArray(weekly?.rows) ? weekly.rows : [])
-    } catch (e) {
-      // ignore stats errors silently
-      // console.debug("weekly stats error", e)
-    }
+      const weeklyRowsData = await iseStatsAPI.getWeekly()
+      setWeeklyRows(Array.isArray(weeklyRowsData) ? weeklyRowsData : [])
+    } catch (e) { }
+    // Leaderboards
     try {
-      const lessons = await iseStatsAPI.getLessons()
-      setLessonRows(Array.isArray(lessons?.rows) ? lessons.rows : [])
+      const dailyLb = await iseStatsAPI.getLeaderboardDaily()
+      setDailyLeaderboard(Array.isArray(dailyLb) ? dailyLb : [])
+    } catch (e) { }
+    try {
+      const weeklyLb = await iseStatsAPI.getLeaderboardWeekly()
+      setWeeklyLeaderboard(Array.isArray(weeklyLb) ? weeklyLb : [])
+    } catch (e) { }
+    try {
+      const lessonsLeaderboard = await iseStatsAPI.getLeaderboardByLesson(lessonId)
+      setLessonRows(Array.isArray(lessonsLeaderboard) ? lessonsLeaderboard : [])
     } catch (e) {
       // console.debug("lesson stats error", e)
     }
     try {
+      // test stats remain unchanged
       const tests = await iseStatsAPI.getTests()
-      setTestRows(Array.isArray(tests?.rows) ? tests.rows : [])
+      setTestRows(Array.isArray(tests) ? tests : [])
     } catch (e) {
       // console.debug("test stats error", e)
     }
@@ -506,20 +517,7 @@ const SpeakingPracticePage = () => {
       }
 
       const resp = await iseAPI.scoreSentence(payload)
-      const sent = resp?.sentence || {}
-      const normalized = {
-        total_score: sent?.total_score ?? resp?.total_score ?? null,
-        fluency: sent?.fluency ?? resp?.fluency ?? null,
-        completeness: sent?.completeness ?? resp?.completeness ?? null,
-        wrong_words: sent?.wrong_words ?? resp?.wrong_words ?? [],
-        sid: sent?.sid ?? resp?.sid ?? null,
-        status: sent?.status ?? resp?.status ?? null,
-        raw_xml: sent?.raw_xml ?? resp?.raw_xml ?? null,
-        words: resp?.words ?? sent?.words ?? resp?.words ?? [],
-        is_rejected: sent?.is_rejected ?? resp?.is_rejected ?? false,
-        except_info: sent?.except_info ?? resp?.except_info ?? null,
-        warning: sent?.warning ?? resp?.warning ?? null,
-      }
+      const normalized = adaptIseScore(resp)
       setSelectedWord(null)
       setResult(normalized)
       setCurrentScored(true)
@@ -769,7 +767,7 @@ const SpeakingPracticePage = () => {
                 {isVocabMode ? "📝 Từ cần luyện" : "💬 Câu cần luyện"}
               </div>
               <div className="text-4xl md:text-5xl font-bold text-gray-900 break-words whitespace-pre-wrap leading-relaxed">
-                {sentence}
+                {result ? highlightSentence(sentence, result.wrong_words) : sentence}
               </div>
             </div>
 
@@ -817,7 +815,7 @@ const SpeakingPracticePage = () => {
 
             {result && (
               <SentencePronunciationResult
-                result={result}
+                result={{ ...result.legacy, ...result }} // allow existing component to read either naming style
                 recordedAudio={audioBlob}
                 onClose={() => {
                   setResult(null)
@@ -825,6 +823,16 @@ const SpeakingPracticePage = () => {
                 }}
                 sentenceText={sentence}
               />
+            )}
+
+            {/* Leaderboards Section */}
+            {(dailyLeaderboard.length > 0 || weeklyLeaderboard.length > 0 || lessonRows.length > 0) && (
+              <div className="space-y-6 mt-10">
+                <h2 className="text-2xl font-bold text-gray-800">🏆 Bảng xếp hạng</h2>
+                <LeaderboardTable title="Hôm nay" rows={dailyLeaderboard} />
+                <LeaderboardTable title="Tuần này" rows={weeklyLeaderboard} />
+                <LeaderboardTable title="Theo bài học" rows={lessonRows} />
+              </div>
             )}
           </div>
         )}

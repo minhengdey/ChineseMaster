@@ -1,52 +1,29 @@
 package com.bucha.controller;
 
-import com.bucha.dto.LessonDtos.LessonSummary;
-import com.bucha.dto.LessonDtos.LessonDetail;
-import com.bucha.repository.LessonRepository;
-import com.bucha.entity.Lesson;
+import com.bucha.dto.response.LessonSummaryResponse;
+import com.bucha.dto.response.LessonDetailResponse;
+import com.bucha.service.LessonService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/lessons")
 public class LessonController {
 
-    private final LessonRepository lessonRepository;
+    private final LessonService lessonService;
 
-    public LessonController(LessonRepository lessonRepository) {
-        this.lessonRepository = lessonRepository;
+    public LessonController(LessonService lessonService) {
+        this.lessonService = lessonService;
     }
 
     @GetMapping
-    public ResponseEntity<List<LessonSummary>> list(@RequestParam(required = false) String level) {
-        List<Lesson> lessons = (level == null) ? lessonRepository.findAll() : lessonRepository.findByLevel(level);
-        List<LessonSummary> dtos = lessons.stream().map(this::toSummary).collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+    public ResponseEntity<List<LessonSummaryResponse>> list(@RequestParam(required = false) String level) {
+        return ResponseEntity.ok(lessonService.list(level));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<LessonDetail> get(@PathVariable Long id) {
-        return lessonRepository.findById(id)
-                .map(this::toDetail)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    private LessonSummary toSummary(Lesson l) {
-        LessonSummary dto = new LessonSummary();
-        dto.id = l.getId();
-        dto.title = l.getTitle();
-        dto.level = l.getLevel();
-        return dto;
-    }
-
-    private LessonDetail toDetail(Lesson l) {
-        LessonDetail dto = new LessonDetail();
-        dto.id = l.getId();
-        dto.title = l.getTitle();
-        dto.level = l.getLevel();
-        return dto;
+    public ResponseEntity<LessonDetailResponse> get(@PathVariable Long id) {
+        return ResponseEntity.ok(lessonService.get(id));
     }
 }

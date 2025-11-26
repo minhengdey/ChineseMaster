@@ -1,5 +1,6 @@
 import React from "react";
 import { pronunciationAPI } from "../../../services/api";
+import adaptIseScore from "../../../utils/iseScoreAdapter";
 
 const SentencePronunciationResult = ({
   result,
@@ -8,6 +9,10 @@ const SentencePronunciationResult = ({
   sentenceText = "",
 }) => {
   if (!result) return null;
+
+  // Always adapt incoming result to unified shape (camel + legacy)
+  const adapted = adaptIseScore(result);
+  const display = adapted ? { ...adapted.legacy, ...adapted } : result;
 
   const [selectedWord, setSelectedWord] = React.useState(null);
   const [guide, setGuide] = React.useState(null);
@@ -30,6 +35,12 @@ const SentencePronunciationResult = ({
     return "text-red-600";
   };
 
+  const getScoreBg = (score) => {
+    if (score >= 80) return "bg-green-50";
+    if (score >= 60) return "bg-yellow-50";
+    return "bg-red-50";
+  };
+
   const getScoreMessage = (score) => {
     if (score >= 90) return "🎉 Xuất sắc!";
     if (score >= 80) return "👍 Tốt!";
@@ -40,24 +51,24 @@ const SentencePronunciationResult = ({
 
   // Parse scores from actual ISE sentence API format.
   // The ISE API sometimes nests metrics under `result.sentence`.
-  const sent = result?.sentence || result || {};
+  const sent = display?.sentence || display || {};
   const totalScore =
     sent?.total_score ??
     sent?.totalScore ??
     sent?.overall ??
-    result?.total_score ??
-    result?.totalScore ??
+    display?.total_score ??
+    display?.totalScore ??
     0;
-  const fluencyScore = sent?.fluency ?? result?.fluency ?? 0;
-  const completenessScore = sent?.completeness ?? result?.completeness ?? 0;
+  const fluencyScore = sent?.fluency ?? display?.fluency ?? 0;
+  const completenessScore = sent?.completeness ?? display?.completeness ?? 0;
   const wrongWords =
     sent?.wrong_words ??
-    result?.wrong_words ??
+    display?.wrong_words ??
     sent?.wrongWords ??
-    result?.wrongWords ??
+    display?.wrongWords ??
     [];
-  const sid = sent?.sid ?? result?.sid ?? null;
-  const status = sent?.status ?? result?.status ?? null;
+  const sid = sent?.sid ?? display?.sid ?? null;
+  const status = sent?.status ?? display?.status ?? null;
 
   // Render the sentence as clickable characters, similar to SpeakingPracticePage
   const renderAnnotatedSentence = () => {
@@ -79,7 +90,7 @@ const SentencePronunciationResult = ({
     // Build a set of character indices that belong to words whose per-word score <= 60
     // We use result.words (aligned by mapping) and mark all characters whose mapping points to a low-scoring word.
     const wrongIndices = new Set();
-    const wordsArray = Array.isArray(result?.words) ? result.words : [];
+    const wordsArray = Array.isArray(display?.words) ? display.words : [];
     if (wordsArray.length > 0) {
       const lowScoreWordIndexes = new Set();
       for (let wiIndex = 0; wiIndex < wordsArray.length; wiIndex++) {
@@ -106,8 +117,8 @@ const SentencePronunciationResult = ({
         {chars.map((ch, i) => {
           const wordIndex = mapping[i];
           const details =
-            typeof wordIndex === "number" && Array.isArray(result?.words)
-              ? result.words[wordIndex]
+            typeof wordIndex === "number" && Array.isArray(display?.words)
+              ? display.words[wordIndex]
               : null;
           const normalized = {
             word: ch,
@@ -127,7 +138,8 @@ const SentencePronunciationResult = ({
             ? Number(details?.overall ?? details?.pronunciation ?? details?.score ?? details?.pronunciationScore)
             : null;
           const scoreColorClass = scoreValue != null ? getScoreColor(scoreValue) : "";
-          const charClasses = `inline-block mx-0.5 px-1 rounded ${details ? "hover:bg-base-200 cursor-pointer" : "opacity-60"} ${scoreColorClass} ${isWrong ? "font-bold" : ""}`;
+          const scoreBgClass = scoreValue != null ? getScoreBg(scoreValue) : "";
+          const charClasses = `inline-block mx-0.5 px-1 rounded transition-colors ${details ? "cursor-pointer" : "opacity-60"} ${scoreColorClass} ${scoreBgClass} ${isWrong ? "font-bold ring-1 ring-red-300" : ""}`;
 
           return (
             <span key={`${ch}-${i}`} className="tooltip inline-block" data-tip={details ? `Chi tiết từ: ${ch}` : ch}>
@@ -260,46 +272,27 @@ const SentencePronunciationResult = ({
       {/* Selected word details (rendered when user clicks a character) */}
       {selectedWord && (
         <div className="card mt-4 p-4 bg-base-100">
-          <div className="flex justify-between items-start mb-2">
+          <div className="flex items-center justify-between mb-2">
             <div>
               <div className="text-lg font-semibold">
-                Chi tiết: {selectedWord.word}
+                Chi tiết: {selectedWord.word || `Âm ${selectedWord.index + 1}`}
               </div>
             </div>
-            <div>
-              <button
-                className="btn btn-xs btn-ghost"
-                onClick={() => setSelectedWord(null)}
-              >
-                Đóng
-              </button>
-            </div>
+            <button className="btn btn-xs btn-ghost" onClick={() => setSelectedWord(null)}>Đóng</button>
           </div>
-
-          {selectedWord.overall != null ||
-            (selectedWord.details &&
-              (selectedWord.details.overall != null ||
-                selectedWord.details.pronunciation != null)) ? (
-            <div className="mb-2">
-              <div className="text-sm text-gray-600 mb-1">Điểm từ</div>
-              <div className="flex items-center gap-2">
-                {(() => {
-                  const selectedScore = Number(
-                    selectedWord.overall ??
-                    selectedWord.details?.overall ??
-                    selectedWord.details?.pronunciation ??
-                    0
-                  );
-                  return (
-                    <div className={`text-sm font-medium ${getScoreColor(selectedScore)}`}>
-                      {toPercent(selectedScore)}%
-                    </div>
-                  );
-                })()}
+          {/* Selected word overall score */}
+          {(() => {
+            const selScore = toPercent(selectedWord.overall ?? selectedWord.total_score ?? selectedWord.totalScore ?? 0);
+            return (
+              <div className="mb-3 flex items-center justify-between">
+                <div className="text-sm text-base-content/70">Điểm tổng của chữ</div>
+                <div className="text-right">
+                  <div className={`text-sm font-medium ${getScoreColor(selScore)}`}>{selScore}%</div>
+                  <div className="mb-1"><Stars percent={selScore} size={16} /></div>
+                </div>
               </div>
-            </div>
-          ) : null}
-
+            );
+          })()}
           {/* Initial / Final / Tone breakdown if available */}
           {(selectedWord.details && (selectedWord.details.initial_score != null || selectedWord.details.final_score != null || selectedWord.details.tone_score != null)) || (selectedWord.initial_score != null || selectedWord.final_score != null || selectedWord.tone_score != null) ? (
             <div className="mb-2">
@@ -325,11 +318,7 @@ const SentencePronunciationResult = ({
               </div>
             </div>
           ) : null}
-
-          {(selectedWord.phonemes && selectedWord.phonemes.length > 0) ||
-            (selectedWord.details &&
-              (selectedWord.details.phonemes ||
-                selectedWord.details.phones)) ? (
+          {(selectedWord.phonemes && selectedWord.phonemes.length > 0) || (selectedWord.details && (selectedWord.details.phonemes || selectedWord.details.phones)) ? (
             <div>
               <div className="overflow-x-auto">
                 <table className="table w-full">
@@ -341,106 +330,48 @@ const SentencePronunciationResult = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {(
-                      selectedWord.phonemes ||
-                      selectedWord.details?.phonemes ||
-                      selectedWord.details?.phones ||
-                      []
-                    ).map((p, idx) => (
+                    {(selectedWord.phonemes || selectedWord.details?.phonemes || selectedWord.details?.phones || []).map((p, idx) => (
                       <tr key={idx}>
                         <td>
                           <div className="flex items-center gap-2">
                             <span className="text-sm">
-                              {(typeof p?.phoneme_display ===
-                                "string" &&
-                                p.phoneme_display) ||
-                                (Array.isArray(
-                                  p?.phoneme_display
-                                )
-                                  ? p.phoneme_display.join(" ")
-                                  : p?.phoneme ||
-                                  p?.phone ||
-                                  "-")}
+                              {(typeof p?.phoneme_display === "string" && p.phoneme_display) || (Array.isArray(p?.phoneme_display) ? p.phoneme_display.join(" ") : p?.phoneme || p?.phone || "-")}
                             </span>
                             <button
                               className="btn btn-ghost btn-xs btn-square"
-                              title={`Xem hướng dẫn phát âm: ${(typeof p?.phoneme_display ===
-                                "string" &&
-                                p.phoneme_display) ||
-                                p?.phoneme ||
-                                p?.phone ||
-                                ""
-                                }`}
+                              title={`Xem hướng dẫn phát âm: ${(typeof p?.phoneme_display === "string" && p.phoneme_display) || p?.phoneme || p?.phone || ""}`}
                               onClick={async () => {
                                 setGuide(null);
                                 try {
                                   let query = null;
                                   if (p?.phoneme) query = p.phoneme;
                                   if (!query && p?.phoneme_display) {
-                                    query =
-                                      typeof p.phoneme_display ===
-                                        "string"
-                                        ? p.phoneme_display
-                                        : Array.isArray(
-                                          p.phoneme_display
-                                        )
-                                          ? p.phoneme_display.join(
-                                            " "
-                                          )
-                                          : String(
-                                            p.phoneme_display
-                                          );
+                                    query = typeof p.phoneme_display === "string"
+                                      ? p.phoneme_display
+                                      : Array.isArray(p.phoneme_display)
+                                        ? p.phoneme_display.join(" ")
+                                        : String(p.phoneme_display);
                                   }
                                   if (p?.mono_tone && !query) {
-                                    const toneMark = String(
-                                      p.mono_tone
-                                    ).match(/\d+/)?.[0];
+                                    const toneMark = String(p.mono_tone).match(/\d+/)?.[0];
                                     if (toneMark) query = toneMark;
                                   }
-
                                   let res = null;
                                   if (query) res = await pronunciationAPI.lookup(query);
                                   setGuide(res || null);
                                 } catch (err) {
-                                  // console.error(
-                                  //   "Pronunciation guide lookup failed",
-                                  //   err
-                                  // );
                                   setGuide(null);
                                 }
                               }}
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z"
-                                />
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
                               </svg>
                             </button>
                           </div>
                         </td>
-                        <td>
-                          {p?.score != null
-                            ? Math.round(p.score)
-                            : p?.pronunciation != null
-                              ? Math.round(p.pronunciation)
-                              : "-"}
-                        </td>
-                        <td>
-                          {p?.mono_tone &&
-                            typeof p.mono_tone === "string"
-                            ? (p.mono_tone.match(/\d+/) ||
-                              [])[0] || p.mono_tone
-                            : p?.mono_tone || "-"}
-                        </td>
+                        <td>{p?.score != null ? Math.round(p.score) : p?.pronunciation != null ? Math.round(p.pronunciation) : "-"}</td>
+                        <td>{p?.mono_tone && typeof p.mono_tone === "string" ? (p.mono_tone.match(/\d+/) || [])[0] || p.mono_tone : p?.mono_tone || "-"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -448,37 +379,22 @@ const SentencePronunciationResult = ({
               </div>
             </div>
           ) : null}
-          {/* Pronunciation guide card (shows when user clicks a phoneme) */}
           {guide && (
             <div className="mt-3 card bg-base-100 shadow-sm p-3">
               <div className="flex items-center justify-between mb-2">
                 <div>
-                  <h6 className="font-semibold text-sm">
-                    Hướng dẫn phát âm
-                  </h6>
-                  <div className="text-xs text-base-content/60">
-                    {guide.type} — {guide.key}
-                  </div>
+                  <h6 className="font-semibold text-sm">Hướng dẫn phát âm</h6>
+                  <div className="text-xs text-base-content/60">{guide.type} — {guide.key}</div>
                 </div>
-                <div>
-                  <button
-                    className="btn btn-xs btn-ghost"
-                    onClick={() => setGuide(null)}
-                  >
-                    Đóng
-                  </button>
-                </div>
+                <button className="btn btn-xs btn-ghost" onClick={() => setGuide(null)}>Đóng</button>
               </div>
               {guide.ipa && (
                 <div className="mb-2">
-                  <strong>IPA:</strong>{" "}
-                  <span className="text-sm">{guide.ipa}</span>
+                  <strong>IPA:</strong> <span className="text-sm">{guide.ipa}</span>
                 </div>
               )}
               {guide.pronunciation && (
-                <div className="text-sm text-base-content/70">
-                  {guide.pronunciation}
-                </div>
+                <div className="text-sm text-base-content/70">{guide.pronunciation}</div>
               )}
             </div>
           )}

@@ -2,6 +2,7 @@ package com.bucha.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "ise_daily_entry")
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -21,11 +23,8 @@ public class IseDailyEntry {
     Double totalScore;
     Double durationSeconds;
 
-    // reference to original attempt if needed
     Long attemptId;
 
-    // If the attempt is associated with a lesson or a specific line/vocabulary
-    // within a lesson
     Long lessonId;
     Long lineId;
     Long vocabularyId;
@@ -35,5 +34,5 @@ public class IseDailyEntry {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    UserEntity user;
+    User user;
 }

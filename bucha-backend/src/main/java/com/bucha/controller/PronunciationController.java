@@ -2,6 +2,8 @@ package com.bucha.controller;
 
 import com.bucha.dto.pronunciation.PronunciationGuideDto;
 import com.bucha.service.PronunciationService;
+import com.bucha.enums.ErrorCode;
+import com.bucha.exception.AppException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,24 +27,15 @@ public class PronunciationController {
    @GetMapping
    public ResponseEntity<PronunciationGuideDto> lookup(@RequestParam("q") String q) {
       if (q == null || q.trim().isEmpty()) {
-         return ResponseEntity.badRequest().build();
+         throw new AppException(ErrorCode.INVALID_INPUT);
       }
-
-      // try initial
       PronunciationGuideDto dto = pronunciationService.findByInitial(q);
-      if (dto != null)
-         return ResponseEntity.ok(dto);
-
-      // try final
-      dto = pronunciationService.findByFinal(q);
-      if (dto != null)
-         return ResponseEntity.ok(dto);
-
-      // try tone
-      dto = pronunciationService.findByTone(q);
-      if (dto != null)
-         return ResponseEntity.ok(dto);
-
-      return ResponseEntity.notFound().build();
+      if (dto == null)
+         dto = pronunciationService.findByFinal(q);
+      if (dto == null)
+         dto = pronunciationService.findByTone(q);
+      if (dto == null)
+         throw new AppException(ErrorCode.PRONUNCIATION_NOT_FOUND);
+      return ResponseEntity.ok(dto);
    }
 }

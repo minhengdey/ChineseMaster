@@ -2,6 +2,9 @@ package com.bucha.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.bucha.controller.IseController;
+import com.bucha.dto.response.IseScoreResponse;
+import com.bucha.enums.ErrorCode;
+import com.bucha.exception.AppException;
 import com.bucha.pronunciation.IseFileStreamer;
 import com.bucha.pronunciation.IseGlobalMessageBuilder;
 import com.bucha.pronunciation.IseGlobalUrlSigner;
@@ -616,6 +619,23 @@ public class IseService {
                 }
 
                 IseScore saved = iseRepository.save(score);
+                // enrich response root with attempt metadata for external DTO mapping
+                response.put("attemptId", saved.getId());
+                response.put("totalScore", saved.getTotalScore());
+                response.put("fluency", saved.getFluency());
+                response.put("completeness", saved.getCompleteness());
+                response.put("durationSeconds", saved.getDurationSeconds());
+                response.put("numSentences", saved.getNumSentences());
+                response.put("numWrongWords", saved.getNumWrongWords());
+                response.put("scoreCategory", saved.getScoreCategory());
+                response.put("lessonId", saved.getLessonId());
+                response.put("lineId", saved.getLineId());
+                response.put("vocabularyId", saved.getVocabularyId());
+                response.put("testId", saved.getTestId());
+                response.put("includeInDaily", saved.getIncludeInDaily());
+                if (saved.getSessionDate() != null) {
+                    response.put("sessionDate", saved.getSessionDate().toString());
+                }
                 // also persist into new summary tables as appropriate
                 try {
                     // persist daily entry only when the client explicitly requests it
@@ -1901,5 +1921,58 @@ public class IseService {
         out.put("fluency", fluency);
 
         return out;
+    }
+
+    // Convenience wrapper to produce DTO directly for controller layer
+    public IseScoreResponse scoreDto(JwtUserPrincipal principal,
+            String text,
+            MultipartFile audioFile,
+            String reqSub,
+            String reqEnt,
+            String scoreCategory,
+            Long lessonId,
+            Long testId,
+            Boolean includeInDaily,
+            String sessionDate,
+            Double durationSeconds,
+            Integer numSentences,
+            String lineId,
+            String vocabularyId,
+            String source) throws Exception {
+        ResponseEntity<?> raw = score(principal, text, audioFile, reqSub, reqEnt, scoreCategory, lessonId, testId,
+                includeInDaily, sessionDate, durationSeconds, numSentences, lineId, vocabularyId, source);
+        if (!raw.getStatusCode().is2xxSuccessful()) {
+            throw new AppException(ErrorCode.ISE_PROCESSING_FAILED);
+        }
+        Object body = raw.getBody();
+        if (!(body instanceof Map) && !(body instanceof String)) {
+            throw new AppException(ErrorCode.ISE_PROCESSING_FAILED);
+        }
+        JSONObject obj;
+        if (body instanceof String) {
+            obj = JSONObject.parseObject((String) body);
+        } else {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> mapBody = (Map<String, Object>) body;
+            obj = new JSONObject(mapBody);
+        }
+        return IseScoreResponse.builder()
+                .id(obj.getLong("attemptId"))
+                .totalScore(obj.getDouble("totalScore"))
+                .fluency(obj.getDouble("fluency"))
+                .completeness(obj.getDouble("completeness"))
+                .durationSeconds(obj.getDouble("durationSeconds"))
+                .numSentences(obj.getInteger("numSentences"))
+                .numWrongWords(obj.getInteger("numWrongWords"))
+                .scoreCategory(obj.getString("scoreCategory"))
+                .lessonId(obj.getLong("lessonId"))
+                .lineId(obj.getLong("lineId"))
+                .vocabularyId(obj.getLong("vocabularyId"))
+                .testId(obj.getLong("testId"))
+                .includeInDaily(obj.getBoolean("includeInDaily"))
+                .sessionDate(obj.getString("sessionDate") != null
+                        ? java.time.LocalDateTime.parse(obj.getString("sessionDate"))
+                        : null)
+                .build();
     }
 }

@@ -1,36 +1,37 @@
 package com.bucha.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "`tones`")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Tone {
    @Id
    @GeneratedValue(strategy = GenerationType.IDENTITY)
-   private Long id;
+   Long id;
 
-   private String name;
-   private String pitchValue;
+   String name;
+   String pitchValue;
 
    @Column(length = 2000)
-   private String pronunciation;
+   String pronunciation;
    @Column(name = "tone_mark")
-   private String toneMark;
+   String toneMark;
 
    @Column(name = "external_id")
-   private Long externalId;
+   Long externalId;
 
-   // Order index (1-based) used to number tones during migration so UI can refer
-   // to tones by index
    @Column(name = "tones_order")
-   private Integer order;
+   Integer order;
 
    @Column(name = "content_hash", length = 64)
-   private String contentHash;
+   String contentHash;
 
 }

@@ -27,7 +27,7 @@ const WeeklyLeaderboard = ({ className }) => {
             try {
                 const data = await iseStatsAPI.getLeaderboardWeekly()
                 if (!mounted) return
-                const rows = Array.isArray(data?.rows) ? data.rows : []
+                const rows = Array.isArray(data) ? data : []
 
                 const maxCompletion = rows.reduce((m, r) => Math.max(m, Number(r.completionCount || 0)), 0) || 1
 

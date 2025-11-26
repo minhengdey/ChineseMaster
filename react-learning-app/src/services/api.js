@@ -533,17 +533,22 @@ export const iseStatsAPI = {
    // Leaderboard endpoints (optional on backend)
    getLeaderboardWeekly: async () => {
       const response = await apiClient.get('/ise/stats/leaderboard/weekly');
-      return response.data;
+      // WeeklyLeaderboardResponse: { rows: [...] }
+      const data = response.data;
+      return Array.isArray(data?.rows) ? data.rows : [];
    },
    getLeaderboardDaily: async () => {
-      // Deprecated alias
-      return iseStatsAPI.getLeaderboardWeekly()
+      const response = await apiClient.get('/ise/stats/leaderboard/daily');
+      // Daily returns List<LeaderboardRowResponse>
+      const data = response.data;
+      return Array.isArray(data) ? data : [];
    },
    getLeaderboardByLesson: async (lessonId) => {
       const params = {};
       if (lessonId != null) params.lessonId = lessonId;
       const response = await apiClient.get('/ise/stats/leaderboard/lesson', { params });
-      return response.data;
+      const data = response.data;
+      return Array.isArray(data) ? data : [];
    },
 };
 
@@ -577,8 +582,10 @@ export const pronunciationAPI = {
 
 export const userLessonAPI = {
    complete: async (lessonId, completed) => {
+      // Backend expects ?completed= boolean as request param
       const response = await apiClient.post(
          `/user-lessons/${lessonId}/complete`,
+         null,
          { params: { completed } }
       );
       return response.data;

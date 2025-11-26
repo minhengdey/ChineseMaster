@@ -33,7 +33,6 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http,
             @Value("${app.cors.allowed-origins:https://dingdong.up.railway.app,http://localhost:5501}") String allowedOrigins) throws Exception {
 
-        // CORS config
         http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration cfg = new CorsConfiguration();
             cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -50,10 +49,8 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Disable frame options for H2 console
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
-                        // Use AntPathRequestMatcher explicitly to avoid ambiguity between servlets
                         .requestMatchers(
                                 new AntPathRequestMatcher("/api/auth/**"),
                                 new AntPathRequestMatcher("/api/audio/**"),
@@ -69,10 +66,6 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
                         .anyRequest().permitAll())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
-        // Rate limiting: add a RateLimitFilter before JwtFilter or use a gateway /
-        // bucket4j
-        // TODO: plug in a rate limiter (e.g. bucket4j, redis) here.
 
         return http.build();
     }

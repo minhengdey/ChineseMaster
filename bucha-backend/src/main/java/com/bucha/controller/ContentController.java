@@ -1,9 +1,9 @@
 package com.bucha.controller;
 
-import com.bucha.dto.content.CurriculumDetailDto;
-import com.bucha.dto.content.CurriculumDto;
-import com.bucha.dto.content.LessonDetailDto;
-import com.bucha.dto.content.LessonDto;
+import com.bucha.dto.response.CurriculumResponse;
+import com.bucha.dto.response.CurriculumDetailResponse;
+import com.bucha.dto.response.LessonResponse;
+import com.bucha.dto.response.LessonDetailResponse;
 import com.bucha.service.ContentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,27 +20,32 @@ public class ContentController {
 
    // Curriculum endpoints
    @GetMapping("/curriculums")
-   public ResponseEntity<List<CurriculumDto>> getAllCurriculums() {
-      return ResponseEntity.ok(contentService.getAllCurriculums());
+   public ResponseEntity<List<CurriculumResponse>> getAllCurriculums() {
+      List<CurriculumResponse> data = contentService.getAllCurriculums();
+      return ResponseEntity.ok(data);
    }
 
    @GetMapping("/curriculums/{id}")
-   public ResponseEntity<CurriculumDetailDto> getCurriculumById(@PathVariable Long id) {
-      return ResponseEntity.ok(contentService.getCurriculumById(id));
+   public ResponseEntity<CurriculumDetailResponse> getCurriculumById(@PathVariable Long id) {
+      CurriculumDetailResponse data = contentService.getCurriculumById(id);
+      return ResponseEntity.ok(data);
    }
 
    // Lesson endpoints
    @GetMapping("/curriculums/{id}/lessons")
-   public ResponseEntity<List<LessonDto>> getLessonsByCurriculumId(@PathVariable Long id) {
-      return ResponseEntity.ok(contentService.getLessonsByCurriculumId(id));
+   public ResponseEntity<List<LessonResponse>> getLessonsByCurriculumId(@PathVariable Long id) {
+      List<LessonResponse> data = contentService.getLessonsByCurriculumId(id);
+      return ResponseEntity.ok(data);
    }
 
    @GetMapping("/lessons/{id}")
-   public ResponseEntity<LessonDetailDto> getLessonById(@PathVariable Long id) {
-      return ResponseEntity.ok(contentService.getLessonById(id));
+   public ResponseEntity<LessonDetailResponse> getLessonById(@PathVariable Long id) {
+      LessonDetailResponse data = contentService.getLessonById(id);
+      return ResponseEntity.ok(data);
    }
 
-   // Debug: return conversation lines and their externalIds for a lesson
+   // Debug: return conversation lines and their externalIds for a lesson (kept for
+   // troubleshooting)
    @GetMapping("/debug/lessons/{id}/lines-external")
    public ResponseEntity<?> getLessonLinesExternal(@PathVariable Long id) {
       return ResponseEntity.ok(contentService.getConversationLinesWithExternalForLesson(id));

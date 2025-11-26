@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react"
 import { iseAPI } from "../../../services/api"
+import adaptIseScore from "../../../utils/iseScoreAdapter"
 import { createRecorder, computeSha256Hex, playBlobSafely } from "../../../utils/audioUtils"
 import { Mic, RotateCcw } from "lucide-react"
 
@@ -79,75 +80,10 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = "xs" }
         sha256,
       }
 
-      const result = await iseAPI.scoreWord(payload)
-      const raw = result?.raw_response ?? result
-
-      // Normalize result similar to existing logic in file
-      // Normalize into a predictable shape that SentencePronunciationResult expects.
-      let normalized = raw
-      if (typeof raw === "object") {
-        const sent = raw.sentence || {}
-        // pull raw arrays
-        const rawWords = raw.words ?? sent.words ?? []
-        const rawPhonemes = raw.phonemes ?? sent.phonemes ?? []
-
-        // normalize words: ensure common keys exist for SentencePronunciationResult
-        const wordsArr = (Array.isArray(rawWords) ? rawWords : []).map((w) => {
-          const overall = w?.overall ?? w?.total_score ?? w?.totalScore ?? w?.pronunciation ?? w?.score ?? w?.pronunciationScore ?? null
-          const pronunciation = w?.pronunciation ?? w?.overall ?? w?.score ?? null
-          return {
-            ...w,
-            overall: overall != null ? Number(overall) : null,
-            pronunciation: pronunciation != null ? Number(pronunciation) : null,
-            duration: w?.duration ?? w?.time_len ?? w?.timeLen ?? null,
-            phonemes: w?.phonemes ?? w?.phones ?? w?.phoneme_list ?? w?.phonemeList ?? null,
-            initial_score: w?.initial_score ?? w?.initialScore ?? null,
-            final_score: w?.final_score ?? w?.finalScore ?? null,
-            tone_score: w?.tone_score ?? w?.toneScore ?? null,
-          }
-        })
-
-        // normalize phonemes
-        const phonemesArr = (Array.isArray(rawPhonemes) ? rawPhonemes : []).map((p) => ({
-          ...p,
-          phoneme: p?.phoneme ?? p?.phone ?? null,
-          phoneme_display: p?.phoneme_display ?? p?.phonemeDisplay ?? null,
-          score: p?.score ?? p?.pronunciation ?? null,
-          mono_tone: p?.mono_tone ?? p?.monoTone ?? null,
-        }))
-
-        const sentenceObj = {
-          total_score: sent.total_score ?? raw.total_score ?? raw.totalScore ?? raw.overall ?? null,
-          fluency: sent.fluency ?? raw.fluency ?? null,
-          completeness: sent.completeness ?? raw.completeness ?? null,
-          pronunciation: sent.pronunciation ?? raw.pronunciation ?? null,
-          tone: sent.tone ?? raw.tone ?? null,
-          wrong_words: sent.wrong_words ?? raw.wrong_words ?? raw.wrongWords ?? [],
-          sid: sent.sid ?? raw.sid ?? null,
-          status: sent.status ?? raw.status ?? null,
-          raw_xml: sent.raw_xml ?? raw.raw_xml ?? null,
-          words: wordsArr,
-          phonemes: phonemesArr,
-          is_rejected: sent.is_rejected ?? raw.is_rejected ?? false,
-          except_info: sent.except_info ?? raw.except_info ?? null,
-          warning: sent.warning ?? raw.warning ?? null,
-        }
-
-        // Mirror important fields at top-level as well so caller code that checks either
-        // `result.sentence` or `result` finds consistent data.
-        normalized = {
-          sentence: sentenceObj,
-          words: wordsArr,
-          phonemes: phonemesArr,
-          total_score: sentenceObj.total_score,
-          fluency: sentenceObj.fluency,
-          completeness: sentenceObj.completeness,
-          pronunciation: sentenceObj.pronunciation,
-          tone: sentenceObj.tone,
-        }
-      }
-
-      onScore && onScore(normalized, blob)
+      const raw = await iseAPI.scoreWord(payload)
+      const adapted = adaptIseScore(raw)
+      const merged = { ...adapted.legacy, ...adapted }
+      onScore && onScore(merged, blob)
     } catch (err) {
       // console.error("submitForAnalysisWithBlob error", err)
       setError(err.message || "Không thể đánh giá phát âm. Vui lòng thử lại.")
@@ -168,6 +104,12 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = "xs" }
     setAudioBlob(null)
     setError(null)
     setIsAnalyzing(false)
+  }
+
+  const getScoreColor = (score) => {
+    if (score >= 80) return "text-green-600"
+    if (score >= 60) return "text-yellow-600"
+    return "text-red-600"
   }
 
   const getSizeClasses = () => {

@@ -1,10 +1,8 @@
 package com.bucha.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,43 +11,28 @@ import java.util.List;
 @Getter
 @Entity
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "curriculums")
 public class Curriculum {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @Column(nullable = false)
-    private String name; // e.g., "HSK 1", "HSK 2", "Business Chinese"
+    String name;
 
     @Column(length = 1000)
-    private String description;
+    String description;
 
-    private String level; // e.g., "Beginner", "Intermediate", "Advanced"
+    String level;
 
     @Column(name = "curriculum_order", unique = true)
-    private Integer order; // Thứ tự giáo trình
+    Integer order;
 
     @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Lesson> lessons = new ArrayList<>();
+    List<Lesson> lessons = new ArrayList<>();
 
-    private Long externalId; // ID from external system, if applicable
-
-    // Constructors
-    public Curriculum() {
-    }
-
-    public Curriculum(String name, String description, String level) {
-        this.name = name;
-        this.description = description;
-        this.level = level;
-    }
-
-    public Curriculum(String name, String description, String level, Integer order) {
-        this.name = name;
-        this.description = description;
-        this.level = level;
-        this.order = order;
-    }
+    Long externalId;
 }

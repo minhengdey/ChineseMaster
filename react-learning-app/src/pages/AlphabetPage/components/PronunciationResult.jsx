@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { pronunciationAPI } from "../../../services/api"
+import adaptIseScore from "../../../utils/iseScoreAdapter"
 import { Volume2, Info, AlertCircle, CheckCircle, X } from "lucide-react"
 
 const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = "" }) => {
@@ -25,22 +26,20 @@ const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = ""
 
   if (!result) return null
 
-  // Scores (support multiple possible field names)
-  const overallScore = result?.total_score ?? result?.totalScore ?? result?.overall ?? 0
-  const pronunciationScore = result?.pronunciation ?? result?.pronunciation_score ?? 0
-  const toneScore = result?.tone ?? 0
-  const completenessScore = result?.completeness ?? 0
-  const fluencyScore = result?.fluency ?? 0
-
-  const phonemes = result?.phonemes || []
-  const words = result?.words || []
-  const wrongWords = new Set(result?.wrong_words || result?.wrongWords || result?.wrong || [])
+  // Normalize scoring object via central adapter
+  const adapted = adaptIseScore(result)
+  const overallScore = adapted?.totalScore ?? 0
+  const completenessScore = adapted?.completeness ?? 0
+  const fluencyScore = adapted?.fluency ?? 0
+  const words = adapted?.words || []
+  const wrongWords = new Set(adapted?.wrongWords || [])
 
   // Align with SentencePronunciationResult styles (daisyui utility classes)
   const getScoreColor = (score) => {
-    if (score >= 80) return "text-success"
-    if (score >= 60) return "text-warning"
-    return "text-error"
+    // Unified palette across pronunciation components
+    if (score >= 80) return "text-green-600"
+    if (score >= 60) return "text-yellow-600"
+    return "text-red-600"
   }
 
   const getScoreMessage = (score) => {
@@ -125,7 +124,7 @@ const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = ""
     }
 
     // build set of low scoring word indexes
-    const wordsArray = Array.isArray(result?.words) ? result.words : []
+    const wordsArray = Array.isArray(adapted?.words) ? adapted.words : []
     const lowScoreWordIndexes = new Set()
     for (let wiIndex = 0; wiIndex < wordsArray.length; wiIndex++) {
       const d = wordsArray[wiIndex] || {}
@@ -143,7 +142,7 @@ const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = ""
       <div className="mb-2 whitespace-nowrap overflow-x-auto">
         {chars.map((ch, i) => {
           const wordIndex = mapping[i]
-          const details = typeof wordIndex === "number" && Array.isArray(result?.words) ? result.words[wordIndex] : null
+          const details = typeof wordIndex === "number" && Array.isArray(adapted?.words) ? adapted.words[wordIndex] : null
           const normalized = {
             word: ch,
             index: wordIndex,

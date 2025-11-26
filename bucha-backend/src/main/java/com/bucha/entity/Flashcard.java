@@ -1,37 +1,35 @@
 package com.bucha.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
 @Setter
 @Getter
 @Entity
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "flashcards")
 public class Flashcard {
-    // getters/setters
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
-    private Long userId; // owner
-    private String hanzi;
-    private String pinyin;
-    private String meaning;
+    Long userId;
+    String hanzi;
+    String pinyin;
+    String meaning;
 
-    // SM-2 fields
-    private double efactor = 2.5;
+    double efactor = 2.5;
 
-    // Avoid using reserved word "interval" -> use intervalDays mapped to column interval_days
     @Column(name = "interval_days")
-    private int intervalDays = 0; // days
+    int intervalDays = 0;
 
-    private int box = 1;
+    int box = 1;
 
     @Column(name = "next_review")
-    private LocalDateTime nextReview;
-
-    public Flashcard() {}
-
+    LocalDateTime nextReview;
 }

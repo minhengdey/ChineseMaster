@@ -2,6 +2,7 @@ package com.bucha.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "ise_test_entry")
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -29,5 +31,5 @@ public class IseTestEntry {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    UserEntity user;
+    User user;
 }

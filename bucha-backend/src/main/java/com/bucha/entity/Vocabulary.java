@@ -4,63 +4,50 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Setter
 @Getter
 @Entity
 @Table(name = "vocabularies")
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@NoArgsConstructor
+@AllArgsConstructor
 public class Vocabulary {
    @Id
    @GeneratedValue(strategy = GenerationType.IDENTITY)
-   private Long id;
+   Long id;
 
    @Column(name = "external_id")
-   private Long externalId;
+   Long externalId;
 
    @Column(name = "content_hash", length = 64)
-   private String contentHash;
+   String contentHash;
 
    @Column(nullable = false)
-   private String word; // Chinese word/phrase
+   String word;
 
    @Column(nullable = false)
-   private String pinyin; // Pinyin pronunciation
+   String pinyin;
 
    @Column(nullable = false)
-   private String type; // e.g., "danh từ", "động từ", "tính từ", "cụm từ"
+   String type;
 
    @Column(nullable = false, length = 500)
-   private String meaning; // Vietnamese meaning
+   String meaning;
 
    @ManyToOne(fetch = FetchType.LAZY)
    @JoinColumn(name = "lesson_id")
-   private Lesson lesson;
+   Lesson lesson;
 
    @Column(name = "word_order")
-   private Integer order; // Thứ tự từ vựng trong bài học
-
-   // Cloudinary public_id cho audio (flow Cloudinary-only)
+   Integer order;
 
    @Column(name = "audio_public_id")
-   private String audioPublicId;
+   String audioPublicId;
 
-   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true) // <--- THÊM DÒNG NÀY
+   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
    @JoinColumn(name = "example_line_id", referencedColumnName = "id")
-   private Line example;
-
-   // Constructors
-   public Vocabulary() {
-   }
-
-   public Vocabulary(String word, String pinyin, String type, String meaning,
-         Lesson lesson, Integer order) {
-      this.word = word;
-      this.pinyin = pinyin;
-      this.type = type;
-      this.meaning = meaning;
-      this.lesson = lesson;
-      this.order = order;
-   }
+   Line example;
 }

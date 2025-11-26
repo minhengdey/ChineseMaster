@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react"
 import { iseAPI } from "../../../services/api"
+import adaptIseScore from "../../../utils/iseScoreAdapter"
 import { createRecorder, computeSha256Hex, playBlobSafely } from "../../../utils/audioUtils"
 
 const WordRecordingButton = ({
@@ -82,27 +83,10 @@ const WordRecordingButton = ({
       const vocabExternal = externalId ?? vocabularyId
       if (vocabExternal != null) payload.vocabularyId = String(vocabExternal)
       if (lessonId != null) payload.lessonId = String(lessonId)
-      const result = await iseAPI.scoreWord(payload)
-      const raw = result?.raw_response ?? result
-      // Normalize result similar to existing logic in file
-      let normalized = raw
-      if (typeof raw === "object") {
-        const sent = raw.sentence || {}
-        normalized = {
-          total_score: sent.total_score ?? raw.total_score ?? raw.totalScore ?? raw.overall ?? null,
-          fluency: sent.fluency ?? raw.fluency ?? null,
-          completeness: sent.completeness ?? raw.completeness ?? null,
-          wrong_words: sent.wrong_words ?? raw.wrong_words ?? raw.wrongWords ?? [],
-          sid: sent.sid ?? raw.sid ?? null,
-          status: sent.status ?? raw.status ?? null,
-          raw_xml: sent.raw_xml ?? raw.raw_xml ?? null,
-          words: raw.words ?? sent.words ?? [],
-          is_rejected: sent.is_rejected ?? raw.is_rejected ?? false,
-          except_info: sent.except_info ?? raw.except_info ?? null,
-          warning: sent.warning ?? raw.warning ?? null,
-        }
-      }
-      onScore && onScore(normalized, blob, vocabExternal ? `word-${vocabExternal}` : undefined)
+      const raw = await iseAPI.scoreWord(payload)
+      const adapted = adaptIseScore(raw)
+      const merged = { ...adapted.legacy, ...adapted }
+      onScore && onScore(merged, blob, vocabExternal ? `word-${vocabExternal}` : undefined)
     } catch (err) {
       // console.error("submitForAnalysisWithBlob error", err)
       setError(err.message || "Không thể đánh giá phát âm. Vui lòng thử lại.")

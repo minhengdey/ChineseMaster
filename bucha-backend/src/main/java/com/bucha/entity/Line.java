@@ -10,11 +10,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
@@ -23,27 +20,28 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Line {
    @Id
    @GeneratedValue(strategy = GenerationType.IDENTITY)
-   private Long id;
+   Long id;
 
    @Column(name = "external_id")
-   private Long externalId;
+   Long externalId;
 
    @Column(name = "content_hash", length = 64)
-   private String contentHash;
+   String contentHash;
 
    @Column(name = "zh_text", nullable = false, length = 1000)
-   private String zhText; // Chinese text
+   String zhText;
 
    @Column(nullable = false, length = 1000)
-   private String pinyin; // Pinyin pronunciation
+   String pinyin;
 
    @Column(name = "vn_translation", nullable = false, length = 1000)
-   private String vnTranslation; // Vietnamese translation
+   String vnTranslation;
 
    @Column()
-   private String audioPublicId;
+   String audioPublicId;
 
 }

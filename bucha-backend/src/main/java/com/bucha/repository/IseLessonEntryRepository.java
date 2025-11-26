@@ -1,7 +1,7 @@
 package com.bucha.repository;
 
 import com.bucha.entity.IseLessonEntry;
-import com.bucha.entity.UserEntity;
+import com.bucha.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -13,7 +13,7 @@ public interface IseLessonEntryRepository extends JpaRepository<IseLessonEntry, 
 
     List<IseLessonEntry> findByUser_IdAndLessonId(Long userId, Long lessonId);
 
-    boolean existsByUserAndLessonId(UserEntity user, Long lessonId);
+    boolean existsByUserAndLessonId(User user, Long lessonId);
 
     @Query("SELECT COUNT(DISTINCT e.attemptId) FROM IseLessonEntry e WHERE e.user.id = :userId AND e.lessonId = :lessonId")
     long countDistinctAttemptsByUserAndLesson(@Param("userId") Long userId, @Param("lessonId") Long lessonId);

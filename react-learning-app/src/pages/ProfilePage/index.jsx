@@ -169,13 +169,13 @@ const ProfilePage = ({ user }) => {
     try {
       // fetch weekly rows for lesson summary
       const weekly = await iseStatsAPI.getWeekly()
-      setWeeklyRows(Array.isArray(weekly?.rows) ? weekly.rows : [])
+      setWeeklyRows(Array.isArray(weekly) ? weekly : [])
 
       // fetch today's daily stat (avg for today)
       const todayIso = getVietnamDateIso()
       try {
         const daily = await iseStatsAPI.getDaily(todayIso, todayIso)
-        const rows = Array.isArray(daily?.rows) ? daily.rows : []
+        const rows = Array.isArray(daily) ? daily : []
         setTodayStat(rows.length > 0 ? rows[0] : null)
       } catch (e) {
         // console.debug('failed to fetch today daily stat', e)
@@ -189,7 +189,7 @@ const ProfilePage = ({ user }) => {
     let enriched = []
     try {
       const lessons = await iseStatsAPI.getLessons()
-      const rows = Array.isArray(lessons?.rows) ? lessons.rows : []
+      const rows = Array.isArray(lessons) ? lessons : []
 
       enriched = await Promise.all(
         rows.map(async (r) => {
@@ -320,7 +320,7 @@ const ProfilePage = ({ user }) => {
     let testsRows = []
     try {
       const tests = await iseStatsAPI.getTests()
-      testsRows = Array.isArray(tests?.rows) ? tests.rows : []
+      testsRows = Array.isArray(tests) ? tests : []
       setTestRows(testsRows)
     } catch (e) {
       // console.debug("failed test stats", e)

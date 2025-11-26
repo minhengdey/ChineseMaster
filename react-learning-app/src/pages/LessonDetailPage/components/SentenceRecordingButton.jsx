@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react"
 import { iseAPI } from "../../../services/api"
+import adaptIseScore from "../../../utils/iseScoreAdapter"
 import { createRecorder, computeSha256Hex, playBlobSafely } from "../../../utils/audioUtils"
 
 const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onStartRecording, size = "sm" }) => {
@@ -90,14 +91,13 @@ const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onSta
       if (lessonId !== undefined && lessonId !== null) payload.lessonId = lessonId
       if (lineId !== undefined && lineId !== null) payload.lineId = String(lineId)
 
-      const result = await iseAPI.scoreSentence(payload)
-
-      // console.log("Analysis result:", result)
-
-      if (result && result.success !== false && onScore) {
-        onScore(result, blob, lineId)
+      const raw = await iseAPI.scoreSentence(payload)
+      const adapted = adaptIseScore(raw)
+      const merged = { ...adapted.legacy, ...adapted } // keep backward compatibility for consumers expecting snake_case
+      if (adapted && adapted.success !== false && onScore) {
+        onScore(merged, blob, lineId)
       } else {
-        setError(result?.error || result?.message || "Không thể đánh giá phát âm. Vui lòng thử lại.")
+        setError(adapted?.error || adapted?.message || "Không thể đánh giá phát âm. Vui lòng thử lại.")
       }
     } catch (error) {
       // console.error("Error analyzing audio:", error)

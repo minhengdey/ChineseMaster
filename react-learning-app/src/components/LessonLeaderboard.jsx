@@ -20,7 +20,7 @@ const LessonLeaderboard = ({ lessonId, className }) => {
       try {
         const data = await iseStatsAPI.getLeaderboardByLesson(lessonId)
         if (!mounted) return
-        const rows = Array.isArray(data?.rows) ? data.rows : []
+        const rows = Array.isArray(data) ? data : []
         // ensure numeric score
         const enriched = rows.map((r) => ({
           ...r,

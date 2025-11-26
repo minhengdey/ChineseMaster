@@ -1,6 +1,8 @@
 package com.bucha.controller;
 
-import com.bucha.dto.UserProfileDto;
+import com.bucha.dto.request.UserProfileUpdateRequest;
+import com.bucha.dto.response.UserProfileResponse;
+// import com.bucha.entity.User; // Removed unused import
 import com.bucha.security.JwtUserPrincipal;
 import com.bucha.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -19,38 +21,17 @@ public class ProfileController {
     }
 
     @GetMapping
-    public ResponseEntity<UserProfileDto> getProfile(@AuthenticationPrincipal JwtUserPrincipal principal) {
-        var u = userService.findById(principal.id()).orElseThrow();
-        return ResponseEntity.ok(toDto(u));
+    public ResponseEntity<UserProfileResponse> getProfile(@AuthenticationPrincipal JwtUserPrincipal principal) {
+        return ResponseEntity.ok(userService.getProfile(principal.id()));
     }
 
     @PostMapping
     public ResponseEntity<?> updateProfile(@AuthenticationPrincipal JwtUserPrincipal principal,
-            @RequestBody UserProfileDto patch) {
+            @RequestBody UserProfileUpdateRequest patch) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         System.out.println("auth=" + auth); // hoặc logger
-        try {
-            var u = userService.updateProfile(principal.id(), patch);
-            return ResponseEntity.ok(toDto(u));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(java.util.Map.of("error", "missing_current_password", "message", e.getMessage()));
-        } catch (SecurityException e) {
-            return ResponseEntity.status(403)
-                    .body(java.util.Map.of("error", "incorrect_current_password", "message", e.getMessage()));
-        }
-    }
-
-    private UserProfileDto toDto(com.bucha.entity.UserEntity u) {
-        UserProfileDto dto = new UserProfileDto();
-        dto.id = u.getId();
-        dto.email = u.getEmail();
-        dto.name = u.getName();
-        dto.xp = u.getXp();
-        dto.streak = u.getStreak();
-        dto.darkMode = u.isDarkMode();
-        dto.badges = u.getBadges();
-        return dto;
+        var resp = userService.updateProfile(principal.id(), patch);
+        return ResponseEntity.ok(resp);
     }
 
 }

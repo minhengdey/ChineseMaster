@@ -29,7 +29,7 @@ const DailyLeaderboard = ({ className }) => {
         // NOTE: backend endpoint /ise/stats/leaderboard/daily must exist to return aggregated rows across users.
         const data = await iseStatsAPI.getLeaderboardDaily()
         if (!mounted) return
-        const rows = Array.isArray(data?.rows) ? data.rows : []
+        const rows = Array.isArray(data) ? data : []
 
         // find max completion to normalize
         const maxCompletion = rows.reduce((m, r) => Math.max(m, Number(r.completionCount || 0)), 0) || 1

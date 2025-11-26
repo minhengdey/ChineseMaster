@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.bucha.dto.response.IseScoreResponse;
 
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -18,7 +19,7 @@ public class IseController {
     IseService iseService;
 
     @PostMapping(value = "/score", consumes = "multipart/form-data")
-    public ResponseEntity<?> score(@AuthenticationPrincipal JwtUserPrincipal principal,
+    public ResponseEntity<IseScoreResponse> score(@AuthenticationPrincipal JwtUserPrincipal principal,
             @RequestPart("text") String text,
             @RequestPart("audio") MultipartFile audioFile,
             @RequestPart(value = "sub", required = false) String reqSub,
@@ -33,13 +34,17 @@ public class IseController {
             @RequestPart(value = "sessionDate", required = false) String sessionDate,
             @RequestPart(value = "durationSeconds", required = false) String durationSeconds,
             @RequestPart(value = "source", required = false) String source) throws Exception {
-
-        return iseService.score(principal, text, audioFile, reqSub, reqEnt,
-                scoreCategory, lessonId != null ? Long.parseLong(lessonId) : null,
+        IseScoreResponse resp = iseService.scoreDto(principal, text, audioFile, reqSub, reqEnt,
+                scoreCategory,
+                lessonId != null ? Long.parseLong(lessonId) : null,
                 testId != null ? Long.parseLong(testId) : null,
                 includeInDaily != null ? Boolean.parseBoolean(includeInDaily) : null,
-                sessionDate, durationSeconds != null ? Double.parseDouble(durationSeconds) : null,
+                sessionDate,
+                durationSeconds != null ? Double.parseDouble(durationSeconds) : null,
                 numSentences != null ? Integer.parseInt(numSentences) : null,
-                lineId, vocabularyId, source);
+                lineId,
+                vocabularyId,
+                source);
+        return ResponseEntity.ok(resp);
     }
 }

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { pronunciationAPI } from "../../../services/api";
+import adaptIseScore from "../../../utils/iseScoreAdapter";
 
 const WordPronunciationResult = ({
    result,
@@ -15,28 +16,26 @@ const WordPronunciationResult = ({
    const audioUrlRef = useRef(null);
    const audioRef = useRef(null);
 
-   // Scores (support multiple possible field names)
-   const overallScore =
-      result?.total_score ?? result?.totalScore ?? result?.overall ?? 0;
-   const pronunciationScore =
-      result?.pronunciation ?? result?.pronunciation_score ?? 0;
-   const toneScore = result?.tone ?? 0;
-   const completenessScore = result?.completeness ?? 0;
-   const fluencyScore = result?.fluency ?? 0;
-
-   const phonemes = result?.phonemes || [];
-   const words = result?.words || [];
-   const sid = result?.sid || result?.sentence?.sid;
-   const wrongWords = new Set(
-      result?.wrong_words || result?.wrongWords || result?.wrong || []
-   );
+   // Normalize scoring object via central adapter (unifies legacy field names)
+   const adapted = adaptIseScore(result);
+   const overallScore = adapted?.totalScore ?? 0;
+   const completenessScore = adapted?.completeness ?? 0;
+   const fluencyScore = adapted?.fluency ?? 0;
+   const words = adapted?.words || [];
+   const wrongWords = new Set(adapted?.wrongWords || []);
 
    const isCompoundWord = typeof word === "string" && word.trim().length > 1;
 
    const getScoreColor = (score) => {
-      if (score >= 80) return "text-success";
-      if (score >= 60) return "text-warning";
-      return "text-error";
+      // Unified color scale: >=80 green, 60-79 yellow, <60 red
+      if (score >= 80) return "text-green-600";
+      if (score >= 60) return "text-yellow-600";
+      return "text-red-600";
+   };
+   const getScoreBg = (score) => {
+      if (score >= 80) return "bg-green-50";
+      if (score >= 60) return "bg-yellow-50";
+      return "bg-red-50";
    };
 
    const getScoreMessage = (score) => {
@@ -175,7 +174,7 @@ const WordPronunciationResult = ({
                      <div className="mb-1">
                         <Stars percent={toPercent(overallScore)} />
                      </div>
-                     <div className={`text-sm font-medium text-yellow-700`}>
+                     <div className={`text-sm font-medium ${getScoreColor(overallScore)}`}>
                         {toPercent(overallScore)}%
                      </div>
                      <div className={`text-xs ${getScoreColor(overallScore)}`}>
@@ -194,7 +193,7 @@ const WordPronunciationResult = ({
                   <div className="mb-1">
                      <Stars percent={toPercent(completenessScore)} />
                   </div>
-                  <div className="text-sm font-medium text-yellow-700">
+                  <div className={`text-sm font-medium ${getScoreColor(completenessScore)}`}>
                      {toPercent(completenessScore)}%
                   </div>
                </div>
@@ -206,7 +205,7 @@ const WordPronunciationResult = ({
                   <div className="mb-1">
                      <Stars percent={toPercent(fluencyScore)} />
                   </div>
-                  <div className="text-sm font-medium text-yellow-700">
+                  <div className={`text-sm font-medium ${getScoreColor(fluencyScore)}`}>
                      {toPercent(fluencyScore)}%
                   </div>
                </div>
@@ -222,12 +221,18 @@ const WordPronunciationResult = ({
                      const wordKey = w.word ?? w.text ?? `\u200b${idx}`;
                      const isWrong = wrongWords.has(wordKey) || wrongWords.has(w.word) || wrongWords.has(w.text);
                      const display = w.word || w.text || `Âm ${idx + 1}`;
+                     const rawScore = w.overall ?? w.total_score ?? w.totalScore ?? w.pronunciation ?? w.score ?? null;
+                     const score = rawScore != null ? Math.round(rawScore) : null;
+                     const colorClass = score != null ? getScoreColor(score) : "text-gray-600";
+                     const bgClass = score != null ? getScoreBg(score) : "bg-gray-50";
+                     const activeClass = selectedWordIndex === idx ? "ring-2 ring-primary" : "";
+                     const wrongClass = isWrong ? "font-semibold ring-1 ring-red-300" : "";
                      return (
                         <span key={idx} className="inline-block mr-2">
                            <button
                               onClick={() => setSelectedWordIndex(idx)}
-                              className={`inline-block px-2 py-1 rounded ${isWrong ? "text-red-600 bg-red-100 font-semibold" : "hover:bg-base-100"} ${selectedWordIndex === idx ? "ring-2 ring-primary" : ""}`}
-                              title={isWrong ? "Đánh dấu sai" : `Chi tiết: ${display}`}
+                              className={`inline-block px-2 py-1 rounded transition-colors ${bgClass} ${colorClass} ${wrongClass} ${activeClass} hover:brightness-95`}
+                              title={`Chi tiết: ${display}${score != null ? ` (điểm: ${score}%)` : ""}`}
                            >
                               {display}
                            </button>
@@ -276,7 +281,7 @@ const WordPronunciationResult = ({
                               Điểm tổng của từ
                            </div>
                            <div className="text-right">
-                              <div className="text-sm font-medium text-yellow-700">
+                              <div className={`text-sm font-medium ${getScoreColor(wordOverall)}`}>
                                  {wordOverall}%
                               </div>
                               <div

@@ -2,8 +2,10 @@ package com.bucha.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
@@ -13,28 +15,29 @@ import java.time.LocalDateTime;
 })
 @Getter
 @Setter
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserLesson {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
+    User user;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lesson_id", nullable = false)
-    private Lesson lesson;
+    Lesson lesson;
 
     @Column(nullable = false)
-    private boolean completed = false;
+    Boolean completed = false;
 
     @Column(nullable = false)
-    private boolean inProgress = false;
+    Boolean inProgress = false;
 
-    private LocalDateTime completedAt;
+    LocalDateTime completedAt;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    LocalDateTime createdAt = LocalDateTime.now();
 }

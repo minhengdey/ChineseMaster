@@ -4,71 +4,60 @@ import com.bucha.entity.Curriculum;
 import com.bucha.service.LessonMigrationService;
 import com.bucha.service.CloudinaryService;
 import com.bucha.dto.CurriculumMetadataDto;
-import com.bucha.dto.content.ConversationDto;
 import com.bucha.dto.migration.ConversationMigrationDTO;
 import com.bucha.dto.migration.LessonMigrationDTO;
 import com.bucha.dto.migration.LineMigrationDTO;
 import com.bucha.dto.migration.VocabularyMigrationDTO;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-// helper imports for stable id
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Optional;
-import java.security.NoSuchAlgorithmException;
-import java.security.MessageDigest;
-import java.nio.charset.StandardCharsets;
 import com.bucha.dto.migration.pronunciation.PronunciationDto;
 import com.bucha.dto.migration.pronunciation.InitialSoundMigrationDto;
 import com.bucha.dto.migration.pronunciation.FinalSoundMigrationDto;
 import com.bucha.dto.migration.pronunciation.ToneMigrationDto;
-import com.bucha.entity.InitialSound;
-import com.bucha.entity.FinalSound;
-import com.bucha.entity.Tone;
-import com.bucha.repository.InitialSoundRepository;
-import com.bucha.repository.FinalSoundRepository;
-import com.bucha.repository.ToneRepository;
 
 @Component
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DataInitializer implements CommandLineRunner {
 
-   private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
+   static Logger logger = LoggerFactory.getLogger(DataInitializer.class);
 
-   private final LessonMigrationService lessonMigrationService;
-   private final CloudinaryService cloudinaryService;
-   // Repositories are not used here; migration service will persist pronunciation
-   // entities
+   LessonMigrationService lessonMigrationService;
+   CloudinaryService cloudinaryService;
 
+   @NonFinal
    @Value("${app.data.initializer.enabled:false}")
-   private boolean enabled;
+   boolean enabled;
 
-   @Value("${app.data.initializer.source:CLOUDINARY}")
-   private String source;
-
+   @NonFinal
    @Value("${app.data.initializer.curricula:1}")
-   private String curriculaCsv; // comma separated slugs
+   String curriculaCsv;
 
+   @NonFinal
    @Value("${app.data.initializer.curriculum-base-path:chinese-master/curriculumn}")
-   private String curriculumBasePath;
+   String curriculumBasePath;
 
+   @NonFinal
    @Value("${app.data.initializer.base-path:chinese-master}")
-   private String basePath;
+   String basePath;
 
    @Override
    public void run(String... args) {
@@ -84,34 +73,6 @@ public class DataInitializer implements CommandLineRunner {
       logger.info("Automatic data migration process finished.");
    }
 
-   private String canonicalizeJson(Object obj) {
-      try {
-         com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-         mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
-         return mapper.writeValueAsString(obj);
-      } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-         throw new RuntimeException(e);
-      }
-   }
-
-   private String computeSha256Hex(String input) {
-      try {
-         java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
-         byte[] hash = digest.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-         StringBuilder hexString = new StringBuilder(2 * hash.length);
-         for (byte b : hash) {
-            String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1)
-               hexString.append('0');
-            hexString.append(hex);
-         }
-         return hexString.toString();
-      } catch (java.security.NoSuchAlgorithmException e) {
-         throw new RuntimeException(e);
-      }
-   }
-
-   // --- helper: stable id from hashing a seed string (path/content)
    private Long computeStableId(String seed) {
       if (seed == null)
          return null;
@@ -124,7 +85,6 @@ public class DataInitializer implements CommandLineRunner {
             val = Math.abs(val + 1);
          return Math.abs(val);
       } catch (NoSuchAlgorithmException ex) {
-         // fallback to hashCode if SHA-256 not available (very unlikely)
          return (long) Math.abs(seed.hashCode());
       }
    }
@@ -154,7 +114,7 @@ public class DataInitializer implements CommandLineRunner {
                continue;
             }
 
-            List<String> lessonFiles = metadata != null ? metadata.getLessons() : null;
+            List<String> lessonFiles = metadata.getLessons();
             if (lessonFiles == null || lessonFiles.isEmpty()) {
                logger.warn("No lessonFiles in metadata for curriculumn slug='{}'", slug);
                continue;
@@ -170,7 +130,6 @@ public class DataInitializer implements CommandLineRunner {
                   logger.warn("Cannot fetch lesson '{}' for slug='{}'", file, slug);
                   continue;
                }
-               // compute stable id from content path so id remains stable across syncs
                Long stableLessonId = computeStableId(baseFolder + "/" + file);
                lesson.setId(stableLessonId);
                lesson.setOrder(lessonOrder.getAndIncrement());
@@ -209,7 +168,6 @@ public class DataInitializer implements CommandLineRunner {
             logger.error("Error migrating curriculum '{}' from Cloudinary", slug, ex);
          }
       }
-      // Pronunciation guide (if exists at basePath/sound-pronunciation.json)
       try {
          String pronunciationPath = basePath + "/sound-pronunciation.json";
          PronunciationDto pDto = cloudinaryService.fetchPronunciationDto(pronunciationPath);
@@ -241,7 +199,6 @@ public class DataInitializer implements CommandLineRunner {
                }
             }
 
-            // Delegate persistence to migration service
             lessonMigrationService.migratePronunciation(pDto);
          }
       } catch (Exception ex) {
