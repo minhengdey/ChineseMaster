@@ -9,9 +9,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ClassMembershipRepository extends JpaRepository<ClassMembership, Long> {
-    List<ClassMembership> findByAClass_Id(Long classId);
+    List<ClassMembership> findByClassEntity_Id(Long classId);
 
     List<ClassMembership> findByUser_Id(Long userId);
 
-    Optional<ClassMembership> findByAClass_IdAndUser_Id(Long classId, Long userId);
+    Optional<ClassMembership> findByClassEntity_IdAndUser_Id(Long classId, Long userId);
+
 }

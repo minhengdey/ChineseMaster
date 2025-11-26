@@ -15,7 +15,7 @@ public class ClassMembership {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id")
-    private ClassEntity aClass;
+    private ClassEntity classEntity;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

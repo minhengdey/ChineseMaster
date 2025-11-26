@@ -24,6 +24,6 @@ public class ClassEntity {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "aClass", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "classEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ClassMembership> members = new ArrayList<>();
 }

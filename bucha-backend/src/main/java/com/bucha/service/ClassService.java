@@ -48,17 +48,17 @@ public class ClassService {
         var optU = userRepository.findById(userId);
         if (optC.isEmpty() || optU.isEmpty())
             return false;
-        if (membershipRepository.findByAClass_IdAndUser_Id(classId, userId).isPresent())
+        if (membershipRepository.findByClassEntity_IdAndUser_Id(classId, userId).isPresent())
             return false;
         ClassMembership m = new ClassMembership();
-        m.setAClass(optC.get());
+        m.setClassEntity(optC.get());
         m.setUser(optU.get());
         membershipRepository.save(m);
         return true;
     }
 
     public boolean removeUserFromClass(Long classId, Long userId) {
-        var opt = membershipRepository.findByAClass_IdAndUser_Id(classId, userId);
+        var opt = membershipRepository.findByClassEntity_IdAndUser_Id(classId, userId);
         if (opt.isEmpty())
             return false;
         membershipRepository.delete(opt.get());
@@ -66,6 +66,6 @@ public class ClassService {
     }
 
     public List<ClassMembership> getMembers(Long classId) {
-        return membershipRepository.findByAClass_Id(classId);
+        return membershipRepository.findByClassEntity_Id(classId);
     }
 }

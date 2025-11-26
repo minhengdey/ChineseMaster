@@ -20,6 +20,9 @@ export default function AdminDashboard() {
     const [showAddMemberModal, setShowAddMemberModal] = useState(false)
     const [selectedClassForMember, setSelectedClassForMember] = useState(null)
     const [toast, setToast] = useState({ message: null, type: null })
+    const [activeTab, setActiveTab] = useState("lessons") // "lessons", "tests", "weekly"
+    const [selectedWeek, setSelectedWeek] = useState(1) // Week 1-12
+    const [weeklyData, setWeeklyData] = useState({ rows: [] })
 
     useEffect(() => {
         if (!user) return
@@ -27,29 +30,59 @@ export default function AdminDashboard() {
         (async () => {
             try {
                 await adminAPI.whoami()
-                // fetch users, weekly leaderboard and per-lesson leaderboards for lessons 1..4
-                const [u, weekly, lesson1, lesson2, lesson3, lesson4] = await Promise.all([
+                // fetch users, weekly leaderboard and per-lesson leaderboards for lessons 1..8
+                const [u, weekly, lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, lesson8] = await Promise.all([
                     adminAPI.getUsers(),
                     iseStatsAPI.getLeaderboardWeekly(),
                     iseStatsAPI.getLeaderboardByLesson(1),
                     iseStatsAPI.getLeaderboardByLesson(2),
                     iseStatsAPI.getLeaderboardByLesson(3),
                     iseStatsAPI.getLeaderboardByLesson(4),
+                    iseStatsAPI.getLeaderboardByLesson(5),
+                    iseStatsAPI.getLeaderboardByLesson(6),
+                    iseStatsAPI.getLeaderboardByLesson(7),
+                    iseStatsAPI.getLeaderboardByLesson(8),
                 ])
                 setUsers(u || [])
                 // build a lessonScores map: { userId: { l1:score, l2:score, ... } }
                 const lessonRowsMap = {}
-                    ;[lesson1, lesson2, lesson3, lesson4].forEach((lr, idx) => {
+                    ;[lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, lesson8].forEach((lr, idx) => {
                         if (!lr || !lr.rows) return
                         lr.rows.forEach((r) => {
                             const uid = r.userId
                             if (!uid) return
                             lessonRowsMap[uid] = lessonRowsMap[uid] || {}
-                            lessonRowsMap[uid][`l${idx + 1}`] = r.bestScore ?? r.score ?? r.avgScore ?? null
+                            lessonRowsMap[uid][`l${idx + 1}`] = r.avgScore ?? r.score ?? r.bestScore ?? null
                         })
                     })
                 setLessons({ rows: lessonRowsMap })
                 setTests({ rows: weekly?.rows || [] })
+
+                // Process weekly data with score computation
+                const weeklyRows = Array.isArray(weekly?.rows) ? weekly.rows : []
+                console.log('Weekly data from API:', weeklyRows)
+                const maxCompletion = weeklyRows.reduce((m, r) => Math.max(m, Number(r.completionCount || 0)), 0) || 1
+                console.log('Max completion:', maxCompletion)
+                const enrichedWeekly = weeklyRows.map((r) => {
+                    const avg = Number(r.avgScore ?? 0)
+                    const completionCount = Number(r.completionCount ?? 0)
+                    const completionRate = maxCompletion > 0 ? Math.min(100, (completionCount / maxCompletion) * 100) : 0
+                    const improvementRate = Number(r.improvementRate ?? 0)
+                    const weeklyScore = 0.7 * avg + 0.2 * completionRate + 0.1 * improvementRate
+                    return {
+                        ...r,
+                        weeklyScore: Math.round(Math.max(0, Math.min(100, weeklyScore)) * 10) / 10
+                    }
+                })
+                enrichedWeekly.sort((a, b) => {
+                    if (b.weeklyScore !== a.weeklyScore) return b.weeklyScore - a.weeklyScore
+                    if ((b.improvementRate ?? 0) !== (a.improvementRate ?? 0)) return (b.improvementRate ?? 0) - (a.improvementRate ?? 0)
+                    if ((b.completionCount ?? 0) !== (a.completionCount ?? 0)) return (b.completionCount ?? 0) - (a.completionCount ?? 0)
+                    return (a.timestamp || 0) - (b.timestamp || 0)
+                })
+                console.log('Enriched weekly data:', enrichedWeekly)
+                setWeeklyData({ rows: enrichedWeekly })
+
                 // load classes
                 try {
                     const cls = await adminAPI.listClasses()
@@ -82,6 +115,60 @@ export default function AdminDashboard() {
             console.warn('Failed to refresh classes', err)
         }
     }
+
+    // Compute weekly score using provided formula with normalization for completion count
+    const computeWeeklyScore = (entry, maxCompletion) => {
+        const avg = Number(entry.avgScore ?? 0) // assumed 0-100
+        const completionCount = Number(entry.completionCount ?? 0)
+        // normalize completionCount to 0-100 using maxCompletion (avoid div0)
+        const completionRate = maxCompletion > 0 ? Math.min(100, (completionCount / maxCompletion) * 100) : 0
+        const improvementRate = Number(entry.improvementRate ?? 0)
+
+        const weeklyScore = 0.7 * avg + 0.2 * completionRate + 0.1 * improvementRate
+        return Math.round(Math.max(0, Math.min(100, weeklyScore)) * 10) / 10 // one decimal
+    }
+
+    // Load weekly leaderboard by week number
+    const loadWeeklyLeaderboard = async (weekNumber) => {
+        try {
+            console.log('Loading weekly leaderboard for week:', weekNumber)
+            // TODO: Replace with actual API call when backend supports week parameter
+            // For now, using the weekly endpoint (assuming it returns current week)
+            const data = await iseStatsAPI.getLeaderboardWeekly()
+            console.log('Weekly leaderboard API response:', data)
+            const rows = Array.isArray(data?.rows) ? data.rows : []
+
+            // Find max completion count for normalization
+            const maxCompletion = rows.reduce((m, r) => Math.max(m, Number(r.completionCount || 0)), 0) || 1
+
+            // Compute weekly score for each entry
+            const enriched = rows.map((r) => ({
+                ...r,
+                weeklyScore: computeWeeklyScore(r, maxCompletion),
+            }))
+
+            // Sort by weeklyScore descending, then by improvementRate, then completionCount, then timestamp
+            enriched.sort((a, b) => {
+                if (b.weeklyScore !== a.weeklyScore) return b.weeklyScore - a.weeklyScore
+                if ((b.improvementRate ?? 0) !== (a.improvementRate ?? 0)) return (b.improvementRate ?? 0) - (a.improvementRate ?? 0)
+                if ((b.completionCount ?? 0) !== (a.completionCount ?? 0)) return (b.completionCount ?? 0) - (a.completionCount ?? 0)
+                return (a.timestamp || 0) - (b.timestamp || 0)
+            })
+
+            console.log('Enriched weekly data in loadWeeklyLeaderboard:', enriched)
+            setWeeklyData({ rows: enriched })
+        } catch (err) {
+            console.error('Failed to load weekly leaderboard', err)
+            setWeeklyData({ rows: [] })
+        }
+    }
+
+    // Load weekly data when selectedWeek changes or on initial load
+    useEffect(() => {
+        if (user) {
+            loadWeeklyLeaderboard(selectedWeek)
+        }
+    }, [selectedWeek, user])
 
     const handleCreateClass = async () => {
         if (!newClassName || newClassName.trim() === "") {
@@ -142,232 +229,392 @@ export default function AdminDashboard() {
     }
 
     return (
-        <div className="p-8">
-            <h1 className="text-2xl font-bold mb-4">Admin: Quản lý lớp</h1>
-
-            <section className="mb-8">
-                <h2 className="text-xl font-semibold mb-2">0. Quản lý Lớp</h2>
-                <div className="mb-4 flex gap-2 items-center">
-                    <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>Tạo lớp mới</button>
-                    <div className="text-sm text-slate-500">Hoặc quản lý lớp hiện có bên dưới.</div>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+            <div className="max-w-7xl mx-auto p-4 md:p-8">
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-2">Quản lý Admin</h1>
+                    <p className="text-slate-600">Theo dõi điểm số và quản lý lớp học</p>
                 </div>
 
-                <div className="overflow-x-auto bg-white border rounded shadow-sm p-4">
-                    <table className="min-w-full text-left table-auto">
-                        <thead>
-                            <tr>
-                                <th className="px-3 py-2">ID</th>
-                                <th className="px-3 py-2">Tên</th>
-                                <th className="px-3 py-2">Mô tả</th>
-                                <th className="px-3 py-2">Thành viên</th>
-                                <th className="px-3 py-2">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {classes.map(c => (
-                                <tr key={c.id} className="border-t">
-                                    <td className="px-3 py-2">{c.id}</td>
-                                    <td className="px-3 py-2">{c.name}</td>
-                                    <td className="px-3 py-2">{c.description || '-'}</td>
-                                    <td className="px-3 py-2">
-                                        {(c.members || []).length === 0 ? (
-                                            <div className="text-sm text-slate-500">—</div>
-                                        ) : (
-                                            (c.members || []).map(m => (
-                                                <div key={m.userId} className="flex items-center gap-2 mb-1">
-                                                    <span className="text-sm">{m.name || m.email}</span>
-                                                    <button className="btn btn-xs btn-ghost text-rose-600" onClick={async () => {
-                                                        if (!confirm('Xóa thành viên khỏi lớp?')) return
-                                                        try {
-                                                            await adminAPI.removeMember(c.id, m.userId)
-                                                            const cls = await adminAPI.listClasses()
-                                                            setClasses(cls || [])
-                                                            setToast({ message: 'Đã xóa thành viên', type: 'success' })
-                                                            setTimeout(() => setToast({ message: null, type: null }), 3000)
-                                                        } catch (err) {
-                                                            console.error('Remove member failed', err)
-                                                            setToast({ message: 'Xóa thành viên thất bại', type: 'error' })
-                                                            setTimeout(() => setToast({ message: null, type: null }), 3000)
-                                                        }
-                                                    }}>x</button>
-                                                </div>
-                                            ))
-                                        )}
-                                        <div className="mt-2">
-                                            <button className="btn btn-sm" onClick={() => { setSelectedClassForMember(c); setShowAddMemberModal(true); }}>Thêm thành viên</button>
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-2">
-                                        {/* reserved for future actions */}
-                                        <span className="text-sm text-gray-500">-</span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                {/* Main Score Table Section */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+                    {/* Title Header */}
+                    <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+                        <h2 className="text-2xl font-bold text-white text-center">Điểm Theo Bài</h2>
+                    </div>
 
-            <section className="mb-8">
-                <h2 className="text-xl font-semibold mb-2">0.5 Quản lý Người dùng</h2>
-                <div className="overflow-x-auto bg-white border rounded shadow-sm p-4">
-                    <table className="min-w-full text-left table-auto">
-                        <thead>
-                            <tr>
-                                <th className="px-3 py-2">ID</th>
-                                <th className="px-3 py-2">Tên / Email</th>
-                                <th className="px-3 py-2">Role</th>
-                                <th className="px-3 py-2">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.map(u => (
-                                <tr key={u.id} className="border-t">
-                                    <td className="px-3 py-2">{u.id}</td>
-                                    <td className="px-3 py-2">{u.name || u.email}</td>
-                                    <td className="px-3 py-2">{u.role || 'ROLE_USER'}</td>
-                                    <td className="px-3 py-2">
-                                        {u.role === 'ROLE_ADMIN' ? (
-                                            <button className="btn btn-sm btn-warning" onClick={async () => {
-                                                if (!confirm('Hạ quyền admin cho người dùng này?')) return
-                                                try {
-                                                    await adminAPI.changeUserRole(u.id, 'ROLE_USER')
-                                                    const refreshed = await adminAPI.getUsers()
-                                                    setUsers(refreshed || [])
-                                                } catch (err) {
-                                                    console.error('Change role failed', err)
-                                                    alert('Thay đổi role thất bại')
-                                                }
-                                            }}>Hạ quyền</button>
-                                        ) : (
-                                            <button className="btn btn-sm btn-primary" onClick={async () => {
-                                                if (!confirm('Cấp quyền admin cho người dùng này?')) return
-                                                try {
-                                                    await adminAPI.changeUserRole(u.id, 'ROLE_ADMIN')
-                                                    const refreshed = await adminAPI.getUsers()
-                                                    setUsers(refreshed || [])
-                                                } catch (err) {
-                                                    console.error('Change role failed', err)
-                                                    alert('Thay đổi role thất bại')
-                                                }
-                                            }}>Cấp quyền</button>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                    {/* Tab Navigation */}
+                    <div className="border-b border-slate-200 bg-slate-50">
+                        <div className="flex">
+                            <button
+                                onClick={() => setActiveTab("lessons")}
+                                className={`flex-1 px-6 py-4 font-medium transition-all duration-200 ${activeTab === "lessons"
+                                    ? "bg-white text-red-600 border-b-2 border-red-600"
+                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                                    }`}
+                            >
+                                Điểm theo bài
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("tests")}
+                                className={`flex-1 px-6 py-4 font-medium transition-all duration-200 ${activeTab === "tests"
+                                    ? "bg-white text-red-600 border-b-2 border-red-600"
+                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                                    }`}
+                            >
+                                Điểm test
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("weekly")}
+                                className={`flex-1 px-6 py-4 font-medium transition-all duration-200 ${activeTab === "weekly"
+                                    ? "bg-white text-red-600 border-b-2 border-red-600"
+                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                                    }`}
+                            >
+                                BXH theo Tuần
+                            </button>
+                        </div>
+                    </div>
 
-            <section className="mb-8">
-                <h2 className="text-xl font-semibold mb-2">1. Điểm theo bài</h2>
-                <div className="overflow-x-auto bg-white border rounded shadow-sm p-4">
-                    <table className="min-w-full text-left table-auto">
-                        <thead>
-                            <tr>
-                                <th className="px-3 py-2">STT</th>
-                                <th className="px-3 py-2">Học viên</th>
-                                <th className="px-3 py-2">Bài 1</th>
-                                <th className="px-3 py-2">Bài 2</th>
-                                <th className="px-3 py-2">Bài 3</th>
-                                <th className="px-3 py-2">Bài 4</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.map((u, idx) => {
-                                const scores = lessons.rows[u.id] || {}
-                                return (
-                                    <tr key={u.id} className="border-t">
-                                        <td className="px-3 py-2">{idx + 1}</td>
-                                        <td className="px-3 py-2">{u.name || u.email}</td>
-                                        <td className="px-3 py-2">{scores.l1 != null ? scores.l1 : '-'}</td>
-                                        <td className="px-3 py-2">{scores.l2 != null ? scores.l2 : '-'}</td>
-                                        <td className="px-3 py-2">{scores.l3 != null ? scores.l3 : '-'}</td>
-                                        <td className="px-3 py-2">{scores.l4 != null ? scores.l4 : '-'}</td>
+                    {/* Tab Content */}
+                    <div className="overflow-x-auto">
+                        {/* Điểm theo bài */}
+                        {activeTab === "lessons" && (
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="bg-slate-100 border-b border-slate-200">
+                                        <th className="px-4 py-3 text-left font-semibold text-slate-700 sticky left-0 bg-slate-100 z-10">Họ tên</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 1</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 2</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 3</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 4</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Test 1</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 5</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 6</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 7</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Bài 8</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 min-w-[120px]">Test 2</th>
                                     </tr>
-                                )
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                                </thead>
+                                <tbody>
+                                    {users.map((u, idx) => {
+                                        const scores = lessons.rows[u.id] || {}
+                                        return (
+                                            <tr key={u.id} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
+                                                <td className="px-4 py-3 font-medium text-slate-800 sticky left-0 bg-inherit z-10">{u.name || u.email}</td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={scores.l1} maxScore={100} />
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={scores.l2} maxScore={100} />
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={scores.l3} maxScore={100} />
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={scores.l4} maxScore={100} />
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={null} maxScore={100} label="Test 1" />
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={scores.l5} maxScore={100} />
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={scores.l6} maxScore={100} />
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={scores.l7} maxScore={100} />
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={scores.l8} maxScore={100} />
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={null} maxScore={100} label="Test 2" />
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        )}
 
-            <section className="mb-8">
-                <h2 className="text-xl font-semibold mb-2">2. Điểm test</h2>
-                <div className="overflow-x-auto bg-white border rounded shadow-sm p-4">
-                    <table className="min-w-full text-left table-auto">
-                        <thead>
-                            <tr>
-                                <th className="px-3 py-2">STT</th>
-                                <th className="px-3 py-2">Học viên</th>
-                                <th className="px-3 py-2">Test 1</th>
-                                <th className="px-3 py-2">Test 2</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.map((u, idx) => (
-                                <tr key={u.id} className="border-t">
-                                    <td className="px-3 py-2">{idx + 1}</td>
-                                    <td className="px-3 py-2">{u.name || u.email}</td>
-                                    {/* For lack of a global test leaderboard endpoint, show weekly avg as a proxy */}
-                                    <td className="px-3 py-2">{(tests.rows.find(r => r.userId === u.id) || {}).avgScore ?? '-'}</td>
-                                    <td className="px-3 py-2">-</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                        {/* Điểm test */}
+                        {activeTab === "tests" && (
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="bg-slate-100 border-b border-slate-200">
+                                        <th className="px-4 py-3 text-left font-semibold text-slate-700">STT</th>
+                                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Học viên</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700">Test 1</th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-700">Test 2</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {users.map((u, idx) => (
+                                        <tr key={u.id} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
+                                            <td className="px-4 py-3 text-slate-700">{idx + 1}</td>
+                                            <td className="px-4 py-3 font-medium text-slate-800">{u.name || u.email}</td>
+                                            <td className="px-4 py-3 text-center">
+                                                <ScoreCell score={(tests.rows.find(r => r.userId === u.id) || {}).avgScore} maxScore={100} />
+                                            </td>
+                                            <td className="px-4 py-3 text-center">
+                                                <ScoreCell score={null} maxScore={100} />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
 
-            <section className="mt-8">
-                <h2 className="text-xl font-semibold mb-2">3. Xếp hạng theo Tuần</h2>
-                <div className="overflow-x-auto bg-white border rounded shadow-sm p-4">
-                    <table className="min-w-full text-left table-auto">
-                        <thead>
-                            <tr>
-                                <th className="px-3 py-2">Hạng</th>
-                                <th className="px-3 py-2">Học viên</th>
-                                <th className="px-3 py-2">Avg Score</th>
-                                <th className="px-3 py-2">Completion</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {(tests.rows || []).map((r, i) => (
-                                <tr key={r.userId || i} className="border-t">
-                                    <td className="px-3 py-2">{i + 1}</td>
-                                    <td className="px-3 py-2">{r.name || r.userId}</td>
-                                    <td className="px-3 py-2">{r.avgScore ?? '-'}</td>
-                                    <td className="px-3 py-2">{r.completionCount ?? r.count ?? '-'}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                        {/* BXH theo tuần */}
+                        {activeTab === "weekly" && (
+                            <div>
+                                {/* Debug Info */}
+                                <div className="px-6 py-2 bg-blue-50 border-b border-blue-200 text-sm text-blue-800">
+                                    Debug: {weeklyData.rows?.length || 0} records loaded
+                                </div>
+
+                                {/* Week Selector */}
+                                <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="font-medium text-slate-700">Chọn tuần:</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {[...Array(12)].map((_, idx) => {
+                                            const weekNum = idx + 1
+                                            return (
+                                                <button
+                                                    key={weekNum}
+                                                    onClick={() => setSelectedWeek(weekNum)}
+                                                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${selectedWeek === weekNum
+                                                        ? 'bg-red-600 text-white shadow-md'
+                                                        : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'
+                                                        }`}
+                                                >
+                                                    Tuần {weekNum}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Weekly Leaderboard Table */}
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="bg-slate-100 border-b border-slate-200">
+                                            <th className="px-4 py-3 text-left font-semibold text-slate-700">Hạng</th>
+                                            <th className="px-4 py-3 text-left font-semibold text-slate-700">Học viên</th>
+                                            <th className="px-4 py-3 text-center font-semibold text-slate-700">Điểm tuần</th>
+                                            <th className="px-4 py-3 text-center font-semibold text-slate-700">Điểm TB</th>
+                                            <th className="px-4 py-3 text-center font-semibold text-slate-700">Số bài</th>
+                                            <th className="px-4 py-3 text-center font-semibold text-slate-700">Cải thiện</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(weeklyData.rows || []).map((r, i) => (
+                                            <tr key={r.userId || i} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
+                                                <td className="px-4 py-3">
+                                                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ${i === 0 ? 'bg-yellow-400 text-yellow-900' :
+                                                        i === 1 ? 'bg-slate-300 text-slate-800' :
+                                                            i === 2 ? 'bg-orange-400 text-orange-900' :
+                                                                'bg-slate-200 text-slate-700'
+                                                        }`}>
+                                                        {i + 1}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 font-medium text-slate-800">{r.name || r.userId}</td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <div className="font-bold text-lg text-purple-600">{r.weeklyScore ?? '-'}</div>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <ScoreCell score={r.avgScore} maxScore={100} />
+                                                </td>
+                                                <td className="px-4 py-3 text-center text-slate-700">{r.completionCount ?? r.count ?? '-'}</td>
+                                                <td className="px-4 py-3 text-center text-slate-700">{r.improvementRate != null ? `${r.improvementRate}%` : '-'}</td>
+                                            </tr>
+                                        ))}
+                                        {(weeklyData.rows || []).length === 0 && (
+                                            <tr>
+                                                <td colSpan="6" className="px-4 py-8 text-center text-slate-500">
+                                                    Chưa có dữ liệu cho tuần {selectedWeek}
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </section>
+
+                {/* Management Sections - Collapsible */}
+                <div className="space-y-6">
+                    {/* Class Management */}
+                    <details className="bg-white rounded-xl shadow-md overflow-hidden">
+                        <summary className="px-6 py-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors font-semibold text-slate-800 flex items-center justify-between">
+                            <span>📚 Quản lý Lớp</span>
+                            <span className="text-sm text-slate-500">({classes.length} lớp)</span>
+                        </summary>
+                        <div className="p-6">
+                            <div className="mb-4">
+                                <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium" onClick={() => setShowCreateModal(true)}>
+                                    + Tạo lớp mới
+                                </button>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-slate-200">
+                                            <th className="px-3 py-2 text-left text-slate-700">ID</th>
+                                            <th className="px-3 py-2 text-left text-slate-700">Tên</th>
+                                            <th className="px-3 py-2 text-left text-slate-700">Mô tả</th>
+                                            <th className="px-3 py-2 text-left text-slate-700">Thành viên</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {classes.map(c => (
+                                            <tr key={c.id} className="border-b border-slate-100">
+                                                <td className="px-3 py-2 text-slate-600">{c.id}</td>
+                                                <td className="px-3 py-2 font-medium text-slate-800">{c.name}</td>
+                                                <td className="px-3 py-2 text-slate-600">{c.description || '-'}</td>
+                                                <td className="px-3 py-2">
+                                                    {(c.members || []).length === 0 ? (
+                                                        <div className="text-sm text-slate-500">—</div>
+                                                    ) : (
+                                                        <div className="space-y-1">
+                                                            {(c.members || []).map(m => (
+                                                                <div key={m.userId} className="flex items-center gap-2">
+                                                                    <span className="text-sm text-slate-700">{m.name || m.email}</span>
+                                                                    <button className="text-red-600 hover:text-red-800 text-xs" onClick={async () => {
+                                                                        if (!confirm('Xóa thành viên khỏi lớp?')) return
+                                                                        try {
+                                                                            await adminAPI.removeMember(c.id, m.userId)
+                                                                            const cls = await adminAPI.listClasses()
+                                                                            setClasses(cls || [])
+                                                                            setToast({ message: 'Đã xóa thành viên', type: 'success' })
+                                                                            setTimeout(() => setToast({ message: null, type: null }), 3000)
+                                                                        } catch (err) {
+                                                                            console.error('Remove member failed', err)
+                                                                            setToast({ message: 'Xóa thành viên thất bại', type: 'error' })
+                                                                            setTimeout(() => setToast({ message: null, type: null }), 3000)
+                                                                        }
+                                                                    }}>✕</button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                    <div className="mt-2">
+                                                        <button className="text-sm text-blue-600 hover:text-blue-800" onClick={() => { setSelectedClassForMember(c); setShowAddMemberModal(true); }}>+ Thêm thành viên</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </details>
+
+                    {/* User Management */}
+                    <details className="bg-white rounded-xl shadow-md overflow-hidden">
+                        <summary className="px-6 py-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors font-semibold text-slate-800 flex items-center justify-between">
+                            <span>👥 Quản lý Người dùng</span>
+                            <span className="text-sm text-slate-500">({users.length} người dùng)</span>
+                        </summary>
+                        <div className="p-6">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-slate-200">
+                                            <th className="px-3 py-2 text-left text-slate-700">ID</th>
+                                            <th className="px-3 py-2 text-left text-slate-700">Tên / Email</th>
+                                            <th className="px-3 py-2 text-left text-slate-700">Role</th>
+                                            <th className="px-3 py-2 text-left text-slate-700">Hành động</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {users.map(u => (
+                                            <tr key={u.id} className="border-b border-slate-100">
+                                                <td className="px-3 py-2 text-slate-600">{u.id}</td>
+                                                <td className="px-3 py-2 text-slate-800">{u.name || u.email}</td>
+                                                <td className="px-3 py-2">
+                                                    <span className={`px-2 py-1 rounded text-xs font-medium ${u.role === 'ROLE_ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-700'}`}>
+                                                        {u.role === 'ROLE_ADMIN' ? 'Admin' : 'User'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    {u.role === 'ROLE_ADMIN' ? (
+                                                        <button className="px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm" onClick={async () => {
+                                                            if (!confirm('Hạ quyền admin cho người dùng này?')) return
+                                                            try {
+                                                                await adminAPI.changeUserRole(u.id, 'ROLE_USER')
+                                                                const refreshed = await adminAPI.getUsers()
+                                                                setUsers(refreshed || [])
+                                                            } catch (err) {
+                                                                console.error('Change role failed', err)
+                                                                alert('Thay đổi role thất bại')
+                                                            }
+                                                        }}>Hạ quyền</button>
+                                                    ) : (
+                                                        <button className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm" onClick={async () => {
+                                                            if (!confirm('Cấp quyền admin cho người dùng này?')) return
+                                                            try {
+                                                                await adminAPI.changeUserRole(u.id, 'ROLE_ADMIN')
+                                                                const refreshed = await adminAPI.getUsers()
+                                                                setUsers(refreshed || [])
+                                                            } catch (err) {
+                                                                console.error('Change role failed', err)
+                                                                alert('Thay đổi role thất bại')
+                                                            }
+                                                        }}>Cấp quyền</button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </div>
+
             {/* Toast */}
             {toast.message && (
-                <div className={`fixed bottom-6 right-6 z-50 p-4 rounded shadow-lg ${toast.type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-rose-50 border border-rose-200 text-rose-800'}`}>
-                    <div className="text-sm">{toast.message}</div>
+                <div className={`fixed bottom-6 right-6 z-50 p-4 rounded-lg shadow-xl ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                    }`}>
+                    <div className="font-medium">{toast.message}</div>
                 </div>
             )}
 
             {/* Create Class Modal */}
             {showCreateModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                    <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-                        <h3 className="text-lg font-semibold mb-4">Tạo lớp mới</h3>
-                        <div className="mb-3">
-                            <label className="block text-sm text-slate-600 mb-1">Tên lớp</label>
-                            <input className="input input-bordered w-full" value={newClassName} onChange={e => setNewClassName(e.target.value)} />
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 m-4">
+                        <h3 className="text-xl font-bold text-slate-800 mb-4">Tạo lớp mới</h3>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Tên lớp</label>
+                            <input
+                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                value={newClassName}
+                                onChange={e => setNewClassName(e.target.value)}
+                                placeholder="Nhập tên lớp"
+                            />
                         </div>
-                        <div className="mb-3">
-                            <label className="block text-sm text-slate-600 mb-1">Mô tả (tùy chọn)</label>
-                            <input className="input input-bordered w-full" value={newClassDesc} onChange={e => setNewClassDesc(e.target.value)} />
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Mô tả (tùy chọn)</label>
+                            <input
+                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                value={newClassDesc}
+                                onChange={e => setNewClassDesc(e.target.value)}
+                                placeholder="Nhập mô tả"
+                            />
                         </div>
-                        <div className="flex justify-end gap-2">
-                            <button className="btn btn-ghost" onClick={() => setShowCreateModal(false)}>Hủy</button>
-                            <button className="btn btn-primary" onClick={handleCreateClass}>Tạo</button>
+                        <div className="flex justify-end gap-3">
+                            <button className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors" onClick={() => setShowCreateModal(false)}>Hủy</button>
+                            <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium" onClick={handleCreateClass}>Tạo</button>
                         </div>
                     </div>
                 </div>
@@ -375,21 +622,50 @@ export default function AdminDashboard() {
 
             {/* Add Member Modal */}
             {showAddMemberModal && selectedClassForMember && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                    <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-                        <h3 className="text-lg font-semibold mb-4">Thêm thành viên vào lớp: {selectedClassForMember.name}</h3>
-                        <div className="mb-3">
-                            <label className="block text-sm text-slate-600 mb-1">Email thành viên</label>
-                            <input className="input input-bordered w-full" value={memberEmail} onChange={e => setMemberEmail(e.target.value)} placeholder="email@domain.com" />
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 m-4">
+                        <h3 className="text-xl font-bold text-slate-800 mb-2">Thêm thành viên</h3>
+                        <p className="text-sm text-slate-600 mb-4">Lớp: <span className="font-semibold">{selectedClassForMember.name}</span></p>
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Email thành viên</label>
+                            <input
+                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                value={memberEmail}
+                                onChange={e => setMemberEmail(e.target.value)}
+                                placeholder="email@domain.com"
+                            />
                         </div>
-                        <div className="flex justify-end gap-2">
-                            <button className="btn btn-ghost" onClick={() => { setShowAddMemberModal(false); setSelectedClassForMember(null); }}>Hủy</button>
-                            <button className="btn btn-primary" onClick={handleAddMember}>Thêm</button>
+                        <div className="flex justify-end gap-3">
+                            <button className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors" onClick={() => { setShowAddMemberModal(false); setSelectedClassForMember(null); }}>Hủy</button>
+                            <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium" onClick={handleAddMember}>Thêm</button>
                         </div>
                     </div>
                 </div>
             )}
 
+        </div>
+    )
+}
+
+// Helper component for displaying scores with styling
+function ScoreCell({ score, maxScore = 100, label = null }) {
+    if (score == null) {
+        return <span className="text-slate-400">{label || "0/100"}</span>
+    }
+
+    const displayScore = typeof score === 'number' ? score.toFixed(2) : score
+    const percentage = (parseFloat(score) / maxScore) * 100
+
+    let colorClass = 'text-slate-700'
+    if (percentage >= 90) colorClass = 'text-green-600 font-semibold'
+    else if (percentage >= 75) colorClass = 'text-blue-600 font-medium'
+    else if (percentage >= 50) colorClass = 'text-orange-600'
+    else colorClass = 'text-red-600'
+
+    return (
+        <div className="flex flex-col items-center">
+            <span className={colorClass}>{displayScore}/{maxScore}</span>
+            <span className="text-xs text-slate-500">({percentage.toFixed(0)}%)</span>
         </div>
     )
 }
