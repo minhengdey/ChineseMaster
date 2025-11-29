@@ -5,6 +5,13 @@ import { iseAPI } from "../../../services/api"
 import { createRecorder, computeSha256Hex, playBlobSafely } from "../../../utils/audioUtils"
 
 const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onStartRecording, size = "sm" }) => {
+  // If the reference sentence contains no letters (only digits/punctuation/etc.), do not render the recording UI.
+  const refText = (hanzi || text || "").trim();
+  try {
+    if (refText && !/\p{L}/u.test(refText)) return null;
+  } catch (e) {
+    if (refText && !/[A-Za-z]/.test(refText)) return null;
+  }
   const [isRecording, setIsRecording] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [error, setError] = useState(null)

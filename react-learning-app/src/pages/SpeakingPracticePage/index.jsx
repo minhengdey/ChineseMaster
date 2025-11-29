@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react"
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom"
 import { iseAPI, migrationAPI, contentAPI } from "../../services/api"
 import { iseStatsAPI } from "../../services/api"
+import { hasLetters } from "../../utils/textUtils"
 import SentencePronunciationResult from "../LessonDetailPage/components/SentencePronunciationResult"
 
 const SpeakingPracticePage = () => {
@@ -161,6 +162,7 @@ const SpeakingPracticePage = () => {
             // Be tolerant to different backend field names
             const text = line?.zhText || line?.zh || line?.text || line?.content || line?.sentence || null
             if (!text) return // only keep lines that actually have Chinese text
+            if (!hasLetters(text)) return // skip lines with no letters
             items.push({
               id: line.externalId,
               text: text,
@@ -217,7 +219,7 @@ const SpeakingPracticePage = () => {
               item?.conversationLine ||
               (typeof item === "string" ? item : null),
           }))
-          .filter((i) => i.text)
+          .filter((i) => i.text && hasLetters(i.text))
         originalQueueRef.current = normalized
         const effectiveShuffle = (() => {
           try {
@@ -259,6 +261,7 @@ const SpeakingPracticePage = () => {
         const internalId = v?.id ?? v?._id ?? null
         const text = v?.word || v?.zh || v?.text || v?.chinese || null
         if (!text) return
+        if (!hasLetters(text)) return
         items.push({
           // keep internal id for UI keys if present, but expose externalId for backend
           id: internalId,

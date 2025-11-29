@@ -5,6 +5,7 @@ import AudioPlayer from "./AudioPlayer"
 import WordRecordingButton from "./WordRecordingButton"
 import SentencePronunciationResult from "./SentencePronunciationResult"
 import { iseStatsAPI } from "../../../services/api"
+import { hasLetters } from "../../../utils/textUtils"
 
 const VocabularySection = ({
   vocabularies,
@@ -350,7 +351,12 @@ const VocabularySection = ({
     )
   }
 
-  if (!vocabularies || vocabularies.length === 0) {
+  // Filter out vocabulary items whose main display text (word or example) contains no letters
+  const visibleVocabularies = (vocabularies || []).filter((v) =>
+    hasLetters(v?.word || v?.exampleText || "")
+  )
+
+  if (!visibleVocabularies || visibleVocabularies.length === 0) {
     return (
       <div className="text-center py-12 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border-2 border-slate-200">
         <div className="text-6xl mb-4">📚</div>
@@ -372,7 +378,7 @@ const VocabularySection = ({
           {localShowPinyin ? "👁️ Ẩn pinyin" : "👁️ Hiện pinyin"}
         </button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{vocabularies.map(renderVocabulary)}</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{visibleVocabularies.map(renderVocabulary)}</div>
     </div>
   )
 }

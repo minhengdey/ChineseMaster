@@ -14,6 +14,13 @@ const WordRecordingButton = ({
   onStartRecording,
   size = "xs",
 }) => {
+  // If the word contains no letters (only digits/punctuation/etc.), do not render the recording UI.
+  const wordText = (word || "").trim();
+  try {
+    if (wordText && !/\p{L}/u.test(wordText)) return null;
+  } catch (e) {
+    if (wordText && !/[A-Za-z]/.test(wordText)) return null;
+  }
   const [isRecording, setIsRecording] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [error, setError] = useState(null)
