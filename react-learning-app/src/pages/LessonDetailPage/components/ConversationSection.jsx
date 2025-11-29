@@ -5,6 +5,7 @@ import AudioPlayer from "./AudioPlayer"
 import SentenceRecordingButton from "./SentenceRecordingButton"
 import SentencePronunciationResult from "./SentencePronunciationResult"
 import { iseStatsAPI } from "../../../services/api"
+import { hasLetters } from "../../../utils/textUtils"
 
 const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds = [], refreshPronounced }) => {
   const [expandedSection, setExpandedSection] = useState(null)
@@ -122,7 +123,12 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
     setActiveLineId(null)
   }
 
-  if (!conversations || conversations.length === 0) {
+  // Filter out conversations and lines that have no letters in their main display text
+  const visibleConversations = (conversations || [])
+    .map((c) => ({ ...c, visibleLines: (c.lines || []).filter((line) => hasLetters(line?.zh || line?.zhText || line?.pinyin || line?.text || "")) }))
+    .filter((c) => Array.isArray(c.visibleLines) && c.visibleLines.length > 0)
+
+  if (!visibleConversations || visibleConversations.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="text-6xl mb-4">💬</div>
@@ -142,7 +148,7 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
           {showPinyin ? "Ẩn pinyin" : "Hiện pinyin"}
         </button>
       </div>
-      {conversations.map((conversation, index) => (
+      {visibleConversations.map((conversation, index) => (
         <div
           key={conversation.id ?? index}
           className="card bg-gradient-to-br from-white to-purple-50 shadow-lg border border-purple-200"
@@ -164,7 +170,7 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
 
             {expandedSection === index && (
               <div className="mt-6 space-y-4">
-                {conversation.lines?.map((line) => {
+                {conversation.visibleLines?.map((line) => {
                   const effectiveHighlighted =
                     localHighlightedLineIds && localHighlightedLineIds.length
                       ? localHighlightedLineIds

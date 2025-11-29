@@ -10,6 +10,16 @@ const WordPronunciationResult = ({
 }) => {
    if (!result) return null;
 
+      // If the reference word contains no letters (digits/punctuation only), don't render.
+      if (typeof word === "string") {
+         const w = word.trim();
+         try {
+            if (w && !/\p{L}/u.test(w)) return null;
+         } catch (e) {
+            if (w && !/[A-Za-z]/.test(w)) return null;
+         }
+      }
+
    const [selectedWordIndex, setSelectedWordIndex] = useState(null);
    const [guide, setGuide] = useState(null);
    const audioUrlRef = useRef(null);
@@ -265,8 +275,7 @@ const WordPronunciationResult = ({
                            Math.round(
                               selected?.overall ??
                               selected?.total_score ??
-                              selected?.totalScore ??
-                              0
+                              selected?.totalScore ?? 0
                            )
                         )
                      );

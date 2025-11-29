@@ -9,6 +9,16 @@ const SentencePronunciationResult = ({
 }) => {
   if (!result) return null;
 
+  // If the reference sentence contains no letters (only digits/punctuation/etc.), do not render.
+  const refSentence = (sentenceText || "").trim();
+  try {
+    // Use Unicode letter property; if no letter present, skip rendering.
+    if (refSentence && !/\p{L}/u.test(refSentence)) return null;
+  } catch (e) {
+    // In environments without Unicode property support, fallback to ASCII letter check
+    if (refSentence && !/[A-Za-z]/.test(refSentence)) return null;
+  }
+
   const [selectedWord, setSelectedWord] = React.useState(null);
   const [guide, setGuide] = React.useState(null);
   const toPercent = (v) => (v == null ? 0 : Math.round(v));
@@ -287,8 +297,7 @@ const SentencePronunciationResult = ({
                   const selectedScore = Number(
                     selectedWord.overall ??
                     selectedWord.details?.overall ??
-                    selectedWord.details?.pronunciation ??
-                    0
+                    selectedWord.details?.pronunciation ?? 0
                   );
                   return (
                     <div className={`text-sm font-medium ${getScoreColor(selectedScore)}`}>

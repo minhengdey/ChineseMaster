@@ -6,6 +6,13 @@ import { createRecorder, computeSha256Hex, playBlobSafely } from "../../../utils
 import { Mic, RotateCcw } from "lucide-react"
 
 const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = "xs" }) => {
+  // If the reference character/text contains no letters (digits/punctuation only), do not render the recording UI.
+  const ref = (hanzi || text || "").trim();
+  try {
+    if (ref && !/\p{L}/u.test(ref)) return null;
+  } catch (e) {
+    if (ref && !/[A-Za-z]/.test(ref)) return null;
+  }
   const [isRecording, setIsRecording] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [error, setError] = useState(null)
