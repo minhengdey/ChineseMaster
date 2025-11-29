@@ -97,13 +97,13 @@ public class IseService {
 
         // If the normalized text does not contain any letters (for any language),
         // treat it as non-meaningful (e.g. only digits / punctuation) and reject.
-        // This prevents unnecessary scoring requests for inputs like "1234", "1.2.3", "...,,,".
+        // This prevents unnecessary scoring requests for inputs like "1234", "1.2.3",
+        // "...,,,".
         if (normalizedText == null || !normalizedText.trim().matches(".*\\p{L}.*")) {
             logger.info("Rejecting scoring request because text contains no letters: '{}'", normalizedText);
             return ResponseEntity.badRequest().body(Map.of(
                     "error", "text contains no letters",
-                    "hint", "Reference text must contain at least one letter character"
-            ));
+                    "hint", "Reference text must contain at least one letter character"));
         }
 
         final AtomicReference<JSONObject> firstFrameRef = new AtomicReference<>();

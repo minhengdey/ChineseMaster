@@ -191,8 +191,8 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
                     <div
                       key={line.externalId ?? line.id}
                       className={`p-4 rounded-lg transition-all ${isHighlighted
-                          ? "bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-500 shadow-md"
-                          : "bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200"
+                        ? "bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-500 shadow-md"
+                        : "bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200"
                         }`}
                     >
                       <div className="flex justify-between items-start mb-2">
