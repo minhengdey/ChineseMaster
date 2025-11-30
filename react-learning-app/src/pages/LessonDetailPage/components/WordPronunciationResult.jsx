@@ -196,32 +196,36 @@ const WordPronunciationResult = ({
             </div>
          </div>
 
-         {/* Detailed scores grid (star style like speaking practice) */}
-         <div className="grid grid-cols-2 gap-2">
-            <div className="card bg-base-200">
-               <div className="card-body p-2 text-center">
-                  <h6 className="font-medium text-xs mb-1">Hoàn thiện</h6>
-                  <div className="mb-1">
-                     <Stars percent={toPercent(completenessScore)} />
-                  </div>
-                  <div className="text-sm font-medium text-yellow-700">
-                     {toPercent(completenessScore)}%
+         {/* Detailed scores grid (star style like speaking practice).
+             Hide fluency/completeness for single-character word mode because
+             ISE read_word typically doesn't compute these metrics. */}
+         {isCompoundWord ? (
+            <div className="grid grid-cols-2 gap-2">
+               <div className="card bg-base-200">
+                  <div className="card-body p-2 text-center">
+                     <h6 className="font-medium text-xs mb-1">Hoàn thiện</h6>
+                     <div className="mb-1">
+                        <Stars percent={toPercent(completenessScore)} />
+                     </div>
+                     <div className="text-sm font-medium text-yellow-700">
+                        {toPercent(completenessScore)}%
+                     </div>
                   </div>
                </div>
-            </div>
 
-            <div className="card bg-base-200">
-               <div className="card-body p-2 text-center">
-                  <h6 className="font-medium text-xs mb-1">Trôi chảy</h6>
-                  <div className="mb-1">
-                     <Stars percent={toPercent(fluencyScore)} />
-                  </div>
-                  <div className="text-sm font-medium text-yellow-700">
-                     {toPercent(fluencyScore)}%
+               <div className="card bg-base-200">
+                  <div className="card-body p-2 text-center">
+                     <h6 className="font-medium text-xs mb-1">Trôi chảy</h6>
+                     <div className="mb-1">
+                        <Stars percent={toPercent(fluencyScore)} />
+                     </div>
+                     <div className="text-sm font-medium text-yellow-700">
+                        {toPercent(fluencyScore)}%
+                     </div>
                   </div>
                </div>
             </div>
-         </div>
+         ) : null}
 
          {/* Per-word inline clickable line (single-line text). Click a word to view its detailed info below. */}
          {words && words.length > 0 && (
@@ -232,6 +236,7 @@ const WordPronunciationResult = ({
                      const wordKey = w.word ?? w.text ?? `\u200b${idx}`;
                      const isWrong = wrongWords.has(wordKey) || wrongWords.has(w.word) || wrongWords.has(w.text);
                      const display = w.word || w.text || `Âm ${idx + 1}`;
+                     const wScore = Number(w?.overall ?? w?.pronunciation ?? w?.score ?? w?.pronunciationScore ?? 0)
                      return (
                         <span key={idx} className="inline-block mr-2">
                            <button
@@ -239,7 +244,12 @@ const WordPronunciationResult = ({
                               className={`inline-block px-2 py-1 rounded ${isWrong ? "text-red-600 bg-red-100 font-semibold" : "hover:bg-base-100"} ${selectedWordIndex === idx ? "ring-2 ring-primary" : ""}`}
                               title={isWrong ? "Đánh dấu sai" : `Chi tiết: ${display}`}
                            >
-                              {display}
+                              <div className="flex items-center gap-2">
+                                 <span>{display}</span>
+                                 {(!isCompoundWord) && (
+                                    <span className="ml-2 inline-flex items-center"><Stars percent={Math.round(wScore)} /></span>
+                                 )}
+                              </div>
                            </button>
                         </span>
                      );
@@ -265,8 +275,8 @@ const WordPronunciationResult = ({
                         Đóng
                      </button>
                   </div>
-                  {/* Selected word overall score (stars + percent) */}
-                  {(() => {
+                  {/* Selected word overall score (stars + percent) - show only for compound words */}
+                  {isCompoundWord && (() => {
                      const selected = words[selectedWordIndex];
                      const wordOverall = Math.max(
                         0,
@@ -291,8 +301,8 @@ const WordPronunciationResult = ({
                               <div
                                  className={`text-xs ${getScoreColor(
                                     wordOverall
-                                 )}`}
-                              ></div>
+                                 )}`}>
+                              </div>
                               <div className="mb-1">
                                  <Stars percent={wordOverall} />
                               </div>
