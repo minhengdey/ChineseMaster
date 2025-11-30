@@ -17,4 +17,24 @@ public interface IseLessonEntryRepository extends JpaRepository<IseLessonEntry, 
 
     @Query("SELECT COUNT(DISTINCT e.attemptId) FROM IseLessonEntry e WHERE e.user.id = :userId AND e.lessonId = :lessonId")
     long countDistinctAttemptsByUserAndLesson(@Param("userId") Long userId, @Param("lessonId") Long lessonId);
+
+    @Query("SELECT e.user.id, SUM(COALESCE(e.totalScore,0)) FROM IseLessonEntry e WHERE e.lessonId = :lessonId GROUP BY e.user.id")
+    List<Object[]> sumTotalScoreByLessonGroupByUser(@Param("lessonId") Long lessonId);
+
+    @Query("SELECT e.user.id, SUM(COALESCE(e.totalScore,0)) FROM IseLessonEntry e WHERE e.lessonId = :lessonId AND e.createdAt BETWEEN :start AND :end GROUP BY e.user.id")
+    List<Object[]> sumTotalScoreByLessonGroupByUserAndDateRange(@Param("lessonId") Long lessonId,
+            @Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
+
+    @Query(value = "SELECT e.user_id, AVG(COALESCE(e.total_score,0)) AS avg_score, COUNT(e.attempt_id) AS cnt_e, MAX(e.total_score) AS best "
+            + "FROM ise_lesson_entry e "
+            + "WHERE e.lesson_id = :lessonId "
+            + "GROUP BY e.user_id", nativeQuery = true)
+    List<Object[]> aggregateLessonEntryByUser(@Param("lessonId") Long lessonId);
+
+    @Query(value = "SELECT e.user_id, AVG(COALESCE(e.total_score,0)) AS avg_score, COUNT(e.attempt_id) AS cnt_e, MAX(e.total_score) AS best "
+            + "FROM ise_lesson_entry e "
+            + "WHERE e.lesson_id = :lessonId AND e.created_at BETWEEN :start AND :end "
+            + "GROUP BY e.user_id", nativeQuery = true)
+    List<Object[]> aggregateLessonEntryByUserAndDateRange(@Param("lessonId") Long lessonId,
+            @Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
 }
