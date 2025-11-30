@@ -13,10 +13,9 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
   // Compare `lesson.order` with 12 using parseInt to handle string values.
   const UNLOCK_UP_TO = 12
   const lessonOrder = parseInt(lesson?.order, 10) || 0
-  // Default behavior: unlock lessons up to UNLOCK_UP_TO inclusive; lock only
-  // when lessonOrder > UNLOCK_UP_TO. This ignores parent `isLocked` for
-  // lessons within the unlocked range so lesson 1..12 remain accessible.
-  const localIsLocked = lessonOrder > UNLOCK_UP_TO
+  // Force all lessons to be unlocked for current session.
+  // Previously locking logic used `UNLOCK_UP_TO` and lessonOrder; override it.
+  const localIsLocked = false
 
   useEffect(() => {
     let mounted = true

@@ -6,7 +6,7 @@ const API_BASE_URL =
       window._env_ &&
       window._env_.VITE_API_BASE_URL
       ? window._env_.VITE_API_BASE_URL
-      : import.meta?.env?.VITE_API_BASE_URL || "http://localhost:8080/api";
+      : import.meta?.env?.VITE_API_BASE_URL || "https://chinesemaster-dwffc2hrdpfdh3dz.southeastasia-01.azurewebsites.net/api";
 
 const apiClient = axios.create({
    baseURL: API_BASE_URL,
@@ -326,7 +326,18 @@ export const iseAPI = {
 
          return response.data;
       } catch (error) {
-         // console.error("ISE API Error:", error);
+         // Handle 422 responses from backend which indicate ISE rejected the
+         // recording and request a re-pronunciation. Normalize into a return
+         // object so callers can show a retry UI instead of a generic error.
+         if (error.response && error.response.status === 422 && error.response.data) {
+            return {
+               require_retry: Boolean(error.response.data.require_retry),
+               error: error.response.data.error || null,
+               message: error.response.data.message || null,
+               detail: error.response.data,
+            };
+         }
+
          throw new Error(
             error.response?.data?.message ||
             error.message ||
@@ -470,6 +481,17 @@ export const iseAPI = {
          // Fallback: return as-is if structure unknown
          return { raw_response: result };
       } catch (error) {
+         // If backend returned 422 / require_retry, normalize the response so
+         // callers can present a retry prompt.
+         if (error.response && error.response.status === 422 && error.response.data) {
+            return {
+               require_retry: Boolean(error.response.data.require_retry),
+               error: error.response.data.error || null,
+               message: error.response.data.message || null,
+               detail: error.response.data,
+            };
+         }
+
          // console.error("ISE Word API Error:", error);
 
          // Extract meaningful error message

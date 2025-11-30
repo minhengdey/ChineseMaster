@@ -1,4 +1,6 @@
 spring:
+   profiles:
+      active: dev
    datasource:
       driver-class-name: com.mysql.cj.jdbc.Driver
       url: ${DB_URL}
@@ -10,6 +12,7 @@ spring:
       properties:
          hibernate:
             format_sql: true
+            dialect: org.hibernate.dialect.MySQL8Dialect
    h2:
       console:
          enabled: true

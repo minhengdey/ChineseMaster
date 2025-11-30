@@ -1,0 +1,60 @@
+name: Deploy Backend to Azure
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'bucha-backend/**'
+      - '.github/workflows/backend-deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'maven'
+        cache-dependency-path: './bucha-backend/pom.xml'
+
+    - name: Build with Maven
+      working-directory: ./bucha-backend
+      run: mvn clean package -DskipTests
+
+    - name: List target directory (debug)
+      working-directory: ./bucha-backend
+      run: ls -la target/ || true
+
+    - name: Find built jar
+      # tìm file .jar trong bucha-backend/target (dùng glob bao gồm cả subdirs nếu cần)
+      run: |
+        echo "Searching for jar files..."
+        JAR=$(bash -lc 'ls bucha-backend/target/*.jar 2>/dev/null || true')
+        if [ -z "$JAR" ]; then
+          # thử tìm trong subfolders (multi-module)
+          JAR=$(bash -lc 'find . -type f -path "*/target/*.jar" | head -n 1 || true')
+        fi
+        if [ -z "$JAR" ]; then
+          echo "##[error]No jar artifact found in bucha-backend/target or submodules."
+          echo "Searched patterns: bucha-backend/target/*.jar and **/target/*.jar"
+          exit 1
+        fi
+        echo "Found jar: $JAR"
+        # đặt biến để bước sau dùng
+        echo "JAR_PATH=$JAR" >> $GITHUB_ENV
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: 'ChineseMaster'
+        publish-profile: ${{ secrets.AZURE_BACKEND_PUBLISH_PROFILE }}
+        package: ${{ env.JAR_PATH }}

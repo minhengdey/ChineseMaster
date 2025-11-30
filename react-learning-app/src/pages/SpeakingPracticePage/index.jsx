@@ -509,6 +509,15 @@ const SpeakingPracticePage = () => {
       }
 
       const resp = await iseAPI.scoreSentence(payload)
+
+      // If backend requested a retry (recording rejected by ISE), show message
+      // and do not proceed to persist/normalize results.
+      if (resp && resp.require_retry) {
+        const msg = resp.message || "Ghi âm không rõ; vui lòng ghi lại và thử lại."
+        setError(msg)
+        setLoading(false)
+        return
+      }
       const sent = resp?.sentence || {}
       const normalized = {
         total_score: sent?.total_score ?? resp?.total_score ?? null,

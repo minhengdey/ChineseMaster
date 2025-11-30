@@ -1,23 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
   <xml_result>
-      <read_word lan="cn" type="study" version="7,0,0,1024">
+      <read_sentence lan="cn" type="study" version="7,0,0,1024">
           <rec_paper>
-              <read_word beg_pos="0" content="和。" end_pos="130" except_info="0" fluency_score="0.000000" integrity_score="0.000000" phone_score="50.000000" time_len="130" tone_score="100.000000" total_score="75.000000">
-                  <sentence beg_pos="0" content="和" end_pos="130" time_len="130">
-                      <word beg_pos="0" content="和" end_pos="130" symbol="he2" time_len="130">
-                          <syll beg_pos="0" content="silv" dp_message="0" end_pos="21" rec_node_type="silv" time_len="21">
-                              <phone beg_pos="0" content="silv" dp_message="0" end_pos="21" rec_node_type="silv" time_len="21"></phone>
+              <read_sentence accuracy_score="0.000000" beg_pos="0" content="老师。" emotion_score="0.000000" end_pos="100" except_info="28676" fluency_score="0.000000" integrity_score="0.000000" is_rejected="true" phone_score="7.500000" time_len="100" tone_score="15.000000" total_score="14.329613">
+                  <sentence beg_pos="0" content="老师" end_pos="100" fluency_score="0.000000" phone_score="7.500000" time_len="100" tone_score="15.000000" total_score="1.600440">
+                      <word beg_pos="0" content="老" end_pos="33" symbol="lao3" time_len="33">
+                          <syll beg_pos="0" content="sil" dp_message="0" end_pos="25" rec_node_type="sil" time_len="25">
+                              <phone beg_pos="0" content="sil" dp_message="0" end_pos="25" rec_node_type="sil" time_len="25"></phone>
                           </syll>
-                          <syll beg_pos="21" content="和" dp_message="0" end_pos="62" rec_node_type="paper" symbol="he2" time_len="41">
-                              <phone beg_pos="17" content="h" dp_message="0" end_pos="20" is_yun="0" perr_level_msg="0" perr_msg="1" rec_node_type="paper" time_len="3"></phone>
-                              <phone beg_pos="20" content="e" dp_message="0" end_pos="56" is_yun="1" mono_tone="TONE2" perr_level_msg="0" perr_msg="0" rec_node_type="paper" time_len="38"></phone>
+                          <syll beg_pos="25" content="老" dp_message="0" end_pos="33" rec_node_type="paper" symbol="lao3" time_len="8">
+                              <phone beg_pos="25" content="l" dp_message="0" end_pos="28" is_yun="0" perr_level_msg="2" perr_msg="0" rec_node_type="paper" time_len="3"></phone>
+                              <phone beg_pos="28" content="ao" dp_message="0" end_pos="33" is_yun="1" mono_tone="TONE3" perr_level_msg="3" perr_msg="3" rec_node_type="paper" time_len="5"></phone>
                           </syll>
-                          <syll beg_pos="62" content="silv" dp_message="0" end_pos="130" rec_node_type="silv" time_len="68">
-                              <phone beg_pos="62" content="silv" end_pos="130" time_len="68"></phone>
+                      </word>
+                      <word beg_pos="33" content="师" end_pos="100" symbol="shi1" time_len="67">
+                          <syll beg_pos="33" content="师" dp_message="0" end_pos="41" rec_node_type="paper" symbol="shi1" time_len="8">
+                              <phone beg_pos="33" content="sh" dp_message="0" end_pos="36" is_yun="0" perr_level_msg="3" perr_msg="1" rec_node_type="paper" time_len="3"></phone>
+                              <phone beg_pos="36" content="iii" dp_message="0" end_pos="41" is_yun="1" mono_tone="TONE1" perr_level_msg="3" perr_msg="1" rec_node_type="paper" time_len="5"></phone>
+                          </syll>
+                          <syll beg_pos="41" content="sil" dp_message="0" end_pos="100" rec_node_type="sil" time_len="59">
+                              <phone beg_pos="41" content="sil" end_pos="100" time_len="59"></phone>
                           </syll>
                       </word>
                   </sentence>
-              </read_word>
+              </read_sentence>
           </rec_paper>
-      </read_word>
+      </read_sentence>
   </xml_result>

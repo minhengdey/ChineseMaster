@@ -1,10 +1,10 @@
 package com.bucha.controller;
 
-// import com.bucha.entity.IseScore; // no longer used; SQL aggregation is used instead
 import com.bucha.entity.UserEntity;
 import com.bucha.entity.UserLesson;
 import com.bucha.repository.*;
 import com.bucha.security.JwtUserPrincipal;
+import com.bucha.service.LeaderboardService;
 import com.bucha.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
-import java.sql.Timestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -40,6 +39,7 @@ public class IseStatsController {
         IseTestEntryRepository iseTestEntryRepository;
         UserLessonRepository userLessonRepository;
         UserService userService;
+        LeaderboardService leaderboardService;
         JdbcTemplate jdbcTemplate;
         static final Logger logger = LoggerFactory.getLogger(IseStatsController.class);
 
@@ -66,7 +66,7 @@ public class IseStatsController {
                                         + "GROUP BY DATE(session_date)";
 
                         List<Map<String, Object>> sqlRows = jdbcTemplate.queryForList(sql,
-                                        userId, Timestamp.valueOf(start), Timestamp.valueOf(end));
+                                        userId, start, end);
 
                         // convert sqlRows into a map for quick lookup (accept either 'day' or 'date'
                         // key)
@@ -384,7 +384,7 @@ public class IseStatsController {
                                         + "GROUP BY DATE(session_date)";
 
                         List<Map<String, Object>> sqlRows = jdbcTemplate.queryForList(sql,
-                                        userId, Timestamp.valueOf(start), Timestamp.valueOf(end));
+                                        userId, start, end);
 
                         // map day -> {avgScore, count, duration} (use null-safe extraction)
                         Map<LocalDate, Map<String, Object>> dayMap = new HashMap<>();
@@ -466,15 +466,15 @@ public class IseStatsController {
                                         + "WHERE ide.session_date BETWEEN ? AND ? "
                                         + "GROUP BY ide.user_id";
 
-                        List<Map<String, Object>> cur = jdbcTemplate.queryForList(sql, Timestamp.valueOf(start),
-                                        Timestamp.valueOf(end));
+                        List<Map<String, Object>> cur = jdbcTemplate.queryForList(sql, start,
+                                        end);
 
                         // previous week
                         LocalDate prevWeekStart = weekStart.minusWeeks(1);
                         LocalDateTime pys = prevWeekStart.atStartOfDay();
                         LocalDateTime pye = prevWeekStart.plusDays(6).atTime(LocalTime.MAX);
-                        List<Map<String, Object>> prev = jdbcTemplate.queryForList(sql, Timestamp.valueOf(pys),
-                                        Timestamp.valueOf(pye));
+                        List<Map<String, Object>> prev = jdbcTemplate.queryForList(sql, pys,
+                                        pye);
 
                         Map<Long, Double> prevAvgByUser = new HashMap<>();
                         for (Map<String, Object> p : prev) {
@@ -525,53 +525,13 @@ public class IseStatsController {
                         @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
                 if (lessonId == null)
                         return ResponseEntity.badRequest().body(Map.of("error", "lessonId is required"));
-                List<com.bucha.entity.IseDailyEntry> entries;
-                if (date == null) {
-                        // no date provided: return all-time entries for the lesson
-                        entries = iseDailyEntryRepository.findByLessonId(lessonId);
-                } else {
-                        LocalDate target = date;
-                        LocalDateTime start = target.atStartOfDay();
-                        LocalDateTime end = target.atTime(LocalTime.MAX);
-                        entries = iseDailyEntryRepository.findByLessonIdAndSessionDateBetween(lessonId, start, end);
+
+                try {
+                        List<Map<String, Object>> rows = leaderboardService.getLessonLeaderboard(lessonId, date);
+                        return ResponseEntity.ok(Map.of("rows", rows));
+                } catch (Exception e) {
+                        logger.debug("failed to compute lesson leaderboard via service", e);
+                        return ResponseEntity.status(500).body(Map.of("error", "failed to compute lesson leaderboard"));
                 }
-
-                // group entries by user to compute metrics: best (max), avg, attempts
-                Map<Long, List<com.bucha.entity.IseDailyEntry>> byUser = entries.stream()
-                                .filter(e -> e.getUser() != null && e.getUser().getId() != null)
-                                .collect(Collectors.groupingBy(e -> e.getUser().getId()));
-
-                List<Map<String, Object>> rows = new ArrayList<>();
-                for (Map.Entry<Long, List<com.bucha.entity.IseDailyEntry>> ent : byUser.entrySet()) {
-                        Long userId = ent.getKey();
-                        List<com.bucha.entity.IseDailyEntry> list = ent.getValue();
-                        if (list == null || list.isEmpty())
-                                continue;
-
-                        double best = list.stream()
-                                        .mapToDouble(s -> Optional.ofNullable(s.getTotalScore()).orElse(0.0))
-                                        .max().orElse(0.0);
-                        double avg = list.stream()
-                                        .mapToDouble(s -> Optional.ofNullable(s.getTotalScore()).orElse(0.0))
-                                        .average().orElse(0.0);
-                        int attempts = list.size();
-
-                        UserEntity user = userService.findById(userId)
-                                        .orElseThrow(() -> new RuntimeException("user not found"));
-                        Map<String, Object> row = new HashMap<>();
-                        row.put("userId", userId);
-                        row.put("name", user.getName());
-                        row.put("score", Math.round(best * 100.0) / 100.0); // best score (original 'score')
-                        row.put("bestScore", Math.round(best * 100.0) / 100.0);
-                        row.put("avgScore", Math.round(avg * 100.0) / 100.0);
-                        row.put("attempts", attempts);
-                        rows.add(row);
-                }
-
-                // sort by best score by default; frontend will compute lesson_score and may
-                // re-sort
-                rows.sort((a, b) -> Double.compare((Double) b.get("score"), (Double) a.get("score")));
-
-                return ResponseEntity.ok(Map.of("rows", rows));
         }
 }

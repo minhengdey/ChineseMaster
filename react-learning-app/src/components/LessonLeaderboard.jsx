@@ -29,15 +29,9 @@ const LessonLeaderboard = ({ lessonId, className }) => {
           attempts: Number(r.attempts ?? 0),
         }))
 
-        // compute consistency_score and composite lesson_score
-        const withScores = enriched.map((r) => {
-          const consistency = Math.min(5, Math.max(0, Number(r.attempts || 0))) * 2 // 0..10
-          const lessonScore = Math.round((0.8 * (r.bestScore || 0) + 0.2 * consistency) * 100) / 100
-          return { ...r, consistency, lessonScore }
-        })
-
-        // sort by lessonScore desc
-        withScores.sort((a, b) => (b.lessonScore ?? 0) - (a.lessonScore ?? 0))
+        // sort by avgScore desc (user-requested)
+        const withScores = enriched.map((r) => ({ ...r }))
+        withScores.sort((a, b) => (b.avgScore ?? 0) - (a.avgScore ?? 0))
         setRows(withScores)
       } catch (e) {
         console.debug("Failed to load lesson leaderboard", e)
@@ -96,7 +90,7 @@ const LessonLeaderboard = ({ lessonId, className }) => {
           🏅 BXH — Bài {lessonId}
         </div>
         <div className="text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-blue-500 px-4 py-2 rounded-full">
-          👥 {rows.length} lượt
+          👥 {rows.length}
         </div>
       </div>
 
@@ -128,7 +122,6 @@ const LessonLeaderboard = ({ lessonId, className }) => {
                     <div className="font-bold text-white truncate">{r.name || r.userId}</div>
                     <div className="text-lg">{medals[idx]}</div>
                   </div>
-                  <div className="text-xs text-white/80">{r.email ? r.email : r.userId ? `uid:${r.userId}` : ""}</div>
                   <div className="mt-2 h-2 bg-white/30 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400"
@@ -138,17 +131,12 @@ const LessonLeaderboard = ({ lessonId, className }) => {
                     />
                   </div>
                   <div className="text-xs text-white/80 mt-1">
-                    Avg: {r.avgScore}% • {r.attempts} lượt
+                    {r.attempts} lượt
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold text-white">{r.lessonScore ?? r.bestScore}</div>
+                  <div className="text-3xl font-bold text-white">{r.avgScore ?? r.bestScore}</div>
                   <div className="text-xs text-white/80 mt-1">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-bold ${r.lessonScore >= 80 ? "bg-emerald-300 text-emerald-900" : r.lessonScore >= 60 ? "bg-amber-300 text-amber-900" : "bg-rose-300 text-rose-900"}`}
-                    >
-                      BXH {r.lessonScore}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -161,12 +149,11 @@ const LessonLeaderboard = ({ lessonId, className }) => {
         <table className="table w-full">
           <thead>
             <tr className="bg-gradient-to-r from-purple-500 to-blue-500 text-white">
-              <th className="w-12 font-bold">#</th>
-              <th className="font-bold">Học viên</th>
-              <th className="text-right font-bold">Điểm cao nhất</th>
-              <th className="text-right font-bold">Điểm trung bình</th>
-              <th className="text-right font-bold">Lượt luyện</th>
-              <th className="text-right font-bold">Điểm BXH</th>
+              <th className="w-12 font-bold text-center">#</th>
+              <th className="font-bold text-center">Học viên</th>
+              <th className="text-center font-bold">Điểm cao nhất</th>
+              <th className="text-center font-bold">Lượt luyện</th>
+              <th className="text-center font-bold">Điểm trung bình</th>
             </tr>
           </thead>
           <tbody>
@@ -175,9 +162,9 @@ const LessonLeaderboard = ({ lessonId, className }) => {
                 key={r.userId || i}
                 className={`border-b hover:bg-purple-50 transition-colors ${i < 3 ? "font-bold bg-purple-100/50" : ""}`}
               >
-                <td className="text-slate-800">{i + 1}</td>
-                <td>
-                  <div className="flex items-center gap-3">
+                <td className="text-center text-slate-800">{i + 1}</td>
+                <td className="text-left">
+                  <div className="flex items-center gap-3 justify-start">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center overflow-hidden text-white font-bold shadow-md">
                       {r.avatar ? (
                         <img src={r.avatar || "/placeholder.svg"} alt="av" className="w-full h-full object-cover" />
@@ -187,19 +174,15 @@ const LessonLeaderboard = ({ lessonId, className }) => {
                         "U"
                       )}
                     </div>
-                    <div className="truncate text-slate-800">{r.name || r.userId}</div>
+                    <div className="text-left">
+                      <div className="font-semibold text-slate-800 truncate max-w-[180px]">{r.name || r.userId}</div>
+                      {r.email && <div className="text-xs text-slate-500 truncate max-w-[180px]">{r.email}</div>}
+                    </div>
                   </div>
                 </td>
-                <td className="text-right text-slate-800 font-semibold">{r.bestScore}</td>
-                <td className="text-right text-slate-800">{r.avgScore}%</td>
-                <td className="text-right text-slate-800">{r.attempts}</td>
-                <td className="text-right">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-bold ${r.lessonScore >= 80 ? "bg-emerald-200 text-emerald-800" : r.lessonScore >= 60 ? "bg-amber-200 text-amber-800" : "bg-rose-200 text-rose-800"}`}
-                  >
-                    {r.lessonScore}
-                  </span>
-                </td>
+                <td className="text-center text-slate-800 font-semibold">{r.bestScore}</td>
+                <td className="text-center text-slate-800">{r.attempts}</td>
+                <td className="text-center text-slate-800 font-semibold">{r.avgScore}</td>
               </tr>
             ))}
           </tbody>

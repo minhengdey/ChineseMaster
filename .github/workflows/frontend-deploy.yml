@@ -1,0 +1,70 @@
+name: Deploy Frontend to Azure
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'react-learning-app/**'
+      - '.github/workflows/frontend-deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'     # recommended LTS
+        cache: 'npm'
+        cache-dependency-path: './react-learning-app/package-lock.json'
+
+    - name: Install dependencies
+      working-directory: ./react-learning-app
+      run: npm ci --prefer-offline --no-audit --progress=false
+
+    - name: Build React app
+      working-directory: ./react-learning-app
+      env:
+        # đặt cả REACT_APP_ và VITE_ để tương thích với CRA và Vite
+        REACT_APP_API_URL: https://chinesemaster-dwffc2hrdpfdh3dz.southeastasia-01.azurewebsites.net/api
+        VITE_API_URL: https://chinesemaster-dwffc2hrdpfdh3dz.southeastasia-01.azurewebsites.net/api
+      run: |
+        echo "Running npm run build..."
+        npm run build
+        echo "Build exit code: $?"
+
+    - name: List project root (debug)
+      run: ls -la react-learning-app || true
+
+    - name: Find build output (build/ or dist/)
+      run: |
+        echo "Searching for build output folders..."
+        if [ -d "react-learning-app/build" ]; then
+          echo "Found build/ directory"
+          echo "BUILD_DIR=react-learning-app/build" >> $GITHUB_ENV
+        elif [ -d "react-learning-app/dist" ]; then
+          echo "Found dist/ directory"
+          echo "BUILD_DIR=react-learning-app/dist" >> $GITHUB_ENV
+        else
+          echo "##[error]No build output found. Checked react-learning-app/build and react-learning-app/dist"
+          echo "Contents of react-learning-app:"
+          ls -la react-learning-app || true
+          exit 1
+        fi
+
+    - name: List build directory (debug)
+      run: ls -la ${{ env.BUILD_DIR }}
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: 'ChineseMaster-FE'
+        publish-profile: ${{ secrets.AZURE_FRONTEND_PUBLISH_PROFILE }}
+        package: ${{ env.BUILD_DIR }}

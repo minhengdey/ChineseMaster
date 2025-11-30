@@ -90,6 +90,12 @@ const WordRecordingButton = ({
       if (vocabExternal != null) payload.vocabularyId = String(vocabExternal)
       if (lessonId != null) payload.lessonId = String(lessonId)
       const result = await iseAPI.scoreWord(payload)
+
+      if (result && result.require_retry) {
+        setError(result.message || "Ghi âm không đủ rõ. Vui lòng ghi lại và thử lại.")
+        return
+      }
+
       const raw = result?.raw_response ?? result
       // Normalize result similar to existing logic in file
       let normalized = raw
