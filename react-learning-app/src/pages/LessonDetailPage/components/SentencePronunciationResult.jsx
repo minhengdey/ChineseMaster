@@ -23,6 +23,23 @@ const SentencePronunciationResult = ({
   const [guide, setGuide] = React.useState(null);
   const toPercent = (v) => (v == null ? 0 : Math.round(v));
 
+  // Detect word-mode (single character) so UI can hide fluency/completeness boxes
+  const isWordMode = (() => {
+    try {
+      const st = (sentenceText || "").trim()
+      if (st && st.length === 1) return true
+    } catch (e) { }
+    try {
+      const wordsArray = Array.isArray(result?.words) ? result.words : []
+      if (wordsArray.length === 1) {
+        const w = wordsArray[0]
+        const txt = (w?.word || w?.text || "").toString().trim()
+        if (txt && txt.length === 1) return true
+      }
+    } catch (e) { }
+    return false
+  })()
+
   const playRecordedAudio = () => {
     if (recordedAudio) {
       const audioUrl = URL.createObjectURL(recordedAudio);
@@ -216,50 +233,80 @@ const SentencePronunciationResult = ({
       </div>
 
       {/* Overall Score */}
-      <div className="card bg-gray-50 shadow-sm border border-gray-200">
-        <div className="card-body p-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h5 className="text-sm font-semibold">Điểm tổng</h5>
-              <p className="text-xs text-base-content/60">Phát âm câu</p>
-            </div>
-            <div className="text-right">
-              <div className="flex flex-col items-end">
-                <div className={`font-bold ${getScoreColor(totalScore)}`}>
-                  <Stars percent={totalScore} size={20} />
-                  <div className={`text-sm mt-1 ${getScoreColor(totalScore)}`}>{toPercent(totalScore)}%</div>
+      {/* Overall Score - hide when in word-mode (single char) */}
+      {(isWordMode ? (
+        (() => {
+          const first = (Array.isArray(result?.words) && result.words.length > 0) ? result.words[0] : null
+          const label = first ? (first.word || first.text || String(sentenceText || "").trim().slice(0, 1)) : (String(sentenceText || "").trim().slice(0, 1) || "Từ")
+          const wScore = first ? Math.max(0, Math.min(100, Math.round(first?.overall ?? first?.pronunciation ?? first?.score ?? first?.pronunciationScore ?? 0))) : 0
+          return (
+            <div className="card bg-gray-50 shadow-sm border border-gray-200">
+              <div className="card-body p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h5 className="text-sm font-semibold">Điểm tổng</h5>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex flex-col items-end">
+                      <div className={`font-bold ${getScoreColor(wScore)}`}>
+                        <Stars percent={toPercent(wScore)} size={20} />
+                        <div className={`text-sm mt-1 ${getScoreColor(wScore)}`}>{toPercent(wScore)}%</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className={`text-xs ${getScoreColor(totalScore)}`}>
-                  {getScoreMessage(totalScore)}
+              </div>
+            </div>
+          )
+        })()
+      ) : (
+        <div className="card bg-gray-50 shadow-sm border border-gray-200">
+          <div className="card-body p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h5 className="text-sm font-semibold">Điểm tổng</h5>
+                <p className="text-xs text-base-content/60">Phát âm câu</p>
+              </div>
+              <div className="text-right">
+                <div className="flex flex-col items-end">
+                  <div className={`font-bold ${getScoreColor(totalScore)}`}>
+                    <Stars percent={totalScore} size={20} />
+                    <div className={`text-sm mt-1 ${getScoreColor(totalScore)}`}>{toPercent(totalScore)}%</div>
+                  </div>
+                  <div className={`text-xs ${getScoreColor(totalScore)}`}>
+                    {getScoreMessage(totalScore)}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      ))}
 
       {/* Detailed scores grid */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="card bg-gray-50 border border-gray-200">
-          <div className="card-body p-2 text-center">
-            <h6 className="font-medium text-xs mb-1">Trôi chảy</h6>
-            <div className={`text-lg font-bold ${getScoreColor(fluencyScore)}`}>
-              <Stars percent={fluencyScore} size={16} />
-              <div className={`text-sm mt-1 ${getScoreColor(fluencyScore)}`}>{toPercent(fluencyScore)}%</div>
+      {!isWordMode && (
+        <div className="grid grid-cols-2 gap-2">
+          <div className="card bg-gray-50 border border-gray-200">
+            <div className="card-body p-2 text-center">
+              <h6 className="font-medium text-xs mb-1">Trôi chảy</h6>
+              <div className={`text-lg font-bold ${getScoreColor(fluencyScore)}`}>
+                <Stars percent={fluencyScore} size={16} />
+                <div className={`text-sm mt-1 ${getScoreColor(fluencyScore)}`}>{toPercent(fluencyScore)}%</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="card bg-gray-50 border border-gray-200">
-          <div className="card-body p-2 text-center">
-            <h6 className="font-medium text-xs mb-1">Hoàn thiện</h6>
-            <div className={`text-lg font-bold ${getScoreColor(completenessScore)}`}>
-              <Stars percent={completenessScore} size={16} />
-              <div className={`text-sm mt-1 ${getScoreColor(completenessScore)}`}>{toPercent(completenessScore)}%</div>
+          <div className="card bg-gray-50 border border-gray-200">
+            <div className="card-body p-2 text-center">
+              <h6 className="font-medium text-xs mb-1">Hoàn thiện</h6>
+              <div className={`text-lg font-bold ${getScoreColor(completenessScore)}`}>
+                <Stars percent={completenessScore} size={16} />
+                <div className={`text-sm mt-1 ${getScoreColor(completenessScore)}`}>{toPercent(completenessScore)}%</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Annotated sentence: show whole sentence; click a character to view word details */}
       <div className="card bg-gray-50 border border-gray-200">
@@ -286,10 +333,10 @@ const SentencePronunciationResult = ({
             </div>
           </div>
 
-          {selectedWord.overall != null ||
+          {!isWordMode && (selectedWord.overall != null ||
             (selectedWord.details &&
               (selectedWord.details.overall != null ||
-                selectedWord.details.pronunciation != null)) ? (
+                selectedWord.details.pronunciation != null))) ? (
             <div className="mb-2">
               <div className="text-sm text-gray-600 mb-1">Điểm từ</div>
               <div className="flex items-center gap-2">

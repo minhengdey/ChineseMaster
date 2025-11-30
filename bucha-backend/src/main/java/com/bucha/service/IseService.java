@@ -107,13 +107,37 @@ public class IseService {
         }
 
         final AtomicReference<JSONObject> firstFrameRef = new AtomicReference<>();
+        // Determine whether this is a single-word input (one Han character / syllable)
+        boolean isWord = isSingleWord(normalizedText);
+        // For single-character (word) mode, strip punctuation and whitespace when
+        // building the ISE first frame and sending the reference text. This avoids
+        // integrity/fluency penalties caused by trailing punctuation or silence.
+        String textForIse = normalizedText;
+        if (isWord) {
+            try {
+                textForIse = normalizedText.replaceAll("[。.,!?！？;:，；（）\\s]", "").trim();
+                if (textForIse.isEmpty())
+                    textForIse = normalizedText.replaceAll("[。.,!?！？;:，；（）\\s]", "").trim();
+            } catch (Throwable ignored) {
+                textForIse = normalizedText;
+            }
+        }
         try {
+
+            // Per iFlyTek ISE API the `sub` (core_type) must remain "ise" (or
+            // "xse"). Do not change it. Only change the `category` to select
+            // word vs sentence scoring.
+            String coreType = "ise";
+            String category = isWord ? "read_word" : "read_sentence";
+
             JSONObject built = IseGlobalMessageBuilder.buildFirstFrame(
                     appId,
-                    reqSub != null && !reqSub.isEmpty() ? reqSub : sub,
+                    coreType,
                     reqEnt != null && !reqEnt.isEmpty() ? reqEnt : defaultEnt,
-                    defaultCategory,
-                    normalizedText,
+                    category,
+                    // use textForIse for the reference text so read_word gets a clean
+                    // single-character reference without punctuation
+                    (isWord ? textForIse : normalizedText),
                     "utf-8");
 
             if (built.containsKey("parameter")) {
@@ -123,14 +147,37 @@ public class IseService {
                         parameter = new JSONObject();
                         built.put("parameter", parameter);
                     }
-                    JSONObject st = parameter.getJSONObject("st");
+
+                    JSONObject st = null;
+                    try {
+                        st = parameter.getJSONObject("st");
+                    } catch (Throwable ignored) {
+                    }
                     if (st == null) {
                         st = new JSONObject();
                         parameter.put("st", st);
                     }
-                    st.put("core", "read_sentence");
+                    st.put("core", isWord ? "word" : "read_sentence");
                     st.put("phoneme_output", "1");
-                    st.put("ref_text", normalizedText);
+                    st.put("ref_text", (isWord ? textForIse : normalizedText));
+
+                    JSONObject iseParam = null;
+                    try {
+                        iseParam = parameter.getJSONObject("ise");
+                    } catch (Throwable ignored) {
+                    }
+                    if (iseParam == null) {
+                        iseParam = new JSONObject();
+                        parameter.put("ise", iseParam);
+                    }
+                    iseParam.put("core_type", coreType);
+                    iseParam.put("category", category);
+                    if (isWord) {
+                        iseParam.put("ise_unite", "1");
+                        iseParam.put("vad_bos", 3000);
+                        iseParam.put("vad_eos", 2000);
+                        iseParam.put("strict_check", "off");
+                    }
                 } catch (Throwable t) {
                     logger.warn("Could not safely modify built.parameter: {}", t.getMessage());
                 }
@@ -141,14 +188,37 @@ public class IseService {
                         parameter = new JSONObject();
                         built.put("params", parameter);
                     }
-                    JSONObject st = parameter.getJSONObject("st");
+
+                    JSONObject st = null;
+                    try {
+                        st = parameter.getJSONObject("st");
+                    } catch (Throwable ignored) {
+                    }
                     if (st == null) {
                         st = new JSONObject();
                         parameter.put("st", st);
                     }
-                    st.put("core", "read_sentence");
+                    st.put("core", isWord ? "word" : "read_sentence");
                     st.put("phoneme_output", "1");
-                    st.put("ref_text", normalizedText);
+                    st.put("ref_text", (isWord ? textForIse : normalizedText));
+
+                    JSONObject iseParam = null;
+                    try {
+                        iseParam = parameter.getJSONObject("ise");
+                    } catch (Throwable ignored) {
+                    }
+                    if (iseParam == null) {
+                        iseParam = new JSONObject();
+                        parameter.put("ise", iseParam);
+                    }
+                    iseParam.put("core_type", coreType);
+                    iseParam.put("category", category);
+                    if (isWord) {
+                        iseParam.put("ise_unite", "1");
+                        iseParam.put("vad_bos", 3000);
+                        iseParam.put("vad_eos", 2000);
+                        iseParam.put("strict_check", "off");
+                    }
                 } catch (Throwable t) {
                     logger.warn("Could not safely modify built.params: {}", t.getMessage());
                 }
@@ -286,7 +356,11 @@ public class IseService {
                                         } else {
                                             JSONObject sentenceOut = new JSONObject();
                                             Element readSentence = null;
+                                            // Accept both sentence and word-level top tags
                                             NodeList rsList = doc.getElementsByTagName("read_sentence");
+                                            if (rsList == null || rsList.getLength() == 0) {
+                                                rsList = doc.getElementsByTagName("read_word");
+                                            }
                                             if (rsList != null && rsList.getLength() > 0) {
                                                 for (int idx = rsList.getLength() - 1; idx >= 0; idx--) {
                                                     Element cand = (Element) rsList.item(idx);
@@ -359,6 +433,75 @@ public class IseService {
                                                                 + (sentenceExceptInfo == null ? "unknown"
                                                                         : sentenceExceptInfo)
                                                                 + "). Please try again with a longer, clearer recording.");
+                                                // Compute averaged total/fluency/completeness across characters when
+                                                // rejected.
+                                                try {
+                                                    double sumOverall = 0.0d, sumFluency = 0.0d, sumCompleteness = 0.0d;
+                                                    int charsOverall = 0, charsFluency = 0, charsCompleteness = 0;
+                                                    if (readSentence != null) {
+                                                        NodeList wlist = readSentence.getElementsByTagName("word");
+                                                        for (int wi = 0; wlist != null
+                                                                && wi < wlist.getLength(); wi++) {
+                                                            Element we = (Element) wlist.item(wi);
+                                                            String content = we.getAttribute("content");
+                                                            if (content == null || content.isEmpty()) {
+                                                                content = we.getTextContent() == null ? ""
+                                                                        : we.getTextContent().trim();
+                                                            }
+                                                            int charCount = 0;
+                                                            if (content != null && !content.isEmpty()) {
+                                                                try {
+                                                                    charCount = content.codePointCount(0,
+                                                                            content.length());
+                                                                } catch (Exception e) {
+                                                                    charCount = content.length();
+                                                                }
+                                                            }
+                                                            if (charCount <= 0)
+                                                                charCount = 1; // fallback to avoid divide-by-zero
+                                                            try {
+                                                                JSONObject wScores = extractWordScoresFromElement(we);
+                                                                double wOverall = wScores.getDoubleValue("overall");
+                                                                double wFluency = wScores.getDoubleValue("fluency");
+                                                                double wCompleteness = wScores
+                                                                        .getDoubleValue("completeness");
+                                                                if (wOverall > 0.0d) {
+                                                                    sumOverall += wOverall * (double) charCount;
+                                                                    charsOverall += charCount;
+                                                                }
+                                                                if (wFluency > 0.0d) {
+                                                                    sumFluency += wFluency * (double) charCount;
+                                                                    charsFluency += charCount;
+                                                                }
+                                                                if (wCompleteness > 0.0d) {
+                                                                    sumCompleteness += wCompleteness
+                                                                            * (double) charCount;
+                                                                    charsCompleteness += charCount;
+                                                                }
+                                                            } catch (Throwable t) {
+                                                                // best-effort: skip problematic word
+                                                            }
+                                                        }
+                                                    }
+                                                    double avgOverall = charsOverall > 0 ? (sumOverall / charsOverall)
+                                                            : 0.0d;
+                                                    double avgFluency = charsFluency > 0 ? (sumFluency / charsFluency)
+                                                            : 0.0d;
+                                                    double avgCompleteness = charsCompleteness > 0
+                                                            ? (sumCompleteness / charsCompleteness)
+                                                            : 0.0d;
+                                                    sentenceOut.put("total_score",
+                                                            Math.min(100.0, Math.max(0.0, avgOverall)));
+                                                    sentenceOut.put("fluency",
+                                                            Math.min(100.0, Math.max(0.0, avgFluency)));
+                                                    sentenceOut.put("completeness",
+                                                            Math.min(100.0, Math.max(0.0, avgCompleteness)));
+                                                    sentenceOut.put("char_overall_count", charsOverall);
+                                                    sentenceOut.put("char_fluency_count", charsFluency);
+                                                    sentenceOut.put("char_completeness_count", charsCompleteness);
+                                                } catch (Throwable t) {
+                                                    // ignore averaging failures
+                                                }
                                                 // Do not compute wrong_words from word-level scores when rejected
                                                 sentenceOut.put("wrong_words", new com.alibaba.fastjson.JSONArray());
                                             } else {
@@ -545,6 +688,148 @@ public class IseService {
             response.put("sentence", sentenceResult);
             response.put("words", wordsResults);
 
+            // When the request is a single word, mirror common sentence fields
+            // to the top-level so frontend normalization (which accepts many
+            // different shapes) finds values like `total_score`/`fluency`.
+            if (isWord) {
+                try {
+                    if (sentenceResult.containsKey("total_score"))
+                        response.put("total_score", sentenceResult.getDoubleValue("total_score"));
+                    if (sentenceResult.containsKey("fluency"))
+                        response.put("fluency", sentenceResult.getDoubleValue("fluency"));
+                    if (sentenceResult.containsKey("completeness"))
+                        response.put("completeness", sentenceResult.getDoubleValue("completeness"));
+                    if (sentenceResult.containsKey("wrong_words"))
+                        response.put("wrong_words", sentenceResult.get("wrong_words"));
+                    if (sentenceResult.containsKey("sid"))
+                        response.put("sid", sentenceResult.getString("sid"));
+                    if (sentenceResult.containsKey("status"))
+                        response.put("status", sentenceResult.getIntValue("status"));
+                    if (sentenceResult.containsKey("raw_xml"))
+                        response.put("raw_xml", sentenceResult.getString("raw_xml"));
+                } catch (Throwable ignored) {
+                }
+            }
+
+            // Additional normalization for frontend: expose phonemes at top-level
+            // and provide a `details` object per word so FE can read breakdowns
+            // in either `word.details.*` or top-level `word.*` fields.
+            try {
+                if (isWord) {
+                    if (wordsResults != null && wordsResults.size() > 0) {
+                        JSONObject first = wordsResults.get(0);
+                        // mirror phonemes to top-level for convenience
+                        if (first.containsKey("phonemes"))
+                            response.put("phonemes", first.get("phonemes"));
+
+                        // ensure each word has a `details` object with initial/final/tone
+                        for (int wi = 0; wi < wordsResults.size(); wi++) {
+                            JSONObject wj = wordsResults.get(wi);
+                            JSONObject details = new JSONObject();
+                            // prefer explicit detailed fields when present
+                            details.put("initial_score", wj.containsKey("initial_score")
+                                    ? wj.getDoubleValue("initial_score")
+                                    : (wj.containsKey("initial_score") ? wj.getDoubleValue("initial_score") : 0.0));
+                            details.put("final_score",
+                                    wj.containsKey("final_score") ? wj.getDoubleValue("final_score") : 0.0);
+                            details.put("tone_score", wj.containsKey("tone_score") ? wj.getDoubleValue("tone_score")
+                                    : (wj.containsKey("tone") ? wj.getDoubleValue("tone") : 0.0));
+                            details.put("initial_count",
+                                    wj.containsKey("initial_count") ? wj.getIntValue("initial_count") : 0);
+                            details.put("final_count",
+                                    wj.containsKey("final_count") ? wj.getIntValue("final_count") : 0);
+                            details.put("tone_count", wj.containsKey("tone_count") ? wj.getIntValue("tone_count") : 0);
+                            // attach details if not present
+                            if (!wj.containsKey("details"))
+                                wj.put("details", details);
+                        }
+                        // Override top-level completeness/fluency with per-word values when present
+                        try {
+                            if (first.containsKey("completeness")) {
+                                double wc = first.getDoubleValue("completeness");
+                                // prefer positive per-word completeness over sentence-level
+                                if (wc > 0.0)
+                                    response.put("completeness", wc);
+                            }
+                            if (first.containsKey("fluency")) {
+                                double wf = first.getDoubleValue("fluency");
+                                if (wf > 0.0)
+                                    response.put("fluency", wf);
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+
+            // Derive missing per-word metrics (initial/final/tone/completeness) from phones
+            // so single-word responses still show useful values when top-level
+            // fluency/completeness are zero or absent.
+            try {
+                if (wordsResults != null) {
+                    for (int _wi = 0; _wi < wordsResults.size(); _wi++) {
+                        try {
+                            deriveWordMetrics(wordsResults.get(_wi));
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+
+            // Add canonical/camelCase alias fields that the frontend sometimes
+            // expects (e.g. initialScore vs initial_score, completenessScore,
+            // fluencyScore).
+            try {
+                // top-level aliases
+                if (response.containsKey("total_score") && !response.containsKey("totalScore"))
+                    response.put("totalScore", response.get("total_score"));
+                if (response.containsKey("completeness") && !response.containsKey("completenessScore"))
+                    response.put("completenessScore", response.get("completeness"));
+                if (response.containsKey("fluency") && !response.containsKey("fluencyScore"))
+                    response.put("fluencyScore", response.get("fluency"));
+
+                // per-word aliases
+                if (wordsResults != null) {
+                    for (int i = 0; i < wordsResults.size(); i++) {
+                        JSONObject wj = wordsResults.get(i);
+                        // overall / total_score / totalScore
+                        if (wj.containsKey("overall") && !wj.containsKey("total_score"))
+                            wj.put("total_score", wj.get("overall"));
+                        if (wj.containsKey("total_score") && !wj.containsKey("totalScore"))
+                            wj.put("totalScore", wj.get("total_score"));
+
+                        // initial/final/tone aliases
+                        if (wj.containsKey("initial_score") && !wj.containsKey("initialScore"))
+                            wj.put("initialScore", wj.get("initial_score"));
+                        if (wj.containsKey("final_score") && !wj.containsKey("finalScore"))
+                            wj.put("finalScore", wj.get("final_score"));
+                        if (wj.containsKey("tone_score") && !wj.containsKey("toneScore"))
+                            wj.put("toneScore", wj.get("tone_score"));
+
+                        // counts
+                        if (wj.containsKey("initial_count") && !wj.containsKey("initialCount"))
+                            wj.put("initialCount", wj.get("initial_count"));
+                        if (wj.containsKey("final_count") && !wj.containsKey("finalCount"))
+                            wj.put("finalCount", wj.get("final_count"));
+                        if (wj.containsKey("tone_count") && !wj.containsKey("toneCount"))
+                            wj.put("toneCount", wj.get("tone_count"));
+
+                        // ensure details.* aliases also exist
+                        if (wj.containsKey("details")) {
+                            JSONObject det = wj.getJSONObject("details");
+                            if (det.containsKey("initial_score") && !det.containsKey("initialScore"))
+                                det.put("initialScore", det.get("initial_score"));
+                            if (det.containsKey("final_score") && !det.containsKey("finalScore"))
+                                det.put("finalScore", det.get("final_score"));
+                            if (det.containsKey("tone_score") && !det.containsKey("toneScore"))
+                                det.put("toneScore", det.get("tone_score"));
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
             // Persist attempt to DB if user present
             try {
                 IseScore score = new IseScore();
@@ -778,6 +1063,8 @@ public class IseService {
 
         final AtomicReference<JSONObject> builtRef = new AtomicReference<>();
         try {
+            // For single-word scoring keep sub/core_type as the required 'sub' value
+            // and use the read_word category so the ISE server accepts the frame.
             JSONObject b = IseGlobalMessageBuilder.buildFirstFrame(appId, sub, defaultEnt, "read_word", word, "utf-8");
             builtRef.set(b);
         } catch (Throwable t) {
@@ -1109,6 +1396,13 @@ public class IseService {
             return "";
         return text.replace("\uFEFF", "").trim().replace("!", "！").replace("?", "？").replace(",", "，")
                 .replace(".", "。").replace(";", "；").replace(":", "：").trim();
+    }
+
+    private boolean isSingleWord(String text) {
+        if (text == null)
+            return false;
+        String trimmed = text.replaceAll("[。,.!?！？]", "").trim();
+        return trimmed.length() == 1;
     }
 
     private File convertToWavWithFfmpeg(File inputFile) throws IOException, InterruptedException {
@@ -1527,6 +1821,101 @@ public class IseService {
         return out;
     }
 
+    private void deriveWordMetrics(JSONObject wj) {
+        if (wj == null)
+            return;
+        try {
+            if (!wj.containsKey("phones"))
+                return;
+            com.alibaba.fastjson.JSONArray phones = wj.getJSONArray("phones");
+            int totalPhones = 0;
+            int errorPhones = 0;
+            double sumInitial = 0, sumFinal = 0, sumTone = 0;
+            int cntInitial = 0, cntFinal = 0, cntTone = 0;
+
+            for (int i = 0; i < phones.size(); i++) {
+                JSONObject p = phones.getJSONObject(i);
+                String content = p.containsKey("content") ? p.getString("content") : "";
+                String recNode = p.containsKey("rec_node_type") ? p.getString("rec_node_type") : "";
+                if ("silv".equalsIgnoreCase(content) || "silv".equalsIgnoreCase(recNode))
+                    continue;
+                totalPhones++;
+
+                long dp = 0;
+                try {
+                    Object o = p.get("dp_message");
+                    if (o != null)
+                        dp = Long.parseLong(o.toString());
+                } catch (Exception ex) {
+                }
+                int perr = 0;
+                try {
+                    Object o = p.get("perr_msg");
+                    if (o != null)
+                        perr = Integer.parseInt(o.toString());
+                } catch (Exception ex) {
+                }
+                boolean phoneError = (dp != 0 || perr != 0);
+
+                double phoneScore = 100.0;
+                if (p.containsKey("score")) {
+                    try {
+                        phoneScore = Double.parseDouble(p.get("score").toString());
+                    } catch (Exception ex) {
+                    }
+                } else if (phoneError) {
+                    phoneScore = 0.0;
+                }
+
+                String isYun = p.containsKey("is_yun") ? p.getString("is_yun") : null;
+                if ("1".equals(isYun)) {
+                    sumFinal += phoneScore;
+                    cntFinal++;
+                } else {
+                    sumInitial += phoneScore;
+                    cntInitial++;
+                }
+
+                if (p.containsKey("mono_tone") && p.get("mono_tone") != null && !"".equals(p.getString("mono_tone"))) {
+                    sumTone += phoneScore;
+                    cntTone++;
+                }
+
+                if (phoneError)
+                    errorPhones++;
+
+                p.put("score", phoneScore);
+                p.put("status", phoneError ? "error" : "ok");
+            }
+
+            int completeness = totalPhones == 0 ? 0
+                    : (int) Math.round(100.0 * (totalPhones - errorPhones) / totalPhones);
+            int initialScore = cntInitial == 0 ? 0 : (int) Math.round(sumInitial / cntInitial);
+            int finalScore = cntFinal == 0 ? 0 : (int) Math.round(sumFinal / cntFinal);
+            int toneScore = cntTone == 0 ? 0 : (int) Math.round(sumTone / cntTone);
+
+            JSONObject det = new JSONObject();
+            det.put("initial_score", initialScore);
+            det.put("initial_count", cntInitial);
+            det.put("final_score", finalScore);
+            det.put("final_count", cntFinal);
+            det.put("tone_score", toneScore);
+            det.put("tone_count", cntTone);
+
+            wj.put("details", det);
+            wj.put("initial_score", initialScore);
+            wj.put("final_score", finalScore);
+            wj.put("tone_score", toneScore);
+
+            if (!wj.containsKey("completeness") || (wj.get("completeness") instanceof Number
+                    && ((Number) wj.get("completeness")).doubleValue() == 0)) {
+                wj.put("completeness", completeness);
+                wj.put("derived_completeness", true);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
     // Helper method: Tính điểm từ phone khi không có syllable
     private JSONObject extractWordScoresFromPhones(Element wordElem) {
         JSONObject out = new JSONObject();
@@ -1702,7 +2091,12 @@ public class IseService {
     // GIỮ NGUYÊN phương thức extractWordScores cho sentence-level
     private JSONObject extractWordScores(Document doc) {
         Element readSentence = null;
+        // Support both read_sentence and read_word top-level elements returned
+        // by different ISE category responses.
         NodeList rsList = doc.getElementsByTagName("read_sentence");
+        if (rsList == null || rsList.getLength() == 0) {
+            rsList = doc.getElementsByTagName("read_word");
+        }
         if (rsList != null && rsList.getLength() > 0) {
             for (int i = rsList.getLength() - 1; i >= 0; i--) {
                 Element cand = (Element) rsList.item(i);
@@ -1742,12 +2136,10 @@ public class IseService {
         double tone = out.getDoubleValue("tone");
         double fluency = out.getDoubleValue("fluency");
 
-        // Nếu đã có đủ điểm từ read_sentence, return luôn
-        if (overall > 0.0d && pron > 0.0d) {
-            com.alibaba.fastjson.JSONArray emptyArr = new com.alibaba.fastjson.JSONArray();
-            out.put("phonemes", emptyArr);
-            return out;
-        }
+        // Previously we returned early when sentence-level overall/pronunciation
+        // were present which caused the response to omit per-phoneme details.
+        // Include phoneme details even when sentence-level scores exist so
+        // callers can access phone/tone level information for diagnostics.
 
         // Nếu chưa có điểm, tính từ phoneme
         Element wordElem = null;
