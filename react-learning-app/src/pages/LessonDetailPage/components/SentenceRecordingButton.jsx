@@ -99,7 +99,12 @@ const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onSta
 
       const result = await iseAPI.scoreSentence(payload)
 
-      // console.log("Analysis result:", result)
+      // If backend asked for a retry (recording rejected by ISE), show a
+      // friendly prompt instead of treating it as a generic error.
+      if (result && result.require_retry) {
+        setError(result.message || "Ghi âm không đủ rõ. Vui lòng ghi lại và thử lại.")
+        return
+      }
 
       if (result && result.success !== false && onScore) {
         onScore(result, blob, lineId)

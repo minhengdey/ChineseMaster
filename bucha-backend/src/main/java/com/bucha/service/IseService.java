@@ -830,6 +830,18 @@ public class IseService {
                 }
             } catch (Throwable ignored) {
             }
+            // If this was a sentence (not single-word) and ISE explicitly marked
+            // it rejected (poor recording / incomprehensible), ask the client to
+            // re-pronounce instead of persisting a meaningless attempt.
+            if (!isWord && sentenceResult.getBooleanValue("is_rejected")) {
+                JSONObject retryResp = new JSONObject();
+                retryResp.put("error", "rejected_by_ise");
+                retryResp.put("message",
+                        "Recording rejected by scoring service (poor quality). Please record again with a clearer, longer pronunciation.");
+                retryResp.put("require_retry", true);
+                return ResponseEntity.status(422).body(retryResp.toJSONString());
+            }
+
             // Persist attempt to DB if user present
             try {
                 IseScore score = new IseScore();

@@ -2,30 +2,30 @@
 FROM node:20-alpine AS frontend-build
 WORKDIR /app
 
-# Copy package.json và package-lock.json rồi cài dependencies
+# Copy package.json & package-lock.json trước để optimize caching
 COPY package*.json ./
 RUN npm install
 
 # Copy toàn bộ source
 COPY . .
 
-# Chỉ build bằng Vite, không dùng tsc
+# Build Vite
 RUN npm run build
 
 # --- Serve stage ---
-FROM nginx:1.29.2-alpine
-# Copy thư mục build của Vite sang nginx
+FROM nginx:1.25-alpine
+
+# Copy build output của Vite
 COPY --from=frontend-build /app/dist /usr/share/nginx/html
 
-# Copy cấu hình nginx nếu có
+# Copy config Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Copy entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 EXPOSE 80
 
-# Đặt entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
-# Lệnh mặc định sẽ được truyền cho entrypoint
 CMD ["nginx", "-g", "daemon off;"]

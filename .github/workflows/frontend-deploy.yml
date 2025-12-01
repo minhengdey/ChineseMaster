@@ -1,0 +1,69 @@
+name: Deploy Frontend to Azure
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+    
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+    
+    - name: Build React app
+      working-directory: ./frontend
+      run: npm run build
+      env:
+        REACT_APP_API_URL: https://chinesemaster-dwffc2hrdpfdh3dz.southeastasia-01.azurewebsites.net/api
+        CI: false
+    
+    - name: Create deployment package
+      working-directory: ./frontend
+      run: |
+        cp startup.sh build/
+        cd build
+        zip -r ../deploy.zip .
+    
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: 'ChineseMaster-FE'
+        publish-profile: ${{ secrets.AZURE_FRONTEND_PUBLISH_PROFILE }}
+        package: './frontend/deploy.zip'
+```
+
+---
+
+### **PHẦN 4: CẤU HÌNH DATABASE**
+
+#### 4.1. Cấu hình Firewall cho Database
+
+1. Vào Azure Portal → `chinesemaster-db`
+2. Vào **Settings** → **Networking**
+3. Thêm các Firewall rules:
+```
+Rule Name: AllowAzureServices
+Start IP: 0.0.0.0
+End IP: 0.0.0.0
+
+Rule Name: AllowBackendApp
+Start IP: 20.24.130.46
+End IP: 20.24.131.162
