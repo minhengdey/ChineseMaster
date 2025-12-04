@@ -837,7 +837,7 @@ public class IseService {
                 JSONObject retryResp = new JSONObject();
                 retryResp.put("error", "rejected_by_ise");
                 retryResp.put("message",
-                        "Recording rejected by scoring service (poor quality). Please record again with a clearer, longer pronunciation.");
+                        "Ghi âm không đủ rõ. Vui lòng ghi lại và thử lại.");
                 retryResp.put("require_retry", true);
                 return ResponseEntity.status(422).body(retryResp.toJSONString());
             }

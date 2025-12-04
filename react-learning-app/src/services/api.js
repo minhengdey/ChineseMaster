@@ -6,7 +6,7 @@ const API_BASE_URL =
       window._env_ &&
       window._env_.VITE_API_BASE_URL
       ? window._env_.VITE_API_BASE_URL
-      : import.meta?.env?.VITE_API_BASE_URL || "https://chinesemaster-dwffc2hrdpfdh3dz.southeastasia-01.azurewebsites.net/api";
+      : import.meta?.env?.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 const apiClient = axios.create({
    baseURL: API_BASE_URL,
