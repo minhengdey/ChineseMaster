@@ -1,4 +1,4 @@
-name: Deploy Frontend to Azure
+name: Deploy Frontend to Azure Static Web Apps
 
 on:
   push:
@@ -11,60 +11,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build_and_deploy_job:
     runs-on: ubuntu-latest
-
+    name: Build and Deploy Job
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: false
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'     # recommended LTS
-        cache: 'npm'
-        cache-dependency-path: './react-learning-app/package-lock.json'
+      # ✅ THÊM BƯỚC NÀY - Set Node.js 20
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: react-learning-app/package-lock.json
 
-    - name: Install dependencies
-      working-directory: ./react-learning-app
-      run: npm ci --prefer-offline --no-audit --progress=false
-
-    - name: Build React app
-      working-directory: ./react-learning-app
-      env:
-        # đặt cả REACT_APP_ và VITE_ để tương thích với CRA và Vite
-        REACT_APP_API_URL: https://chinesemaster-dwffc2hrdpfdh3dz.southeastasia-01.azurewebsites.net/api
-        VITE_API_URL: https://chinesemaster-dwffc2hrdpfdh3dz.southeastasia-01.azurewebsites.net/api
-      run: |
-        echo "Running npm run build..."
-        npm run build
-        echo "Build exit code: $?"
-
-    - name: List project root (debug)
-      run: ls -la react-learning-app || true
-
-    - name: Find build output (build/ or dist/)
-      run: |
-        echo "Searching for build output folders..."
-        if [ -d "react-learning-app/build" ]; then
-          echo "Found build/ directory"
-          echo "BUILD_DIR=react-learning-app/build" >> $GITHUB_ENV
-        elif [ -d "react-learning-app/dist" ]; then
-          echo "Found dist/ directory"
-          echo "BUILD_DIR=react-learning-app/dist" >> $GITHUB_ENV
-        else
-          echo "##[error]No build output found. Checked react-learning-app/build and react-learning-app/dist"
-          echo "Contents of react-learning-app:"
-          ls -la react-learning-app || true
-          exit 1
-        fi
-
-    - name: List build directory (debug)
-      run: ls -la ${{ env.BUILD_DIR }}
-
-    - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v3
-      with:
-        app-name: 'ChineseMaster-FE'
-        publish-profile: ${{ secrets.AZURE_FRONTEND_PUBLISH_PROFILE }}
-        package: ${{ env.BUILD_DIR }}
+      - name: Build and Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_CALM_DUNE_077A49C00 }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "react-learning-app"
+          api_location: ""
+          output_location: "dist"
+          skip_app_build: false  # ✅ Đảm bảo build được chạy
+        env:
+          VITE_API_URL: https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net
