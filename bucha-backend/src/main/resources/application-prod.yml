@@ -1,16 +1,67 @@
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+    jpa:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: false
+        ddl-auto: update
+      properties:
+        hibernate:
+          format_sql: true
+          dialect: org.hibernate.dialect.MySQL8Dialect
+    h2:
+      console:
+        enabled: true
 
-# Production should have a strong jwt secret provided via env
 jwt:
-  secret: ${JWT_SECRET:ChangeMeInProd}
+  secret: ${JWT_SECRET}
+  access-validity-ms: 900000
+  refresh-validity-ms: 1209600000
+
+app:
+  cors:
+    allowed-origins: ${ALLOW_ORIGINS}
+  data:
+    initializer:
+      enabled: ${DATA_INITIALIZER_ENABLED}
+      source: CLOUDINARY
+logging:
+  level:
+    root: ERROR
+    com.bucha.service.CloudinaryService: DEBUG
+    # org.springframework: DEBUG
+    com.bucha: DEBUG
+
+iflytek:
+  app-id: ${APP_ID}
+  api-key: ${API_KEY}
+  api-secret: ${API_SECRET}
+  host-url: wss://ise-api-sg.xf-yun.com/v2/ise
+  ent: cn_vip
+  category: read_sentence
+  # 16kHz, 16bit PCM per ISE docs; omit channel token
+  auf: audio/L16;rate=16000
+  # Raw PCM frames
+  aue: raw
+  sub: ise
+  # Optional network settings for troubleshooting
+  insecure-ssl: false
+  disable-proxy: true
+  proxy-host: ""
+  proxy-port: 0
+  # Advanced websocket tuning per ISE FAQ (approx 1280 bytes every 40ms)
+  frame-size: 320
+  frame-sleep-ms: 80
+  connect-timeout-seconds: 15
+  read-timeout-seconds: 300
+  write-timeout-seconds: 120
+  single-frame: false
+  binary-frames: false
+
+cloudinary:
+  cloud-name: ${CLOUD_NAME}
+  api-key: ${CLOUD_API_KEY}
+  api-secret: ${CLOUD_API_SECRET}
+  upload-folder: chinese-master

@@ -31,7 +31,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-            @Value("${app.cors.allowed-origins:https://dingdong.up.railway.app,http://localhost:5501,https://calm-dune-077a49c00.3.azurestaticapps.net}") String allowedOrigins) throws Exception {
+                                           @Value("${app.cors.allowed-origins:https://calm-dune-077a49c00.3.azurestaticapps.net,http://localhost:5501}") String allowedOrigins) throws Exception {
 
         // CORS config
         http.cors(cors -> cors.configurationSource(request -> {
