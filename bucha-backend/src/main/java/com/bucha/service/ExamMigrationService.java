@@ -61,6 +61,7 @@ public class ExamMigrationService {
                     .questionType(QuestionType.valueOf(questionMigrationDTO.getQuestionType()))
                     .exam(exam)
                     .order(questionOrder)
+                    .externalId(migrateHelper.computeStableId(examBasePath + "/audio/" + questionPublicName))
                     .audioPublicId(examBasePath + "/audio/" + questionPublicName)
                     .build();
             Question save = questionRepository.save(question);

@@ -1,2 +1,2 @@
-select *
-from q;
+drop database buchadb;
+create  database buchadb;
