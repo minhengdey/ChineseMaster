@@ -1,6 +1,7 @@
 package com.bucha.service;
 
 import com.bucha.dto.CurriculumMetadataDto;
+import com.bucha.dto.migration.ExamMigrationDTO;
 import com.bucha.dto.migration.LessonMigrationDTO;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
@@ -117,6 +118,18 @@ public class CloudinaryService {
             return Json.mapper().readValue(json, com.bucha.dto.migration.pronunciation.PronunciationDto.class);
         } catch (Exception e) {
             log.error("Failed to fetch/parse PronunciationDto for publicId={}", publicId, e);
+            return null;
+        }
+    }
+
+    public <T>  T fetchJsonFile(String publicId, Class<T> inputClass) {
+        try {
+            String url = getRawFileUrlLatest(publicId);
+            log.info("Fetching JSON (latest) from URL: {}", url);
+            String json = restTemplate.getForObject(url, String.class);
+            return Json.mapper().readValue(json, inputClass);
+        } catch (Exception e) {
+            log.error("Failed to fetch/parse {} for publicId={}", inputClass.getName(), publicId, e);
             return null;
         }
     }
