@@ -1,13 +1,5 @@
 {
-  "order": 1,
-  "name": "HSK 1",
-  "description": "Giáo trình chuẩn HSK Cấp 1, bao gồm các bài học cơ bản về chào hỏi, giới thiệu bản thân và các chủ đề hàng ngày.",
-  "level": "Beginner",
-  "lessons": [
-    "lesson-1",
-    "lesson-2"
-  ],
-  "audio": [
-    "audio"
+  "examFileNames": [
+    "exam-1.json"
   ]
 }
