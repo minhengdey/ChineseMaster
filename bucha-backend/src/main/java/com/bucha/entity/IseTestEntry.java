@@ -22,6 +22,19 @@ public class IseTestEntry {
     Double totalScore;
     Double durationSeconds;
 
+    // Per-section averaged scores for this test attempt
+    @Column(name = "initial_score")
+    Double initialScore;
+
+    @Column(name = "final_score")
+    Double finalScore;
+
+    @Column(name = "tone_score")
+    Double toneScore;
+
+    @Column(name = "sentence_score")
+    Double sentenceScore;
+
     Long attemptId;
 
     LocalDateTime sessionDate;

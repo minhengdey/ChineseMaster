@@ -2,7 +2,7 @@
 import { Link, useLocation } from "react-router-dom"
 import { useUserStore } from "../store/UserStore"
 import { authAPI, userAPI } from "../services/api"
-import { Menu, X, LogOut, User, BookOpen, Volume2, Layers, Type } from "lucide-react"
+import { Menu, X, LogOut, User, BookOpen, Volume2, Layers, Type, ClipboardCheck } from "lucide-react"
 import { useState, useEffect } from "react"
 
 const Navbar = ({ user, onLogout }) => {
@@ -54,6 +54,7 @@ const Navbar = ({ user, onLogout }) => {
   }
 
   const navItems = [
+    { label: "Bài Kiểm Tra", path: "/assessments", icon: ClipboardCheck },
     { label: "Bài học", path: "/curriculum", icon: BookOpen },
     { label: "Phát âm", path: "/pronunciation", icon: Volume2 },
     { label: "Flash Card", path: "/flashcards", icon: Layers },

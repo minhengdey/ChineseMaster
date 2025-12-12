@@ -837,7 +837,7 @@ public class IseService {
                 JSONObject retryResp = new JSONObject();
                 retryResp.put("error", "rejected_by_ise");
                 retryResp.put("message",
-                        "Recording rejected by scoring service (poor quality). Please record again with a clearer, longer pronunciation.");
+                        "Bản ghi âm không đạt chất lượng để chấm điểm. Vui lòng ghi lại với phát âm rõ ràng hơn và thời lượng dài hơn.");
                 retryResp.put("require_retry", true);
                 return ResponseEntity.status(422).body(retryResp.toJSONString());
             }
@@ -1035,6 +1035,30 @@ public class IseService {
                         te.setSessionDate(saved.getSessionDate());
                         if (saved.getUser() != null)
                             te.setUser(saved.getUser());
+
+                        // Map section field based on scoreCategory when available
+                        try {
+                            String cat = scoreCategory == null ? null : String.valueOf(scoreCategory).toLowerCase();
+                            if (cat != null) {
+                                switch (cat) {
+                                    case "thanh-mau":
+                                        te.setInitialScore(saved.getTotalScore());
+                                        break;
+                                    case "van-mau":
+                                        te.setFinalScore(saved.getTotalScore());
+                                        break;
+                                    case "thanh-dieu":
+                                        te.setToneScore(saved.getTotalScore());
+                                        break;
+                                    case "cau":
+                                        te.setSentenceScore(saved.getTotalScore());
+                                        break;
+                                    default:
+                                        // leave section-specific fields null
+                                }
+                            }
+                        } catch (Throwable ignore) {
+                        }
                         iseTestEntryRepository.save(te);
                     }
                 } catch (Throwable t) {

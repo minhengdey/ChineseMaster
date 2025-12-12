@@ -1,11 +1,20 @@
 import { Link } from "react-router-dom"
 import { useUserStore } from "../../store/UserStore"
-import { BookOpen, Volume2, Sparkles, Type } from "lucide-react"
+import { BookOpen, Volume2, Sparkles, Type, ClipboardCheck } from "lucide-react"
 
 const HomePage = () => {
   const user = useUserStore((state) => state.user)
 
   const features = [
+    {
+      icon: ClipboardCheck,
+      title: "Bài kiểm tra",
+      description: "Đánh giá trình độ phát âm của bạn",
+      link: "/assessments",
+      gradient: "from-pink-500 to-rose-500",
+      bgGradient: "from-pink-50 to-rose-50",
+      iconColor: "text-pink-600",
+    },
     {
       icon: BookOpen,
       title: "Bài học",
@@ -58,7 +67,7 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             {features.map((feature, index) => {
               const Icon = feature.icon
               return (

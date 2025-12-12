@@ -3,12 +3,14 @@ import axios from "axios";
 // Base API configuration (runtime override from public/env-config.js)
 // Priority: runtime `window._env_.VITE_API_URL` -> `window._env_.REACT_APP_API_URL` -> import.meta env -> fallback to relative `/api`
 // Use relative `/api` so frontend calls like `fetch('/api/login')` or axios to `/auth/login` go through the same origin proxy/router.
-const API_BASE_URL =
-   typeof window !== "undefined" &&
-      window._env_ &&
-      (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
-      ? (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
-      : import.meta?.env?.VITE_API_BASE_URL || import.meta?.env?.VITE_API_URL || "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
+// const API_BASE_URL =
+//    typeof window !== "undefined" &&
+//       window._env_ &&
+//       (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
+//       ? (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
+//       : import.meta?.env?.VITE_API_BASE_URL || import.meta?.env?.VITE_API_URL || "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
+
+const API_BASE_URL = "http://localhost:8080/api";
 
 const apiClient = axios.create({
    baseURL: API_BASE_URL,
@@ -645,6 +647,64 @@ export const migrationAPI = {
       }
       throw lastError || new Error("Không thể lấy dữ liệu hội thoại từ server");
    },
+};
+
+// Assessment Test APIs (New)
+export const assessmentAPI = {
+   // Get assessment by ID with test data
+   // API: GET /assessments/{assessmentId}
+   // Returns: { id, title, description, lessonId, curriculumId, testData: {...} }
+   getAssessmentById: async (assessmentId) => {
+      const response = await apiClient.get(`/assessments/${assessmentId}`);
+      return response.data;
+   },
+
+   // Get test data for a lesson divided into 4 sections (deprecated - use getAssessmentById)
+   getTestData: async (lessonId) => {
+      try {
+         const response = await apiClient.get(`/assessments/test-data/${lessonId}`);
+         return response.data;
+      } catch (error) {
+         // Fallback to null so frontend can use lesson data
+         console.warn("Could not fetch assessment test data:", error);
+         return null;
+      }
+   },
+
+   // Submit assessment test results
+   // API: POST /assessments/{assessmentId}/submit
+   submitTest: async (assessmentId, payload) => {
+      const response = await apiClient.post(`/assessments/${assessmentId}/submit`, payload);
+      return response.data;
+   },
+
+   // Get assessment history for a lesson
+   getAssessmentsByLesson: async (lessonId) => {
+      const response = await apiClient.get(`/assessments/lesson/${lessonId}`);
+      return response.data;
+   },
+
+   // Get overall assessment statistics
+   getAssessmentStats: async () => {
+      const response = await apiClient.get("/assessments/stats");
+      return response.data;
+   },
+
+   // Get all assessments list
+   getAllAssessments: async () => {
+      const response = await apiClient.get("/assessments");
+      return response.data;
+   },
+};
+
+// Add method to iseAPI for assessment test data fetching (if using existing API)
+iseAPI.getAssessmentTestData = async (lessonId) => {
+   return assessmentAPI.getTestData(lessonId);
+};
+
+// Add method to iseAPI for submitting assessment
+iseAPI.submitAssessmentTest = async (payload) => {
+   return assessmentAPI.submitTest(payload);
 };
 
 // Helper function to handle API errors

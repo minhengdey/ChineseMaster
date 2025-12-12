@@ -17,6 +17,8 @@ import SpeakingPracticePage from "./pages/SpeakingPracticePage";
 import PronunciationPage from "./pages/PronunciationPage";
 import ProfilePage from "./pages/ProfilePage";
 import AlphabetPage from "./pages/AlphabetPage";
+import AssessmentTestPage from "./pages/AssessmentTestPage";
+import AssessmentsListPage from "./pages/AssessmentsListPage";
 import Login from "./pages/LoginPage/index";
 
 import "./App.css";
@@ -55,9 +57,14 @@ function App() {
                      path="curriculum/:curriculumId/lessons"
                      element={<LessonsPage />}
                   />
+                  <Route path="assessments" element={<AssessmentsListPage />} />
                   <Route
                      path="curriculum/:curriculumId/lesson/:lessonId"
                      element={<LessonDetailPage />}
+                  />
+                  <Route
+                     path="assessment/:assessmentId"
+                     element={<AssessmentTestPage />}
                   />
                   <Route
                      path="curriculum/:curriculumId/lesson/:lessonId/practice"

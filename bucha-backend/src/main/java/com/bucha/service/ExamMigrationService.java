@@ -39,7 +39,8 @@ public class ExamMigrationService {
         String contentHash = migrateHelper.canonicalizeJson(examMigrationDTO);
         contentHash = migrateHelper.computeSha256Hex(contentHash);
 
-        Exam oldExam = examRepository.getExamsByExternalId(examExternalId);
+        Exam oldExam = examRepository.findByExternalId(examExternalId)
+                .orElseThrow(() -> new RuntimeException("Exam not found"));
         if (oldExam != null && oldExam.getContentHash().equals(contentHash)) {
             log.info("Exam {} with order {} has same content hash", publicId, order);
             return false;
