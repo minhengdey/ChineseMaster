@@ -8,9 +8,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 @RestController
@@ -39,7 +42,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest req, HttpServletResponse response) {
         var opt = userService.findByEmail(req.email());
         if (opt.isEmpty())
             return ResponseEntity.status(401).body("Invalid credentials");
@@ -47,11 +50,22 @@ public class AuthController {
         if (!passwordEncoder.matches(req.password(), user.getPassword())) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
-        String access = jwtUtil.generateAccessToken(user.getEmail(), user.getId());
-        // Return token together with basic user info so frontend can store profile
+        String access = jwtUtil.generateAccessToken(user.getEmail(), user.getId(), user.getEmail());
+
+        // Set JWT token in httpOnly cookie for security
+        // For localhost development: no domain restriction, no sameSite for cross-port
+        // access
+        ResponseCookie cookie = ResponseCookie.from("accessToken", access)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(24 * 60 * 60) // 24 hours
+                .domain("localhost") // Explicitly set domain for cross-port access
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        // Return only user info, NOT the token
         Map<String, Object> out = Map.of(
-                "accessToken", access,
-                "expiresIn", 900000,
                 "user", Map.of(
                         "id", user.getId(),
                         "email", user.getEmail(),
@@ -75,5 +89,19 @@ public class AuthController {
         } catch (Exception ex) {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        // Clear the accessToken cookie
+        ResponseCookie cookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0) // Delete cookie
+                .domain("localhost")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
 }

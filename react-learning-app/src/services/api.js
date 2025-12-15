@@ -3,40 +3,26 @@ import axios from "axios";
 // Base API configuration (runtime override from public/env-config.js)
 // Priority: runtime `window._env_.VITE_API_URL` -> `window._env_.REACT_APP_API_URL` -> import.meta env -> fallback to relative `/api`
 // Use relative `/api` so frontend calls like `fetch('/api/login')` or axios to `/auth/login` go through the same origin proxy/router.
-const API_BASE_URL =
-   typeof window !== "undefined" &&
-      window._env_ &&
-      (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
-      ? (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
-      : import.meta?.env?.VITE_API_BASE_URL || import.meta?.env?.VITE_API_URL || "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
+// const API_BASE_URL =
+//    typeof window !== "undefined" &&
+//       window._env_ &&
+//       (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
+//       ? (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
+//       : import.meta?.env?.VITE_API_BASE_URL || import.meta?.env?.VITE_API_URL || "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
+
+const API_BASE_URL = "http://localhost:8080/api";
 
 const apiClient = axios.create({
    baseURL: API_BASE_URL,
+   withCredentials: true, // Enable sending cookies with requests
 });
-
-// Request interceptor to add auth token
-apiClient.interceptors.request.use(
-   (config) => {
-      const token = localStorage.getItem("accessToken");
-      if (token) {
-         config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-   },
-   (error) => {
-      return Promise.reject(error);
-   }
-);
 
 // Response interceptor to handle common errors
 apiClient.interceptors.response.use(
    (response) => response,
    (error) => {
       if (error.response?.status === 401) {
-         // Token expired or invalid
-         localStorage.removeItem("accessToken");
-         localStorage.removeItem("refreshToken");
-         localStorage.removeItem("user");
+         // Token expired or invalid - redirect to login
          window.location.href = "/";
       }
       return Promise.reject(error);
@@ -65,32 +51,23 @@ export const authAPI = {
          password: credentials.password,
       });
 
-      // Backend now returns { accessToken, expiresIn, user: { id, email, name } }
-      if (response.data?.accessToken) {
-         localStorage.setItem("accessToken", response.data.accessToken);
-         if (response.data.user) {
-            try {
-               localStorage.setItem("user", JSON.stringify(response.data.user));
-            } catch (e) {
-               // console.warn('Failed to save user to localStorage', e);
-            }
-         }
-         return { token: response.data.accessToken, user: response.data.user };
-      }
-
+      // Backend returns { user: { id, email, name } } and sets httpOnly cookie
+      // No localStorage - user will be fetched from API on app load
       return response.data;
    },
 
-   logout: () => {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("user");
+   logout: async () => {
+      try {
+         // Call backend to clear cookie
+         await apiClient.post("/auth/logout");
+      } catch (e) {
+         console.warn('Failed to call logout API', e);
+      }
    },
 
-   verifyToken: async (token) => {
-      // If token is passed explicitly, send it in Authorization header;
-      // otherwise apiClient will add accessToken from localStorage via interceptor
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const response = await apiClient.get("/auth/verify", { headers });
+   verifyToken: async () => {
+      // Token is automatically sent via cookie, no need to pass it
+      const response = await apiClient.get("/auth/verify");
       return response.data;
    },
 };
@@ -161,14 +138,8 @@ export const practiceAPI = {
       }
 
       // Do not set Content-Type so the browser can add the multipart boundary automatically.
-      // Only pass Authorization header when available.
-      const token = localStorage.getItem("accessToken");
-      const headers = {};
-      if (token) headers.Authorization = `Bearer ${token}`;
-
-      const response = await apiClient.post("/practice/score", formData, {
-         headers,
-      });
+      // Token is automatically sent via cookie (withCredentials: true)
+      const response = await apiClient.post("/practice/score", formData);
       return response.data;
    },
 };
@@ -262,6 +233,7 @@ export const iseAPI = {
       vocabularyId,
       source,
       testId,
+      questionId,
       includeInDaily,
       sessionDate,
       durationSeconds,
@@ -295,6 +267,7 @@ export const iseAPI = {
          if (vocabularyId != null) formData.append("vocabularyId", String(vocabularyId));
          if (source != null) formData.append("source", String(source));
          if (testId != null) formData.append("testId", String(testId));
+         if (questionId != null) formData.append("questionId", String(questionId));
          if (includeInDaily != null) formData.append("includeInDaily", String(includeInDaily));
          if (sessionDate != null) formData.append("sessionDate", String(sessionDate));
          if (durationSeconds != null) formData.append("durationSeconds", String(durationSeconds));
@@ -317,14 +290,8 @@ export const iseAPI = {
          }
 
          // Do not set Content-Type so the browser can add the multipart boundary automatically.
-         // Only pass Authorization header when available.
-         const token = localStorage.getItem("accessToken");
-         const headers = {};
-         if (token) headers.Authorization = `Bearer ${token}`;
-
-         const response = await apiClient.post("/ise/score", formData, {
-            headers,
-         });
+         // Token is automatically sent via cookie (withCredentials: true)
+         const response = await apiClient.post("/ise/score", formData);
 
          return response.data;
       } catch (error) {
@@ -349,7 +316,7 @@ export const iseAPI = {
    },
 
    // NEW: scoreWord for vocabulary using the new IseWordController
-   scoreWord: async ({ text, audioFile, vocabularyId, lessonId }) => {
+   scoreWord: async ({ text, audioFile, testId, questionId, scoreCategory }) => {
       try {
          const formData = new FormData();
          formData.append("text", text);
@@ -359,12 +326,16 @@ export const iseAPI = {
             type: audioFile.type || "audio/webm",
          });
          formData.append("audio", audioFileWithName);
-         // attach vocabularyId and lessonId when present so backend can attribute attempt
-         if (vocabularyId != null) {
-            formData.append("vocabularyId", String(vocabularyId));
+         // assessment mode: only attach testId
+         if (testId != null) {
+            formData.append("testId", String(testId));
          }
-         if (lessonId != null) {
-            formData.append("lessonId", String(lessonId));
+         if (questionId != null) {
+            formData.append("questionId", String(questionId));
+         }
+         // optional: attach scoreCategory for backend categorization (e.g., thanh-mau/van-mau/...)
+         if (scoreCategory != null) {
+            formData.append("scoreCategory", String(scoreCategory));
          }
 
          // console.log("Sending to ISE Word API:", {
@@ -476,6 +447,7 @@ export const iseAPI = {
                   result.rawXML ??
                   null,
                words: result.words ?? sent.words ?? [],
+               db_scores: result.db_scores ?? null,
             };
             return normalized;
          }
@@ -645,6 +617,83 @@ export const migrationAPI = {
       }
       throw lastError || new Error("Không thể lấy dữ liệu hội thoại từ server");
    },
+};
+
+// Assessment Test APIs (New)
+export const assessmentAPI = {
+   // Get assessment by ID with test data
+   // API: GET /assessments/{assessmentId}
+   // Returns: { id, title, description, lessonId, curriculumId, testData: {...} }
+   getAssessmentById: async (assessmentId) => {
+      const response = await apiClient.get(`/assessments/${assessmentId}`);
+      return response.data;
+   },
+
+   // Get test data for a lesson divided into 4 sections (deprecated - use getAssessmentById)
+   getTestData: async (lessonId) => {
+      try {
+         const response = await apiClient.get(`/assessments/test-data/${lessonId}`);
+         return response.data;
+      } catch (error) {
+         // Fallback to null so frontend can use lesson data
+         console.warn("Could not fetch assessment test data:", error);
+         return null;
+      }
+   },
+
+   // Start assessment - clear old data
+   // API: POST /assessments/{assessmentId}/start
+   startAssessment: async (assessmentId) => {
+      const response = await apiClient.post(`/assessments/${assessmentId}/start`);
+      return response.data;
+   },
+
+   // Submit assessment test results
+   // API: POST /assessments/{assessmentId}/submit
+   submitTest: async (assessmentId, payload) => {
+      const response = await apiClient.post(`/assessments/${assessmentId}/submit`, payload);
+      return response.data;
+   },
+
+   // Get assessment history for a lesson
+   getAssessmentsByLesson: async (lessonId) => {
+      const response = await apiClient.get(`/assessments/lesson/${lessonId}`);
+      return response.data;
+   },
+
+   // Get overall assessment statistics
+   getAssessmentStats: async () => {
+      const response = await apiClient.get("/assessments/stats");
+      return response.data;
+   },
+
+   // Get all assessments list
+   getAllAssessments: async () => {
+      const response = await apiClient.get("/assessments");
+      return response.data;
+   },
+
+   // Get assessment results
+   getAssessmentResults: async (assessmentId) => {
+      const response = await apiClient.get(`/assessments/${assessmentId}/results`);
+      return response.data;
+   },
+
+   // Submit final assessment results
+   submitFinalResults: async (assessmentId, payload) => {
+      const response = await apiClient.post(`/assessments/${assessmentId}/submit`, payload);
+      return response.data;
+   },
+};
+
+// Add method to iseAPI for assessment test data fetching (if using existing API)
+iseAPI.getAssessmentTestData = async (lessonId) => {
+   return assessmentAPI.getTestData(lessonId);
+};
+
+// Add method to iseAPI for submitting assessment
+iseAPI.submitAssessmentTest = async (payload) => {
+   return assessmentAPI.submitTest(payload);
 };
 
 // Helper function to handle API errors

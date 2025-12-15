@@ -2,7 +2,7 @@
 import { Link, useLocation } from "react-router-dom"
 import { useUserStore } from "../store/UserStore"
 import { authAPI, userAPI } from "../services/api"
-import { Menu, X, LogOut, User, BookOpen, Volume2, Layers, Type } from "lucide-react"
+import { Menu, X, LogOut, User, BookOpen, Volume2, Layers, Type, ClipboardCheck } from "lucide-react"
 import { useState, useEffect } from "react"
 
 const Navbar = ({ user, onLogout }) => {
@@ -16,31 +16,17 @@ const Navbar = ({ user, onLogout }) => {
   useEffect(() => {
     if (storeUser) return
 
-    // try to read cached user from localStorage first
-    try {
-      const raw = localStorage.getItem("user")
-      if (raw) {
-        setUser(JSON.parse(raw))
-        return
-      }
-    } catch (e) {
-      // ignore and fallthrough
-    }
-
-    // fallback: try fetching profile from backend (if token present)
-    ; (async () => {
-      try {
-        const profile = await userAPI.getProfile()
-        if (profile) {
-          setUser(profile)
-          try {
-            localStorage.setItem("user", JSON.stringify(profile))
-          } catch (e) { }
+      // No localStorage - fetch user from API using httpOnly cookie
+      ; (async () => {
+        try {
+          const profile = await userAPI.getProfile()
+          if (profile) {
+            setUser(profile)
+          }
+        } catch (e) {
+          // not authenticated or fetch failed - leave store null
         }
-      } catch (e) {
-        // not authenticated or fetch failed - leave store null
-      }
-    })()
+      })()
   }, [storeUser, setUser])
 
   const isActive = (path) => {
@@ -54,6 +40,7 @@ const Navbar = ({ user, onLogout }) => {
   }
 
   const navItems = [
+    { label: "Bài Kiểm Tra", path: "/assessments", icon: ClipboardCheck },
     { label: "Bài học", path: "/curriculum", icon: BookOpen },
     { label: "Phát âm", path: "/pronunciation", icon: Volume2 },
     { label: "Flash Card", path: "/flashcards", icon: Layers },

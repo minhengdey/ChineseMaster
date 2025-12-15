@@ -68,6 +68,14 @@ const SentencePronunciationResult = ({
   // Parse scores from actual ISE sentence API format.
   // The ISE API sometimes nests metrics under `result.sentence`.
   const sent = result?.sentence || result || {};
+
+  console.log("🔥 SentencePronunciationResult received:", {
+    result_total_score: result?.total_score,
+    result_db_scores: result?.db_scores,
+    sent_total_score: sent?.total_score,
+    full_result: result
+  });
+
   const totalScore =
     sent?.total_score ??
     sent?.totalScore ??
@@ -77,6 +85,8 @@ const SentencePronunciationResult = ({
     0;
   const fluencyScore = sent?.fluency ?? result?.fluency ?? 0;
   const completenessScore = sent?.completeness ?? result?.completeness ?? 0;
+
+  console.log("📍 Final totalScore calculated:", totalScore);
   const wrongWords =
     sent?.wrong_words ??
     result?.wrong_words ??
@@ -91,7 +101,7 @@ const SentencePronunciationResult = ({
     const sentence = sentenceText || "";
     if (!sentence) return null;
     const chars = Array.from(sentence);
-    const isPunct = (ch) => /[\s,，。.?!、!！?？;；:：]/.test(ch);
+    const isPunct = (ch) => /[\s,，。.?!、!！?？;；:：/]/.test(ch);
     const mapping = [];
     let wi = 0;
     for (let ci = 0; ci < chars.length; ci++) {
@@ -239,6 +249,13 @@ const SentencePronunciationResult = ({
           const first = (Array.isArray(result?.words) && result.words.length > 0) ? result.words[0] : null
           const label = first ? (first.word || first.text || String(sentenceText || "").trim().slice(0, 1)) : (String(sentenceText || "").trim().slice(0, 1) || "Từ")
           const wScore = first ? Math.max(0, Math.min(100, Math.round(first?.overall ?? first?.pronunciation ?? first?.score ?? first?.pronunciationScore ?? 0))) : 0
+          console.log("🔴 WORD MODE - Displaying wScore from result.words[0]:", {
+            wScore,
+            first_overall: first?.overall,
+            first_pronunciation: first?.pronunciation,
+            first_score: first?.score,
+            totalScore_should_be: totalScore
+          });
           return (
             <div className="card bg-gray-50 shadow-sm border border-gray-200">
               <div className="card-body p-3">
@@ -271,7 +288,10 @@ const SentencePronunciationResult = ({
                 <div className="flex flex-col items-end">
                   <div className={`font-bold ${getScoreColor(totalScore)}`}>
                     <Stars percent={totalScore} size={20} />
-                    <div className={`text-sm mt-1 ${getScoreColor(totalScore)}`}>{toPercent(totalScore)}%</div>
+                    <div className={`text-sm mt-1 ${getScoreColor(totalScore)}`}>
+                      {console.log("🎯 RENDERING Điểm tổng:", toPercent(totalScore), "from totalScore:", totalScore)}
+                      {toPercent(totalScore)}%
+                    </div>
                   </div>
                   <div className={`text-xs ${getScoreColor(totalScore)}`}>
                     {getScoreMessage(totalScore)}

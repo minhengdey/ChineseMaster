@@ -27,8 +27,11 @@ public class CloudinaryService {
 
     public String getAudioUrl(String publicId) {
         String pid = stripAnyExt(publicId);
+        // Generate HTTPS URL and explicitly append mp3 extension for reliable playback
         return cloudinary.url()
+                .secure(true)
                 .resourceType("video")
+                .type("upload")
                 .format("mp3")
                 .generate(pid);
     }
@@ -122,7 +125,7 @@ public class CloudinaryService {
         }
     }
 
-    public <T>  T fetchJsonFile(String publicId, Class<T> inputClass) {
+    public <T> T fetchJsonFile(String publicId, Class<T> inputClass) {
         try {
             String url = getRawFileUrlLatest(publicId);
             log.info("Fetching JSON (latest) from URL: {}", url);

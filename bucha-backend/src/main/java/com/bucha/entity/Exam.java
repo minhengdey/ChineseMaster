@@ -1,6 +1,5 @@
 package com.bucha.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -22,10 +21,12 @@ public class Exam {
 
     @Column(name = "exam_order")
     Integer order;
+
     Long externalId;
     String contentHash;
-    String title;
 
+    @Column(nullable = false)
+    String title;
 
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Question> questions;

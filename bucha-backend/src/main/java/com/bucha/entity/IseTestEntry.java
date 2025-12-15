@@ -19,8 +19,23 @@ public class IseTestEntry {
     Long id;
 
     Long testId;
+    Long questionId; // Stores Question.externalId (not Question.id) - tracks which question this
+                     // score is for
     Double totalScore;
     Double durationSeconds;
+
+    // Per-section averaged scores for this test attempt
+    @Column(name = "initial_score")
+    Double initialScore;
+
+    @Column(name = "final_score")
+    Double finalScore;
+
+    @Column(name = "tone_score")
+    Double toneScore;
+
+    @Column(name = "sentence_score")
+    Double sentenceScore;
 
     Long attemptId;
 
