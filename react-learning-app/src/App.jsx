@@ -30,14 +30,8 @@ function App() {
    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
    useEffect(() => {
-      // Check if user is logged in
-      const token = localStorage.getItem("accessToken");
-      const userData = localStorage.getItem("user");
-
-      if (token && userData) {
-         setUser(JSON.parse(userData));
-         setIsAuthenticated(true);
-      }
+      // No localStorage - authentication is handled by httpOnly cookie
+      // ProtectedRoute will verify token and fetch user when needed
    }, []);
 
    return (

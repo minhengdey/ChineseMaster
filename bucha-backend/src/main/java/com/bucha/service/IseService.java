@@ -75,9 +75,9 @@ public class IseService {
     com.bucha.repository.IseTestEntryRepository iseTestEntryRepository;
 
     public ResponseEntity<?> score(JwtUserPrincipal principal, String text, MultipartFile audioFile, String reqSub,
-            String reqEnt, String scoreCategory, Long lessonId, Long testId, Boolean includeInDaily,
+            String reqEnt, String scoreCategory, Long lessonId, Long testId, Long questionId, Boolean includeInDaily,
             String sessionDate, Double durationSeconds, Integer numSentences, String lineId, String vocabularyId,
-            String source)
+            String source, Double initialScore, Double finalScore, Double toneScore)
             throws Exception {
         logger.info("Received upload: name={} size={} contentType={}",
                 audioFile == null ? null : audioFile.getOriginalFilename(),
@@ -844,8 +844,109 @@ public class IseService {
 
             // Persist attempt to DB if user present
             try {
+                // Extract section-specific scores from response
+                Double extractedInitialScore = null;
+                Double extractedFinalScore = null;
+                Double extractedToneScore = null;
+
+                // For section "cau" (sentence), use total_score directly from sentence result
+                if ("cau".equals(scoreCategory)) {
+                    // Don't extract component scores for sentence section, they're not used
+                    extractedInitialScore = null;
+                    extractedFinalScore = null;
+                    extractedToneScore = null;
+                } else if (wordsResults != null && !wordsResults.isEmpty()) {
+                    // For other sections, calculate average score across all words
+                    double sumInitial = 0.0, sumFinal = 0.0, sumTone = 0.0;
+                    int cntInitial = 0, cntFinal = 0, cntTone = 0;
+
+                    for (int i = 0; i < wordsResults.size(); i++) {
+                        JSONObject word = wordsResults.get(i);
+                        Double wordInitial = null, wordFinal = null, wordTone = null;
+
+                        // Try to get from details first
+                        if (word.containsKey("details")) {
+                            JSONObject details = word.getJSONObject("details");
+                            if (details != null) {
+                                wordInitial = details.getDouble("initial_score");
+                                wordFinal = details.getDouble("final_score");
+                                wordTone = details.getDouble("tone_score");
+                            }
+                        }
+
+                        // Fallback: try to get directly from word object
+                        if (wordInitial == null && word.containsKey("initial_score")) {
+                            wordInitial = word.getDouble("initial_score");
+                        }
+                        if (wordFinal == null && word.containsKey("final_score")) {
+                            wordFinal = word.getDouble("final_score");
+                        }
+                        if (wordTone == null && word.containsKey("tone_score")) {
+                            wordTone = word.getDouble("tone_score");
+                        }
+
+                        // Accumulate scores (skip null values)
+                        if (wordInitial != null && wordInitial > 0.0) {
+                            sumInitial += wordInitial;
+                            cntInitial++;
+                        }
+                        if (wordFinal != null) {
+                            sumFinal += wordFinal;
+                            cntFinal++;
+                        }
+                        if (wordTone != null) {
+                            sumTone += wordTone;
+                            cntTone++;
+                        }
+                    }
+
+                    // Calculate averages
+                    extractedInitialScore = cntInitial > 0 ? sumInitial / cntInitial : null;
+                    extractedFinalScore = cntFinal > 0 ? sumFinal / cntFinal : null;
+                    extractedToneScore = cntTone > 0 ? sumTone / cntTone : null;
+                }
+
+                // Use provided scores from parameters, or fallback to extracted scores
+                Double finalInitialScore = initialScore != null ? initialScore : extractedInitialScore;
+                Double finalFinalScore = finalScore != null ? finalScore : extractedFinalScore;
+                Double finalToneScore = toneScore != null ? toneScore : extractedToneScore;
+
                 IseScore score = new IseScore();
-                score.setTotalScore(sentenceResult.getDoubleValue("total_score"));
+
+                // For word mode (single character), use words[0].overall/pronunciation instead
+                // of total_score
+                // because frontend displays words[0].overall in word mode
+                Double totalScoreToSave = sentenceResult.getDoubleValue("total_score");
+                logger.info("🔍 sentenceResult total_score={}, response has words={}", totalScoreToSave,
+                        response.containsKey("words"));
+                // Check words array from response object, not sentenceResult
+                if (wordsResults != null && !wordsResults.isEmpty()) {
+                    logger.info("ISE response has {} words", wordsResults.size());
+                    if (wordsResults.size() == 1) {
+                        com.alibaba.fastjson.JSONObject firstWord = wordsResults.get(0);
+                        if (firstWord != null) {
+                            logger.info("First word object: {}", firstWord.toJSONString());
+                            // Try overall first, then pronunciation, then score
+                            if (firstWord.containsKey("overall")) {
+                                totalScoreToSave = firstWord.getDoubleValue("overall");
+                                logger.info("Using words[0].overall={} instead of total_score={}",
+                                        totalScoreToSave, sentenceResult.getDoubleValue("total_score"));
+                            } else if (firstWord.containsKey("pronunciation")) {
+                                totalScoreToSave = firstWord.getDoubleValue("pronunciation");
+                                logger.info("Using words[0].pronunciation={} instead of total_score={}",
+                                        totalScoreToSave, sentenceResult.getDoubleValue("total_score"));
+                            } else if (firstWord.containsKey("score")) {
+                                totalScoreToSave = firstWord.getDoubleValue("score");
+                                logger.info("Using words[0].score={} instead of total_score={}",
+                                        totalScoreToSave, sentenceResult.getDoubleValue("total_score"));
+                            } else {
+                                logger.warn("First word has no overall/pronunciation/score field, using total_score");
+                            }
+                        }
+                    }
+                }
+                score.setTotalScore(totalScoreToSave);
+
                 // map fields: fluency/completeness if available
                 if (sentenceResult.containsKey("fluency"))
                     score.setFluency(sentenceResult.getDoubleValue("fluency"));
@@ -1025,41 +1126,142 @@ public class IseService {
                         logger.info("[IseService] skipping IseLessonEntry persist because saved.lessonId is null");
                     }
 
-                    // persist test entry when testId present
+                    // Persist test entry when testId present (with duplicate check)
                     if (saved.getTestId() != null) {
-                        com.bucha.entity.IseTestEntry te = new com.bucha.entity.IseTestEntry();
-                        te.setAttemptId(saved.getId());
-                        te.setTestId(saved.getTestId());
-                        te.setTotalScore(saved.getTotalScore());
-                        te.setDurationSeconds(saved.getDurationSeconds());
-                        te.setSessionDate(saved.getSessionDate());
-                        if (saved.getUser() != null)
-                            te.setUser(saved.getUser());
-
-                        // Map section field based on scoreCategory when available
                         try {
-                            String cat = scoreCategory == null ? null : String.valueOf(scoreCategory).toLowerCase();
-                            if (cat != null) {
-                                switch (cat) {
-                                    case "thanh-mau":
-                                        te.setInitialScore(saved.getTotalScore());
-                                        break;
-                                    case "van-mau":
-                                        te.setFinalScore(saved.getTotalScore());
-                                        break;
-                                    case "thanh-dieu":
-                                        te.setToneScore(saved.getTotalScore());
-                                        break;
-                                    case "cau":
-                                        te.setSentenceScore(saved.getTotalScore());
-                                        break;
-                                    default:
-                                        // leave section-specific fields null
-                                }
+                            // Total score is always the overall score from ISE
+                            Double currentTotalScore = saved.getTotalScore();
+
+                            // Skip duplicate check if questionId is null - always create new entry
+                            // This prevents all null questionId entries from updating the same record
+                            Optional<com.bucha.entity.IseTestEntry> existingOpt = Optional.empty();
+                            if (questionId != null) {
+                                // Find existing entry for this test+user+question (best of 3 attempts per
+                                // question)
+                                existingOpt = iseTestEntryRepository
+                                        .findTopByTestIdAndUserAndQuestionIdOrderByIdDesc(saved.getTestId(),
+                                                saved.getUser(), questionId);
                             }
-                        } catch (Throwable ignore) {
+
+                            com.bucha.entity.IseTestEntry te;
+                            boolean shouldSave = false;
+
+                            if (existingOpt.isPresent()) {
+                                te = existingOpt.get();
+
+                                // Update total score if higher (total score is independent of section)
+                                if (te.getTotalScore() == null || currentTotalScore > te.getTotalScore()) {
+                                    te.setTotalScore(currentTotalScore);
+                                    shouldSave = true;
+                                    logger.info("Updating total score from {} to {}", te.getTotalScore(),
+                                            currentTotalScore);
+                                }
+
+                                // Update component score based on current section only
+                                if ("thanh-mau".equals(scoreCategory) && finalInitialScore != null) {
+                                    Double existingInitial = te.getInitialScore();
+                                    if (existingInitial == null || finalInitialScore > existingInitial) {
+                                        te.setInitialScore(finalInitialScore);
+                                        shouldSave = true;
+                                        logger.info("Updating initial score from {} to {}", existingInitial,
+                                                finalInitialScore);
+                                    }
+                                }
+
+                                if ("van-mau".equals(scoreCategory) && finalFinalScore != null) {
+                                    Double existingFinal = te.getFinalScore();
+                                    if (existingFinal == null || finalFinalScore > existingFinal) {
+                                        te.setFinalScore(finalFinalScore);
+                                        shouldSave = true;
+                                        logger.info("Updating final score from {} to {}", existingFinal,
+                                                finalFinalScore);
+                                    }
+                                }
+
+                                if ("thanh-dieu".equals(scoreCategory) && finalToneScore != null) {
+                                    Double existingTone = te.getToneScore();
+                                    if (existingTone == null || finalToneScore > existingTone) {
+                                        te.setToneScore(finalToneScore);
+                                        shouldSave = true;
+                                        logger.info("Updating tone score from {} to {}", existingTone, finalToneScore);
+                                    }
+                                }
+
+                                if ("cau".equals(scoreCategory) && currentTotalScore != null) {
+                                    Double existingSentence = te.getSentenceScore();
+                                    if (existingSentence == null || currentTotalScore > existingSentence) {
+                                        te.setSentenceScore(currentTotalScore);
+                                        shouldSave = true;
+                                        logger.info("Updating sentence score from {} to {}", existingSentence,
+                                                currentTotalScore);
+                                    }
+                                }
+
+                                // Update attemptId to latest if any score was updated
+                                if (shouldSave) {
+                                    te.setAttemptId(saved.getId());
+                                }
+                            } else {
+                                // Create new entry
+                                te = new com.bucha.entity.IseTestEntry();
+                                te.setAttemptId(saved.getId());
+                                te.setTestId(saved.getTestId());
+                                te.setQuestionId(questionId);
+                                te.setTotalScore(currentTotalScore);
+                                te.setDurationSeconds(saved.getDurationSeconds());
+                                te.setSessionDate(saved.getSessionDate());
+                                if (saved.getUser() != null)
+                                    te.setUser(saved.getUser());
+
+                                // Set component score based on current section only
+                                if ("thanh-mau".equals(scoreCategory) && finalInitialScore != null) {
+                                    te.setInitialScore(finalInitialScore);
+                                    shouldSave = true;
+                                }
+                                if ("van-mau".equals(scoreCategory) && finalFinalScore != null) {
+                                    te.setFinalScore(finalFinalScore);
+                                    shouldSave = true;
+                                }
+                                if ("thanh-dieu".equals(scoreCategory) && finalToneScore != null) {
+                                    te.setToneScore(finalToneScore);
+                                    shouldSave = true;
+                                }
+                                if ("cau".equals(scoreCategory) && currentTotalScore != null) {
+                                    te.setSentenceScore(currentTotalScore);
+                                    shouldSave = true;
+                                }
+
+                                // Always save new entry with totalScore even if no component score
+                                if (!shouldSave) {
+                                    shouldSave = true;
+                                }
+                                logger.info("Creating new test entry for testId={} questionId={}", saved.getTestId(),
+                                        questionId);
+                            }
+
+                            if (shouldSave) {
+                                te = iseTestEntryRepository.save(te);
+                                logger.info(
+                                        "Saved test entry: testId={} questionId={} totalScore={} initial={} final={} tone={} sentence={}",
+                                        saved.getTestId(), questionId, te.getTotalScore(),
+                                        te.getInitialScore(), te.getFinalScore(), te.getToneScore(),
+                                        te.getSentenceScore());
+                            } else {
+                                logger.debug("Skipped save: no score improvement for questionId={}", questionId);
+                            }
+
+                            // Always add saved scores to response for frontend (even if not improved)
+                            JSONObject savedScores = new JSONObject();
+                            savedScores.put("saved_total_score", te.getTotalScore());
+                            savedScores.put("saved_initial_score", te.getInitialScore());
+                            savedScores.put("saved_final_score", te.getFinalScore());
+                            savedScores.put("saved_tone_score", te.getToneScore());
+                            savedScores.put("saved_sentence_score", te.getSentenceScore());
+                            response.put("db_scores", savedScores);
+                            logger.info("Added db_scores to response: {}", savedScores.toJSONString());
+                        } catch (Throwable t) {
+                            logger.warn("Failed to persist test entry: {}", t.getMessage());
                         }
-                        iseTestEntryRepository.save(te);
                     }
                 } catch (Throwable t) {
                     logger.warn("Failed to persist ISE summary entries: {}", t.getMessage());
@@ -1831,15 +2033,18 @@ public class IseService {
                 boolean isFinal = "1".equals(isYun) || pn.matches(".*[aeiouüAEIOU].*");
                 boolean isInitial = !isFinal && !isTone;
 
-                if (isInitial) {
+                if (isInitial && pScore > 0.0) {
+                    // Thanh mẫu: bỏ qua điểm 0
                     initAcc += pScore;
                     initCount++;
                 }
                 if (isFinal) {
+                    // Vận mẫu: tính cả điểm 0
                     finalAcc += pScore;
                     finalCount++;
                 }
                 if (isTone) {
+                    // Thanh điệu: tính cả điểm 0
                     toneAcc += (pToneScore > 0.0d ? pToneScore : pScore);
                     tonePartCount++;
                 }
@@ -1905,14 +2110,19 @@ public class IseService {
 
                 String isYun = p.containsKey("is_yun") ? p.getString("is_yun") : null;
                 if ("1".equals(isYun)) {
+                    // Vận mẫu: tính cả điểm 0
                     sumFinal += phoneScore;
                     cntFinal++;
                 } else {
-                    sumInitial += phoneScore;
-                    cntInitial++;
+                    // Thanh mẫu: bỏ qua điểm 0
+                    if (phoneScore > 0.0) {
+                        sumInitial += phoneScore;
+                        cntInitial++;
+                    }
                 }
 
                 if (p.containsKey("mono_tone") && p.get("mono_tone") != null && !"".equals(p.getString("mono_tone"))) {
+                    // Thanh điệu: tính cả điểm 0
                     sumTone += phoneScore;
                     cntTone++;
                 }
@@ -1924,11 +2134,12 @@ public class IseService {
                 p.put("status", phoneError ? "error" : "ok");
             }
 
-            int completeness = totalPhones == 0 ? 0
-                    : (int) Math.round(100.0 * (totalPhones - errorPhones) / totalPhones);
-            int initialScore = cntInitial == 0 ? 0 : (int) Math.round(sumInitial / cntInitial);
-            int finalScore = cntFinal == 0 ? 0 : (int) Math.round(sumFinal / cntFinal);
-            int toneScore = cntTone == 0 ? 0 : (int) Math.round(sumTone / cntTone);
+            // Keep decimal precision for scores (don't round to int)
+            double completeness = totalPhones == 0 ? 0.0
+                    : 100.0 * (totalPhones - errorPhones) / totalPhones;
+            double initialScore = cntInitial == 0 ? 0.0 : sumInitial / cntInitial;
+            double finalScore = cntFinal == 0 ? 0.0 : sumFinal / cntFinal;
+            double toneScore = cntTone == 0 ? 0.0 : sumTone / cntTone;
 
             JSONObject det = new JSONObject();
             det.put("initial_score", initialScore);
@@ -2098,15 +2309,18 @@ public class IseService {
                 boolean isFinal = "1".equals(isYun) || pn.matches(".*[aeiouüAEIOU].*");
                 boolean isInitial = !isFinal && !isTone;
 
-                if (isInitial) {
+                if (isInitial && pScore > 0.0) {
+                    // Thanh mẫu: bỏ qua điểm 0
                     initAcc += pScore;
                     initCount++;
                 }
                 if (isFinal) {
+                    // Vận mẫu: tính cả điểm 0
                     finalAcc += pScore;
                     finalCount++;
                 }
                 if (isTone) {
+                    // Thanh điệu: tính cả điểm 0
                     toneAcc += (pToneScore > 0.0d ? pToneScore : pScore);
                     toneCount++;
                 }

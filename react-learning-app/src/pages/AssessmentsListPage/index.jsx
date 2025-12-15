@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { assessmentAPI } from "../../services/api"
+import { assessmentAPI, userAPI } from "../../services/api"
 import { Button } from "../AssessmentTestPage/components/ui/button"
 import { Badge } from "../AssessmentTestPage/components/ui/badge"
 
@@ -12,10 +12,26 @@ const AssessmentsListPage = () => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [filter, setFilter] = useState("all")
+    const [hasAssessmentAccess, setHasAssessmentAccess] = useState(false)
+    const [showStartModal, setShowStartModal] = useState(false)
+    const [selectedAssessment, setSelectedAssessment] = useState(null)
 
     useEffect(() => {
-        fetchAssessments()
+        checkAccessAndFetch()
     }, [])
+
+    const checkAccessAndFetch = async () => {
+        try {
+            const profile = await userAPI.getProfile()
+            const hasAccess = profile.email === "dlminhanh272@gmail.com"
+            setHasAssessmentAccess(hasAccess)
+            await fetchAssessments()
+        } catch (err) {
+            console.error("Error checking access:", err)
+            setError("Không thể kiểm tra quyền truy cập")
+            setLoading(false)
+        }
+    }
 
     const fetchAssessments = async () => {
         try {
@@ -42,6 +58,20 @@ const AssessmentsListPage = () => {
         if (filter === "completed") return assessments.filter((a) => a.completed)
         if (filter === "pending") return assessments.filter((a) => !a.completed)
         return assessments
+    }
+
+    const handleStartAssessment = (assessment) => {
+        if (!hasAssessmentAccess) return
+        setSelectedAssessment(assessment)
+        setShowStartModal(true)
+    }
+
+    const handleConfirmStart = () => {
+        if (selectedAssessment) {
+            navigate(`/assessment/${selectedAssessment.id}`)
+        }
+        setShowStartModal(false)
+        setSelectedAssessment(null)
     }
 
     if (loading) {
@@ -196,9 +226,18 @@ const AssessmentsListPage = () => {
                                     <Button
                                         className="w-full"
                                         variant={assessment.completed ? "outline" : "primary"}
-                                        onClick={() => navigate(`/assessment/${assessment.id}`)}
+                                        onClick={() => {
+                                            if (assessment.completed) {
+                                                navigate(`/assessment/${assessment.id}`)
+                                            } else {
+                                                handleStartAssessment(assessment)
+                                            }
+                                        }}
+                                        disabled={!hasAssessmentAccess}
+                                        title={!hasAssessmentAccess ? "Bạn không có quyền truy cập" : ""}
                                     >
-                                        {assessment.completed ? "Xem lại kết quả" : "Bắt đầu kiểm tra"}
+                                        {!hasAssessmentAccess ? "🔒 Không có quyền truy cập" :
+                                            assessment.completed ? "Xem lại kết quả" : "Bắt đầu kiểm tra"}
                                     </Button>
                                 </div>
                             </div>
@@ -206,6 +245,84 @@ const AssessmentsListPage = () => {
                     </div>
                 )}
             </div>
+
+            {/* Start Assessment Modal */}
+            {showStartModal && selectedAssessment && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl p-8 max-w-2xl mx-4 shadow-2xl">
+                        <div className="text-center mb-6">
+                            <div className="text-6xl mb-4">📋</div>
+                            <h3 className="text-2xl font-bold text-slate-900 mb-2">{selectedAssessment.title || "Bài Kiểm Tra"}</h3>
+                            <p className="text-slate-600 mb-6">
+                                Bài kiểm tra toàn diện kỹ năng phát âm tiếng Trung
+                            </p>
+                        </div>
+
+                        <div className="mb-6 space-y-3">
+                            <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
+                                <span className="text-2xl">🎵</span>
+                                <div>
+                                    <div className="font-semibold text-blue-900">Phần A - THANH MẪU</div>
+                                    <div className="text-sm text-blue-700">Phát âm các thanh mẫu cơ bản</div>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg">
+                                <span className="text-2xl">🎤</span>
+                                <div>
+                                    <div className="font-semibold text-green-900">Phần B - VẬN MẪU</div>
+                                    <div className="text-sm text-green-700">Phát âm vận mẫu trong từ vựng</div>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-lg">
+                                <span className="text-2xl">🎶</span>
+                                <div>
+                                    <div className="font-semibold text-purple-900">Phần C - THANH ĐIỆU</div>
+                                    <div className="text-sm text-purple-700">Phát âm 4 thanh điệu chuẩn xác</div>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-4 bg-pink-50 rounded-lg">
+                                <span className="text-2xl">💬</span>
+                                <div>
+                                    <div className="font-semibold text-pink-900">Phần D - CÂU</div>
+                                    <div className="text-sm text-pink-700">Phát âm các câu hoàn chỉnh</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                            <div className="flex items-start gap-2">
+                                <span className="text-xl">⚠️</span>
+                                <div className="text-sm text-amber-800">
+                                    <p className="font-semibold mb-1">Lưu ý:</p>
+                                    <ul className="list-disc list-inside space-y-1">
+                                        <li>Mỗi câu hỏi có tối đa 3 lần thử</li>
+                                        <li>Không thể thoát giữa chừng</li>
+                                        <li>Điểm sẽ được lưu tự động</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <Button
+                                className="flex-1 bg-slate-200 text-slate-700 hover:bg-slate-300"
+                                onClick={() => {
+                                    setShowStartModal(false)
+                                    setSelectedAssessment(null)
+                                }}
+                            >
+                                Hủy
+                            </Button>
+                            <Button
+                                className="flex-1 bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600"
+                                onClick={handleConfirmStart}
+                            >
+                                Bắt đầu ngay →
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

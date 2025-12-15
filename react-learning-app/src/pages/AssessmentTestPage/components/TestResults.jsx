@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "../../AssessmentsListPage/ui/button"
 import { Badge } from "./ui/badge"
 
 const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBack, viewMode = false }) => {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState(null)
+    const [autoSubmitted, setAutoSubmitted] = useState(false)
 
     const calculateTotalScore = () => {
         const sections = ["thanh-mau", "van-mau", "thanh-dieu", "cau"]
@@ -42,6 +43,41 @@ const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBac
             setIsSubmitting(false)
         }
     }
+
+    // Auto-submit when all sections are completed (not in view mode)
+    useEffect(() => {
+        if (!viewMode && !autoSubmitted) {
+            const allSectionsCompleted = ["thanh-mau", "van-mau", "thanh-dieu", "cau"].every(
+                section => sectionResults[section] !== null
+            )
+            
+            if (allSectionsCompleted) {
+                const submit = async () => {
+                    try {
+                        setIsSubmitting(true)
+                        setError(null)
+
+                        const totalScore = calculateTotalScore()
+                        const finalResults = {
+                            assessmentId,
+                            totalScore,
+                            sections: sectionResults,
+                            completedAt: new Date().toISOString(),
+                        }
+
+                        await onSubmit(finalResults)
+                        setAutoSubmitted(true)
+                    } catch (err) {
+                        console.error("Error auto-submitting test:", err)
+                        setError("Không thể nộp bài kiểm tra. Vui lòng thử lại.")
+                        setIsSubmitting(false)
+                    }
+                }
+                submit()
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sectionResults, viewMode, autoSubmitted, assessmentId, onSubmit])
 
     const totalScore = calculateTotalScore()
     const sections = [
@@ -139,7 +175,7 @@ const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBac
             <div className="bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 rounded-2xl shadow-xl p-10 border-2 border-blue-200 mb-8 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-200 rounded-full opacity-10 -mr-32 -mt-32"></div>
                 <div className="text-center relative z-10">
-                    <h2 className="text-2xl font-bold text-slate-900 mb-6">🏆 Điểm Tổng Hợp</h2>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-6">🏆 Điểm Tổng</h2>
                     <div className="relative inline-block">
                         <div className="text-8xl font-bold bg-gradient-to-br from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
                             {totalScore.toFixed(1)}
@@ -149,10 +185,6 @@ const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBac
                         </div>
                     </div>
                     <p className={`text-2xl font-bold mb-6 ${getScoreColor(totalScore)}`}>{getScoreEvaluation(totalScore)}</p>
-                    <div className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold shadow-lg">
-                        <span>📋</span>
-                        <span>Công thức: (A + B + C + D) ÷ 4</span>
-                    </div>
                 </div>
             </div>
 
@@ -247,9 +279,6 @@ const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBac
                         <Button className="flex-1 py-3 text-lg" onClick={onBack}>
                             ← Quay lại danh sách
                         </Button>
-                        <Button className="flex-1 py-3 text-lg bg-transparent" variant="outline" onClick={onBack}>
-                            🔄 Làm lại bài kiểm tra
-                        </Button>
                     </>
                 ) : (
                     <>
@@ -266,12 +295,6 @@ const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBac
                         </Button>
                     </>
                 )}
-            </div>
-
-            <div className="text-center text-sm text-slate-600">
-                <p>
-                    {viewMode ? "Đây là kết quả đã lưu của bạn." : "Điểm của bạn sẽ được lưu lại để theo dõi tiến độ học tập."}
-                </p>
             </div>
         </div>
     )

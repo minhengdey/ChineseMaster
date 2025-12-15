@@ -19,6 +19,8 @@ public class IseTestEntry {
     Long id;
 
     Long testId;
+    Long questionId; // Stores Question.externalId (not Question.id) - tracks which question this
+                     // score is for
     Double totalScore;
     Double durationSeconds;
 

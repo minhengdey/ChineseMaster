@@ -15,12 +15,20 @@ public class SubmitExamRequest {
     @NotNull
     String assessmentId;
 
-    @NotNull
     Map<String, SectionResultDTO> sections;
 
-    @NotNull
     Double totalScore;
 
     String timestamp;
     Integer durationSeconds;
+
+    // Per-item submission fields
+    String section;
+    Long itemId;
+    String itemType;
+    Double fluency;
+    Double completeness;
+    Double initialScore;
+    Double finalScore;
+    Double toneScore;
 }

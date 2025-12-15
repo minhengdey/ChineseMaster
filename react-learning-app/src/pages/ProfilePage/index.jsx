@@ -398,23 +398,11 @@ const ProfilePage = ({ user }) => {
       setIsEditing(false)
       setProfileData((p) => ({ ...p, currentPassword: "", newPassword: "", confirmPassword: "" }))
 
+      // No localStorage - just update in-memory store
       try {
         if (resp && resp.user) {
-          localStorage.setItem("user", JSON.stringify(resp.user))
           try {
             useUserStore.getState().setUser(resp.user)
-          } catch (e) { }
-        } else {
-          try {
-            const raw = localStorage.getItem("user")
-            if (raw) {
-              const u = JSON.parse(raw)
-              u.name = profileData.name
-              localStorage.setItem("user", JSON.stringify(u))
-              try {
-                useUserStore.getState().setUser(u)
-              } catch (e) { }
-            }
           } catch (e) { }
         }
       } catch (e) { }

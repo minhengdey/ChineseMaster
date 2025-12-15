@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { assessmentAPI } from "../../services/api"
+import { assessmentAPI, userAPI } from "../../services/api"
 import TestSection from "./components/TestSection"
 import TestResults from "./components/TestResults"
 import { Button } from "./components/ui/button"
@@ -24,11 +24,72 @@ const AssessmentTestPage = () => {
     const [testStarted, setTestStarted] = useState(false)
     const [testData, setTestData] = useState(null)
     const [viewMode, setViewMode] = useState(false)
+    const [showExitWarning, setShowExitWarning] = useState(false)
+    const [pendingNavigation, setPendingNavigation] = useState(null)
+
+    // Check if test is in progress (for blocking navigation)
+    const isTestInProgress = testStarted && !viewMode && currentSection !== "results" && currentSection !== "intro"
+
+    // Add beforeunload warning when test is in progress
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (isTestInProgress) {
+                e.preventDefault()
+                e.returnValue = "Bạn đang làm bài kiểm tra. Nếu thoát ra bây giờ, dữ liệu có thể bị mất. Bạn có chắc muốn thoát?"
+                return e.returnValue
+            }
+        }
+
+        window.addEventListener("beforeunload", handleBeforeUnload)
+        return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+    }, [isTestInProgress])
+
+    // Intercept navigation attempts when test is in progress
+    useEffect(() => {
+        const handleClick = (e) => {
+            if (!isTestInProgress) return
+
+            // Check if click is on a link or inside a link
+            const link = e.target.closest('a')
+            if (link && link.href) {
+                // Check if it's an internal navigation (not external link)
+                const currentOrigin = window.location.origin
+                const linkUrl = new URL(link.href, currentOrigin)
+
+                if (linkUrl.origin === currentOrigin && linkUrl.pathname !== window.location.pathname) {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setPendingNavigation(linkUrl.pathname)
+                    setShowExitWarning(true)
+                }
+            }
+        }
+
+        document.addEventListener('click', handleClick, true)
+        return () => document.removeEventListener('click', handleClick, true)
+    }, [isTestInProgress])
 
     useEffect(() => {
         const fetchAssessment = async () => {
             try {
                 setLoading(true)
+
+                // Check access permission first
+                try {
+                    const profile = await userAPI.getProfile()
+                    if (profile.email !== "dlminhanh272@gmail.com") {
+                        setError("Bạn không có quyền truy cập bài kiểm tra này")
+                        setLoading(false)
+                        setTimeout(() => navigate("/assessments"), 2000)
+                        return
+                    }
+                } catch (err) {
+                    console.error("Error checking access:", err)
+                    setError("Không thể xác thực quyền truy cập")
+                    setLoading(false)
+                    return
+                }
+
                 const assessmentData = await assessmentAPI.getAssessmentById(assessmentId)
                 setAssessment(assessmentData)
 
@@ -66,10 +127,23 @@ const AssessmentTestPage = () => {
         }
     }, [assessmentId])
 
-    const handleStartTest = () => {
-        setTestStarted(true)
-        setCurrentSection("thanh-mau")
-    }
+    // Auto-start test when page loads (skip intro screen)
+    useEffect(() => {
+        const startTest = async () => {
+            if (assessment && testData && !testStarted && !viewMode && currentSection === "intro") {
+                try {
+                    console.log("Auto-starting test...")
+                    await assessmentAPI.startAssessment(assessmentId)
+                    setTestStarted(true)
+                    setCurrentSection("thanh-mau")
+                } catch (err) {
+                    console.error("Error auto-starting test:", err)
+                    setError("Không thể bắt đầu bài kiểm tra. Vui lòng thử lại.")
+                }
+            }
+        }
+        startTest()
+    }, [assessment, testData, testStarted, viewMode, currentSection, assessmentId])
 
     const handleSectionComplete = (sectionName, result) => {
         setSectionResults((prev) => ({
@@ -166,95 +240,7 @@ const AssessmentTestPage = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {!testStarted ? (
-                    <div className="max-w-4xl mx-auto">
-                        <div className="mb-8 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 rounded-3xl p-8 text-white shadow-xl">
-                            <div className="flex items-center gap-4 mb-3">
-                                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
-                                    <span className="text-4xl">📋</span>
-                                </div>
-                                <div>
-                                    <h1 className="text-4xl font-bold mb-1">Bài Kiểm Tra Toàn Diện</h1>
-                                    <p className="text-purple-100">Kiểm tra kỹ năng phát âm qua 4 phần</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-3">{assessment?.title || "Bài Kiểm Tra"}</h2>
-                            {assessment?.description && <p className="text-slate-600 mb-8 text-lg">{assessment.description}</p>}
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                                {[
-                                    {
-                                        label: "A",
-                                        title: "THANH MẪU",
-                                        desc: "Luyện tập phát âm các thanh mẫu cơ bản",
-                                        color: "from-blue-50 to-blue-100 border-blue-200",
-                                        textColor: "text-blue-900 bg-blue-500",
-                                    },
-                                    {
-                                        label: "B",
-                                        title: "VẬN MẪU",
-                                        desc: "Luyện tập vận dụng trong từng từ vựng",
-                                        color: "from-green-50 to-green-100 border-green-200",
-                                        textColor: "text-green-900 bg-green-500",
-                                    },
-                                    {
-                                        label: "C",
-                                        title: "THANH ĐIỆU",
-                                        desc: "Luyện tập thanh điệu chính xác",
-                                        color: "from-amber-50 to-amber-100 border-amber-200",
-                                        textColor: "text-amber-900 bg-amber-500",
-                                    },
-                                    {
-                                        label: "D",
-                                        title: "CÂU",
-                                        desc: "Phát âm câu hoàn chỉnh",
-                                        color: "from-purple-50 to-purple-100 border-purple-200",
-                                        textColor: "text-purple-900 bg-purple-500",
-                                    },
-                                ].map((section) => (
-                                    <div
-                                        key={section.label}
-                                        className={`flex items-start gap-4 p-5 bg-gradient-to-br ${section.color} rounded-xl border-2 hover:shadow-md transition-shadow`}
-                                    >
-                                        <div
-                                            className={`flex-shrink-0 w-12 h-12 ${section.textColor} text-white rounded-lg flex items-center justify-center font-bold text-xl`}
-                                        >
-                                            {section.label}
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className={`font-bold ${section.textColor} text-lg mb-1`}>{section.title}</h3>
-                                            <p className={`text-sm ${section.textColor} opacity-75`}>{section.desc}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-5 mb-8 border border-slate-200">
-                                <div className="flex items-start gap-3">
-                                    <span className="text-2xl">ℹ️</span>
-                                    <div>
-                                        <p className="font-semibold text-slate-900 mb-1">Cách tính điểm</p>
-                                        <p className="text-sm text-slate-700">
-                                            Tổng điểm = (Điểm phần A + Điểm phần B + Điểm phần C + Điểm phần D) / 4
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <Button className="flex-1 text-lg py-3" onClick={handleStartTest}>
-                                    ▶ Bắt đầu kiểm tra
-                                </Button>
-                                <Button className="flex-1 text-lg py-3 bg-transparent" variant="outline" onClick={handleBackToIntro}>
-                                    ← Quay lại
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                ) : currentSection === "results" ? (
+                {currentSection === "results" ? (
                     <TestResults
                         sectionResults={sectionResults}
                         assessment={assessment}
@@ -274,6 +260,46 @@ const AssessmentTestPage = () => {
                     />
                 )}
             </div>
+
+            {/* Exit Warning Modal */}
+            {showExitWarning && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
+                        <div className="text-center mb-6">
+                            <div className="text-6xl mb-4">⚠️</div>
+                            <h3 className="text-2xl font-bold text-slate-900 mb-2">Cảnh báo</h3>
+                            <p className="text-slate-600">
+                                Bạn đang làm bài kiểm tra. Nếu rời khỏi trang này, dữ liệu có thể bị mất.
+                            </p>
+                            <p className="text-slate-600 font-semibold mt-2">
+                                Bạn có chắc chắn muốn thoát?
+                            </p>
+                        </div>
+                        <div className="flex gap-3">
+                            <Button
+                                className="flex-1 bg-slate-200 text-slate-700 hover:bg-slate-300"
+                                onClick={() => {
+                                    setShowExitWarning(false)
+                                    setPendingNavigation(null)
+                                }}
+                            >
+                                ← Ở lại
+                            </Button>
+                            <Button
+                                className="flex-1 bg-red-500 text-white hover:bg-red-600"
+                                onClick={() => {
+                                    setShowExitWarning(false)
+                                    if (pendingNavigation) {
+                                        navigate(pendingNavigation)
+                                    }
+                                }}
+                            >
+                                Thoát →
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

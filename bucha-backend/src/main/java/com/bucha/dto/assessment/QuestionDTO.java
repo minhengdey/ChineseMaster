@@ -17,4 +17,5 @@ public class QuestionDTO {
     Integer order;
     String content;
     String audioPublicId;
+    String audioUrl;
 }

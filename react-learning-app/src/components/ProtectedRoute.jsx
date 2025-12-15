@@ -1,14 +1,39 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Outlet } from "react-router-dom"
 import { useUserStore } from "../store/UserStore"
-import { authAPI, userAPI } from "../services/api"
+import { userAPI } from "../services/api"
 import { Navigate } from "react-router-dom"
 
 export default function ProtectedRoute({ children }) {
   const user = useUserStore((state) => state.user)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [authError, setAuthError] = useState(false)
+
+  useEffect(() => {
+    // If user already in store, no need to fetch
+    if (user != null) {
+      console.log("User already in store:", user)
+      setIsLoading(false)
+      return
+    }
+
+    console.log("Fetching user profile from API...")
+    // Fetch user from API using httpOnly cookie
+    userAPI
+      .getProfile()
+      .then((userData) => {
+        console.log("User profile fetched:", userData)
+        useUserStore.getState().setUser(userData)
+        setIsLoading(false)
+      })
+      .catch((error) => {
+        console.error("Failed to fetch user profile:", error)
+        setAuthError(true)
+        setIsLoading(false)
+      })
+  }, [user])
 
   if (isLoading) {
     return (
@@ -21,36 +46,9 @@ export default function ProtectedRoute({ children }) {
     )
   }
 
-  if (user == null) {
-    if (localStorage.getItem("accessToken")) {
-      setIsLoading(true)
-      authAPI
-        .verifyToken()
-        .then((data) => {
-          userAPI
-            .getProfile()
-            .then((userData) => {
-              useUserStore.getState().setUser(userData)
-            })
-            .catch((error) => {
-              console.error("Failed to fetch user profile:", error)
-              localStorage.removeItem("accessToken")
-              localStorage.removeItem("refreshToken")
-              localStorage.removeItem("user")
-              return <Navigate to="/login" />
-            })
-        })
-        .catch((error) => {
-          console.error("Token verification failed:", error)
-          localStorage.removeItem("accessToken")
-          localStorage.removeItem("refreshToken")
-          localStorage.removeItem("user")
-          return <Navigate to="/login" />
-        })
-        .finally(() => setIsLoading(false))
-    } else {
-      return <Navigate to="/login" />
-    }
+  // If auth error or no user after loading, redirect to login
+  if (authError || user == null) {
+    return <Navigate to="/login" replace />
   }
 
   return (

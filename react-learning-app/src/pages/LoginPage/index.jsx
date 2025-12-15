@@ -9,7 +9,10 @@ export default function LoginPage() {
   const [activeTab, setActiveTab] = useState("login")
 
   const onLogin = () => {
-    window.location.href = "/"
+    // Small delay to ensure cookie is saved by browser before redirect
+    setTimeout(() => {
+      window.location.href = "/"
+    }, 100)
   }
 
   return (

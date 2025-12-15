@@ -3,22 +3,68 @@
 import { useState, useEffect, useRef } from "react"
 import { createRecorder, computeSha256Hex, playBlobSafely } from "../../../utils/audioUtils"
 import { iseAPI } from "../../../services/api"
+import { assessmentAPI } from "../../../services/api"
 import { Button } from "../../AssessmentsListPage/ui/button"
+import SentencePronunciationResult from "../../LessonDetailPage/components/SentencePronunciationResult"
 
 const TestSection = ({ section, assessmentId, testData, assessment, onComplete, onCancel }) => {
     const [items, setItems] = useState([])
     const [currentItemIndex, setCurrentItemIndex] = useState(0)
-    const [itemScores, setItemScores] = useState([])
+    const [itemScores, setItemScores] = useState([]) // Final scores (highest from attempts)
     const [itemAttempts, setItemAttempts] = useState([]) // Track attempts per item
+    const [bestScores, setBestScores] = useState([]) // Track best score and result for each item
     const [currentAttemptCount, setCurrentAttemptCount] = useState(0) // Current item attempt count (0-2)
     const [currentAttemptResult, setCurrentAttemptResult] = useState(null) // Display result after scoring
-    const [loading, setLoading] = useState(true)
+    const [pageLoading, setPageLoading] = useState(true)
     const [recordingState, setRecordingState] = useState("idle") // idle, recording, analyzing
     const [audioBlob, setAudioBlob] = useState(null)
-    const [sectionScore, setSectionScore] = useState(null)
-    const [allItemsCompleted, setAllItemsCompleted] = useState(false)
     const [error, setError] = useState(null)
     const mediaRecorderRef = useRef(null)
+
+    // Helpers to normalize scoring from various API shapes
+    const toNumber = (v, fallback = 0) => {
+        const n = Number(v)
+        return Number.isFinite(n) ? n : fallback
+    }
+
+    const clamp = (n, min = 0, max = 100) => Math.min(Math.max(n, min), max)
+
+    const normalizeApiResult = (raw) => {
+        if (!raw) return {
+            total_score: 0,
+            fluency: null,
+            completeness: null,
+            wrong_words: [],
+            sid: null,
+            status: null,
+            raw_xml: null,
+            words: [],
+            is_rejected: false,
+            except_info: null,
+            warning: null,
+            db_scores: null,
+        }
+
+        const sent = raw?.sentence || {}
+        const words = Array.isArray(raw?.words) ? raw.words : (Array.isArray(sent?.words) ? sent.words : [])
+
+        return {
+            total_score: sent?.total_score ?? raw?.total_score ?? raw?.totalScore ?? raw?.overall ?? 0,
+            fluency: sent?.fluency ?? raw?.fluency ?? null,
+            completeness: sent?.completeness ?? raw?.completeness ?? null,
+            wrong_words: sent?.wrong_words ?? raw?.wrong_words ?? raw?.wrongWords ?? [],
+            sid: sent?.sid ?? raw?.sid ?? null,
+            status: sent?.status ?? raw?.status ?? null,
+            raw_xml: sent?.raw_xml ?? raw?.raw_xml ?? null,
+            words,
+            is_rejected: sent?.is_rejected ?? raw?.is_rejected ?? false,
+            except_info: sent?.except_info ?? raw?.except_info ?? null,
+            warning: sent?.warning ?? raw?.warning ?? null,
+            db_scores: raw?.db_scores ?? null,
+        }
+    }
+
+    // Backend handles all scoring - frontend only displays scores from db_scores
 
     // Initialize section items based on section type
     useEffect(() => {
@@ -36,6 +82,7 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                         vocabularyId: item.vocabularyId || item.id,
                         externalId: item.externalId || item.id,
                         audioPublicId: item.audioPublicId,
+                        audioUrl: item.audioUrl,
                     }))
                 } else if (section === "van-mau" && testData?.vanMau) {
                     sectionItems = testData.vanMau.map((item) => ({
@@ -47,6 +94,7 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                         vocabularyId: item.vocabularyId || item.id,
                         externalId: item.externalId || item.id,
                         audioPublicId: item.audioPublicId,
+                        audioUrl: item.audioUrl,
                     }))
                 } else if (section === "thanh-dieu" && testData?.thanhDieu) {
                     sectionItems = testData.thanhDieu.map((item) => ({
@@ -58,6 +106,7 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                         vocabularyId: item.vocabularyId || item.id,
                         externalId: item.externalId || item.id,
                         audioPublicId: item.audioPublicId,
+                        audioUrl: item.audioUrl,
                     }))
                 } else if (section === "cau" && testData?.sentences) {
                     sectionItems = testData.sentences.map((item) => ({
@@ -66,26 +115,45 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                         text: item.content,
                         pinyin: item.pinyin,
                         meaning: item.meaning,
+                        externalId: item.externalId || item.id,
                         lineId: item.externalId || item.id,
                         audioPublicId: item.audioPublicId,
+                        audioUrl: item.audioUrl,
                     }))
                 }
 
                 setItems(sectionItems)
+                // Reset index and related states when section items load to avoid stale indices
+                setCurrentItemIndex(0)
                 setItemScores(new Array(sectionItems.length).fill(null))
                 setItemAttempts(new Array(sectionItems.length).fill(null).map(() => []))
-                setLoading(false)
+                setBestScores(new Array(sectionItems.length).fill(null))
+                setPageLoading(false)
             } catch (err) {
                 console.error("Error loading section items:", err)
                 setError("Không thể tải dữ liệu phần kiểm tra")
-                setLoading(false)
+                setPageLoading(false)
             }
         }
 
         loadSectionItems()
     }, [section, testData])
 
-    const currentItem = items[currentItemIndex]
+    // Ensure current index is within bounds; fallback to first item
+    const currentItem = items && items.length > 0
+        ? items[Math.min(Math.max(currentItemIndex, 0), items.length - 1)]
+        : null
+    // Derive helper flags to avoid mis-typing and keep logic consistent
+    const isWord = currentItem?.type === "word"
+    const isSentence = currentItem?.type === "sentence"
+
+    // Auto-correct out-of-range index when items change
+    useEffect(() => {
+        if (items.length === 0) return
+        if (currentItemIndex < 0 || currentItemIndex >= items.length) {
+            setCurrentItemIndex(0)
+        }
+    }, [items])
 
     const startRecording = async () => {
         setRecordingState("recording")
@@ -110,21 +178,45 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
 
         try {
             const rec = mediaRecorderRef.current
-            const { blob, stream } = await rec.stop()
 
+            // Request any remaining data before stopping
             try {
-                if (stream && stream.getTracks) stream.getTracks().forEach((t) => t.stop())
+                if (typeof rec.requestData === "function") {
+                    rec.requestData()
+                }
             } catch (e) {
                 /* ignore */
             }
 
+            const { blob, stream } = await rec.stop()
+
+            // Stop all tracks
+            try {
+                if (stream && stream.getTracks) {
+                    stream.getTracks().forEach((t) => t.stop())
+                }
+            } catch (e) {
+                /* ignore */
+            }
+
+            // Verify blob is valid
+            if (!blob || blob.size === 0) {
+                setError("Bản ghi âm không hợp lệ. Vui lòng thử lại.")
+                setRecordingState("idle")
+                setAudioBlob(null)
+                return
+            }
+
             setAudioBlob(blob)
-            // Auto-submit after recording
-            setTimeout(() => submitRecording(blob), 150)
+            // Auto-submit after recording (give a small delay to ensure blob is ready)
+            setTimeout(() => {
+                submitRecording(blob)
+            }, 200)
         } catch (err) {
             console.error("Error stopping recording:", err)
             setError("Không thể hoàn tất ghi âm. Vui lòng thử lại.")
             setRecordingState("idle")
+            setAudioBlob(null)
         }
     }
 
@@ -142,38 +234,44 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
         }
 
         try {
-            const mime = blob.type || "audio/webm"
-            const size = blob.size
-            const sha256 = await computeSha256Hex(blob)
+            setError(null)
+
+            // Convert blob to File object (same as SpeakingPracticePage)
+            const file = new File([blob], "recording.webm", { type: blob.type || "audio/webm" })
             const textToAnalyze = currentItem.text
 
             let result
 
-            if (currentItem.type === "word") {
-                // Score word
+            if (isWord) {
+                // Score word (assessment): only send testId
                 const payload = {
                     text: textToAnalyze,
-                    audioFile: blob,
-                    mimeType: mime,
-                    size: String(size),
-                    sha256,
+                    audioFile: file,
+                    includeInDaily: false,
                 }
-                if (currentItem.vocabularyId) payload.vocabularyId = String(currentItem.vocabularyId)
                 if (assessmentId) payload.testId = String(assessmentId)
+                if (currentItem.externalId) payload.questionId = String(currentItem.externalId)
                 if (section) payload.scoreCategory = String(section)
 
                 result = await iseAPI.scoreWord(payload)
-            } else if (currentItem.type === "sentence") {
+            } else if (isSentence) {
                 // Score sentence
+                console.log("📍 Sentence scoring - currentItem:", {
+                    externalId: currentItem.externalId,
+                    id: currentItem.id,
+                    text: currentItem.text
+                })
+
                 const payload = {
                     text: textToAnalyze,
-                    audioFile: blob,
-                    mimeType: mime,
-                    size: String(size),
-                    sha256,
+                    audioFile: file,
+                    sub: "ise",
+                    ent: "cn_vip",
+                    includeInDaily: false,
                 }
                 if (assessmentId) payload.testId = String(assessmentId)
-                if (currentItem.lineId) payload.lineId = String(currentItem.lineId)
+                if (currentItem.externalId) payload.questionId = String(currentItem.externalId)
+                else payload.questionId = String(currentItem.id)
                 if (section) payload.scoreCategory = String(section)
 
                 result = await iseAPI.scoreSentence(payload)
@@ -185,49 +283,96 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                 return
             }
 
-            // Extract score from result
-            const score = extractScore(result)
-            const updatedScores = [...itemScores]
-            updatedScores[currentItemIndex] = score
-            setItemScores(updatedScores)
+            // Normalize API response
+            const normalized = normalizeApiResult(result)
+            const dbScores = normalized?.db_scores
 
-            // Store attempt details
+            if (!dbScores) {
+                console.error("No db_scores in response from backend")
+                setError("Không nhận được điểm từ server. Vui lòng thử lại.")
+                setRecordingState("idle")
+                return
+            }
+
+            console.log("🔍 ISE Response Debug:", {
+                ise_total_score: normalized?.total_score,  // Điểm từ ISE API (lần thử hiện tại)
+                db_saved_total_score: dbScores.saved_total_score,  // Điểm cao nhất trong DB
+                raw_result: result
+            })
+
+            // Backend returns saved scores - use them directly
+            const totalScore = dbScores.saved_total_score ?? 0
+            const sectionScore = (
+                (section === "thanh-mau" && dbScores.saved_initial_score) ||
+                (section === "van-mau" && dbScores.saved_final_score) ||
+                (section === "thanh-dieu" && dbScores.saved_tone_score) ||
+                (section === "cau" && dbScores.saved_sentence_score) ||
+                totalScore
+            )
+
+            console.log("📊 Scores from DB:", {
+                section,
+                itemIndex: currentItemIndex,
+                totalScore,
+                sectionScore,
+                db_scores: dbScores
+            })
+
+            // Store attempt
             const updatedAttempts = [...itemAttempts]
             if (!updatedAttempts[currentItemIndex]) updatedAttempts[currentItemIndex] = []
             updatedAttempts[currentItemIndex].push({
                 attemptNumber: currentAttemptCount + 1,
-                score: score,
-                result: result,
+                score: sectionScore,
+                result: normalized,
             })
             setItemAttempts(updatedAttempts)
 
-            // Show result display
+            // Update best score (backend already saved the best, we just track for UI)
+            const updatedBestScores = [...bestScores]
+            const currentBest = updatedBestScores[currentItemIndex]
+            const currentBestTotal = currentBest?.result?.db_scores?.saved_total_score ?? 0
+
+            if (!currentBest || totalScore > currentBestTotal) {
+                updatedBestScores[currentItemIndex] = {
+                    score: sectionScore,
+                    result: normalized,
+                }
+                setBestScores(updatedBestScores)
+
+                // Store total_score for average calculation
+                const updatedScores = [...itemScores]
+                updatedScores[currentItemIndex] = totalScore
+                setItemScores(updatedScores)
+            }
+
+            console.log("🎯 Setting currentAttemptResult:", {
+                attemptNumber: currentAttemptCount + 1,
+                score: sectionScore,
+                result_total_score: normalized?.total_score,
+                result_db_scores: normalized?.db_scores
+            })
+
+            // Show result - all data from backend response
             setCurrentAttemptResult({
                 attemptNumber: currentAttemptCount + 1,
-                score: score,
-                result: result,
+                score: sectionScore, // Section-specific score from db_scores
+                result: normalized, // Full response with db_scores
             })
             setRecordingState("idle")
         } catch (err) {
             console.error("Error submitting recording:", err)
-            setError(err.message || "Không thể đánh giá phát âm. Vui lòng thử lại.")
+            const serverMsg = err?.response?.data?.error || err?.response?.data || err?.message || "Không thể đánh giá phát âm. Vui lòng thử lại."
+            const displayMsg = typeof serverMsg === "string" ? serverMsg : JSON.stringify(serverMsg)
+            setError(`Lỗi server: ${displayMsg}`)
             setRecordingState("idle")
         }
     }
 
-    const extractScore = (result) => {
-        // Extract score from ISE response
-        if (!result) return 0
-
-        const raw = result.raw_response ?? result
-        if (typeof raw === "object") {
-            const sent = raw.sentence || {}
-            return sent.total_score ?? raw.total_score ?? raw.totalScore ?? 0
-        }
-        return 0
-    }
 
     const moveToNextItem = () => {
+        // Backend already saved scores when ISE API was called - no need to submit again
+
         setCurrentAttemptCount(0)
         setCurrentAttemptResult(null)
         setAudioBlob(null)
@@ -237,17 +382,42 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
         if (currentItemIndex < items.length - 1) {
             setCurrentItemIndex(currentItemIndex + 1)
         } else {
-            // Section complete
-            const avgScore = itemScores.filter((s) => s !== null).reduce((a, b) => a + b, 0) / itemScores.filter((s) => s !== null).length
-            setSectionScore(avgScore)
-            setAllItemsCompleted(true)
+            // Section complete - move to next section
+            const scored = itemScores.filter((s) => s !== null && Number.isFinite(Number(s)))
+            const avgScore = scored.length ? (scored.reduce((a, b) => Number(a) + Number(b), 0) / scored.length) : 0
+
+            console.log("📈 Section complete:", {
+                section,
+                itemScores,
+                scored,
+                avgScore
+            })
+
+            onComplete(section, {
+                section,
+                scores: itemScores,
+                averageScore: avgScore,
+                items: items.map((item, idx) => ({
+                    ...item,
+                    score: itemScores[idx],
+                })),
+            })
         }
     }
 
     const handleSkipItem = () => {
+        // Mark as skipped (score 0) in local state only
         const updatedScores = [...itemScores]
         updatedScores[currentItemIndex] = 0
         setItemScores(updatedScores)
+
+        const updatedBestScores = [...bestScores]
+        updatedBestScores[currentItemIndex] = {
+            score: 0,
+            result: null,
+        }
+        setBestScores(updatedBestScores)
+
         moveToNextItem()
     }
 
@@ -260,21 +430,68 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
         }
     }
 
-    const handleCompleteSection = () => {
-        if (sectionScore !== null) {
-            onComplete(section, {
-                section,
-                scores: itemScores,
-                averageScore: sectionScore,
-                items: items.map((item, idx) => ({
-                    ...item,
-                    score: itemScores[idx],
-                })),
-            })
+    // Play the original reference audio for the current item (sentence/word)
+    const playReferenceAudio = async () => {
+        try {
+            // Prefer direct URL if BE returned it
+            if (currentItem?.audioUrl) {
+                try {
+                    const audio = new Audio()
+                    audio.crossOrigin = "anonymous"
+                    audio.src = currentItem.audioUrl
+                    await new Promise((resolve, reject) => {
+                        const onReady = () => {
+                            audio.removeEventListener("canplaythrough", onReady)
+                            resolve()
+                        }
+                        const onErr = (e) => {
+                            audio.removeEventListener("error", onErr)
+                            reject(e)
+                        }
+                        audio.addEventListener("canplaythrough", onReady, { once: true })
+                        audio.addEventListener("error", onErr, { once: true })
+                    })
+                    await audio.play()
+                    return
+                } catch (e) {
+                    // Fallback: fetch as blob then play via Blob to bypass CORS/autoplay quirks
+                    try {
+                        const res = await fetch(currentItem.audioUrl)
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+                        const blob = await res.blob()
+                        await playBlobSafely(blob)
+                        return
+                    } catch (e2) {
+                        console.error("Fallback fetch blob failed:", e2)
+                        // Continue to endpoint fallback below
+                    }
+                }
+            }
+
+            if (!currentItem?.audioPublicId && !currentItem?.id) {
+                setError("Không có audio mẫu cho mục này")
+                return
+            }
+
+            // Fallback: proxy via BE endpoint and stream blob
+            const query = currentItem.audioPublicId
+                ? `publicId=${encodeURIComponent(currentItem.audioPublicId)}`
+                : `itemId=${encodeURIComponent(String(currentItem.id))}`
+            const res = await fetch(`/api/questions/audio?${query}`)
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`)
+            }
+            const blob = await res.blob()
+            await playBlobSafely(blob)
+        } catch (err) {
+            console.error("Error playing reference audio:", err)
+            setError("Không thể phát audio mẫu. Vui lòng thử lại.")
         }
     }
 
-    if (loading) {
+    // handleCompleteSection removed - now auto-advances in moveToNextItem
+
+    if (pageLoading) {
         return (
             <div className="flex items-center justify-center py-12">
                 <span className="loading loading-spinner loading-lg"></span>
@@ -286,9 +503,6 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
         return (
             <div className="text-center py-12">
                 <p className="text-slate-600 mb-4">Không có mục kiểm tra cho phần này</p>
-                <Button onClick={onCancel} className="btn btn-primary">
-                    Quay lại
-                </Button>
             </div>
         )
     }
@@ -314,11 +528,11 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
     }
 
     const getScoreBadgeColor = (score) => {
-        if (score === null || score === undefined) return "badge-neutral"
-        if (score >= 85) return "badge-success"
-        if (score >= 70) return "badge-info"
-        if (score >= 50) return "badge-warning"
-        return "badge-error"
+        if (score === null || score === undefined) return "bg-slate-200 text-slate-600"
+        if (score >= 85) return "bg-green-500 text-white"
+        if (score >= 70) return "bg-blue-500 text-white"
+        if (score >= 50) return "bg-yellow-500 text-white"
+        return "bg-red-500 text-white"
     }
 
     const getScoreLabel = (score) => {
@@ -329,41 +543,75 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
         return "Yếu"
     }
 
-    if (allItemsCompleted) {
-        return (
-            <div className="max-w-2xl mx-auto">
-                <div className="bg-white rounded-2xl shadow-lg p-8 border border-slate-200">
-                    <div className="text-center mb-8">
-                        <div className="text-6xl mb-4">✅</div>
-                        <h2 className="text-3xl font-bold text-slate-900 mb-2">{getSectionTitle()}</h2>
-                        <p className="text-2xl font-bold text-blue-600 mb-4">Điểm: {sectionScore?.toFixed(2) || 0}</p>
-                        <p className="text-slate-600 mb-8">Bạn đã hoàn thành phần kiểm tra này!</p>
-                    </div>
+    // Function to check if component has invalid pronunciation (score = 0)
+    const getComponentWarning = (itemIndex) => {
+        const bestScore = bestScores[itemIndex]
+        if (!bestScore || !bestScore.result) return null
 
-                    <div className="mb-8">
-                        <h3 className="font-bold text-slate-900 mb-4">Chi tiết điểm:</h3>
-                        <div className="space-y-2">
-                            {items.map((item, idx) => (
-                                <div
-                                    key={idx}
-                                    className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200"
-                                >
-                                    <span className="text-slate-700">
-                                        {idx + 1}. {item.text} {item.pinyin && `(${item.pinyin})`}
-                                    </span>
-                                    <span className="font-bold text-blue-600">{itemScores[idx]?.toFixed(2) || 0}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+        const normalized = bestScore.result
+        const item = items[itemIndex]
+        const words = Array.isArray(normalized?.words) ? normalized.words : []
 
-                    <Button onClick={handleCompleteSection} className="btn btn-primary w-full">
-                        ➜ Tiếp tục phần tiếp theo
-                    </Button>
-                </div>
-            </div>
-        )
+        if (words.length === 0) return null
+
+        let invalidCount = 0
+        let totalCount = 0
+
+        words.forEach((w) => {
+            const d = w?.details || w || {}
+            let score = NaN
+
+            if (section === "thanh-mau") {
+                score = toNumber(d?.initial_score ?? d?.initialScore ?? d?.initial, NaN)
+            } else if (section === "van-mau") {
+                score = toNumber(d?.final_score ?? d?.finalScore ?? d?.final, NaN)
+            } else if (section === "thanh-dieu") {
+                score = toNumber(d?.tone_score ?? d?.toneScore ?? d?.tone, NaN)
+            }
+
+            if (Number.isFinite(score)) {
+                totalCount++
+                if (score === 0) {
+                    invalidCount++
+                }
+            }
+        })
+
+        // Skip warning for thanh-mau (initial consonants can be legitimately missing)
+        if (section !== "thanh-mau" && invalidCount > 0 && totalCount > 0) {
+            const sectionName = {
+                "van-mau": "Vận mẫu",
+                "thanh-dieu": "Thanh điệu"
+            }[section] || "Phát âm"
+
+            if (invalidCount === totalCount) {
+                return `⚠️ ${sectionName} không được nhận diện hoặc quá ngắn. Hãy phát âm rõ ràng và kéo dài hơn.`
+            } else {
+                return `⚠️ ${invalidCount}/${totalCount} ${sectionName.toLowerCase()} không hợp lệ. Cần phát âm rõ ràng hơn.`
+            }
+        }
+
+        return null
     }
+
+    // Get display score from backend's db_scores
+    const getDisplayScore = (itemIndex) => {
+        const bestScore = bestScores[itemIndex]
+        if (!bestScore?.result?.db_scores) return null
+
+        const dbScores = bestScore.result.db_scores
+
+        // Return section-specific score from DB
+        if (section === "thanh-mau") return clamp(dbScores.saved_initial_score ?? 0)
+        if (section === "van-mau") return clamp(dbScores.saved_final_score ?? 0)
+        if (section === "thanh-dieu") return clamp(dbScores.saved_tone_score ?? 0)
+        if (section === "cau") return clamp(dbScores.saved_sentence_score ?? 0)
+
+        return clamp(dbScores.saved_total_score ?? 0)
+    }
+
+
+    // Section completion now auto-advances, so this screen is removed
 
     return (
         <div className="max-w-2xl mx-auto">
@@ -381,19 +629,52 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                     <div className="mb-8">
                         <div className="text-center mb-8 p-6 bg-slate-50 rounded-lg border border-slate-200">
                             <div className="flex items-center justify-between mb-2">
-                                <div className="text-4xl font-bold text-slate-900">{currentItem.text}</div>
-                                {itemScores[currentItemIndex] !== null && (
-                                    <div className="flex flex-col items-end gap-1">
-                                        <span className={`badge badge-lg ${getScoreBadgeColor(itemScores[currentItemIndex])}`}>
-                                            {itemScores[currentItemIndex]?.toFixed(1)}
-                                        </span>
-                                        <span className="text-xs text-slate-600">{getScoreLabel(itemScores[currentItemIndex])}</span>
-                                    </div>
-                                )}
+                                <div className="flex items-center gap-2">
+                                    <div className="text-4xl font-bold text-slate-900">{currentItem.text}</div>
+                                    <Button
+                                        onClick={playReferenceAudio}
+                                        className="h-8 w-8 p-0 rounded-full bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 shadow-sm flex items-center justify-center"
+                                        variant="outline"
+                                        aria-label="Phát audio mẫu"
+                                        disabled={!currentItem?.audioUrl && !currentItem?.audioPublicId && !currentItem?.id}
+                                        title="Nghe audio mẫu"
+                                    >
+                                        🔊
+                                    </Button>
+                                </div>
+                                {bestScores[currentItemIndex] && bestScores[currentItemIndex].result && (() => {
+                                    const displayScore = getDisplayScore(currentItemIndex)
+                                    return displayScore !== null ? (
+                                        <div className="flex flex-col items-end gap-1">
+                                            <span className={`px-3 py-1 rounded-full font-bold text-sm ${getScoreBadgeColor(displayScore)}`}>
+                                                {Math.round(displayScore)}
+                                            </span>
+                                            <span className="text-xs text-slate-600">{getScoreLabel(displayScore)}</span>
+                                        </div>
+                                    ) : null
+                                })()}
                             </div>
                             {currentItem.pinyin && <div className="text-xl text-blue-600 mb-2">{currentItem.pinyin}</div>}
                             {currentItem.meaning && <div className="text-slate-600">{currentItem.meaning}</div>}
                         </div>
+
+                        {/* Warning for invalid component pronunciation */}
+                        {bestScores[currentItemIndex] && bestScores[currentItemIndex].result && (() => {
+                            const warning = getComponentWarning(currentItemIndex)
+                            return warning ? (
+                                <div className="mb-6 p-4 bg-amber-50 border border-amber-300 text-amber-800 rounded-lg">
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-lg">⚠️</span>
+                                        <div>
+                                            <p className="text-sm font-semibold mb-1">{warning}</p>
+                                            <p className="text-xs text-amber-700">
+                                                Gợi ý: Hãy phát âm chậm rãi, rõ ràng và kéo dài đủ các âm. Nghe lại audio mẫu để so sánh.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : null
+                        })()}
 
                         {error && (
                             <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
@@ -401,59 +682,27 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                             </div>
                         )}
 
-                        {/* Result Display Modal */}
-                        {currentAttemptResult && (
-                            <div className="mb-8 p-6 bg-gradient-to-b from-blue-50 to-cyan-50 rounded-xl border border-blue-200 shadow-md">
-                                <div className="text-center mb-6">
-                                    <div className="text-5xl mb-3 font-bold text-blue-600">
-                                        {currentAttemptResult.score?.toFixed(1) || 0}
-                                    </div>
-                                    <p className="text-sm text-slate-600 mb-2">Lần thử: {currentAttemptResult.attemptNumber} / 3</p>
-                                    <p className="text-lg font-semibold text-slate-900">
-                                        {getScoreLabel(currentAttemptResult.score)}
+                        {/* Result Display - using SentencePronunciationResult component */}
+                        {currentAttemptResult && currentAttemptResult.result && (
+                            <div className="mb-8">
+                                <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <p className="text-sm text-slate-600 text-center">
+                                        📊 Lần thử: {currentAttemptResult.attemptNumber} / 3
                                     </p>
                                 </div>
 
-                                {currentAttemptResult.result && (
-                                    <div className="space-y-3 mb-6">
-                                        {/* Fluency Score */}
-                                        {currentAttemptResult.result.fluency !== undefined && (
-                                            <div className="flex justify-between items-center p-3 bg-white rounded-lg">
-                                                <span className="text-slate-700 font-medium">Độ trôi chảy:</span>
-                                                <span className="font-bold text-cyan-600">
-                                                    {currentAttemptResult.result.fluency?.toFixed(1) || 0}
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        {/* Completeness Score */}
-                                        {currentAttemptResult.result.completeness !== undefined && (
-                                            <div className="flex justify-between items-center p-3 bg-white rounded-lg">
-                                                <span className="text-slate-700 font-medium">Độ hoàn chỉnh:</span>
-                                                <span className="font-bold text-cyan-600">
-                                                    {currentAttemptResult.result.completeness?.toFixed(1) || 0}
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        {/* Wrong Words */}
-                                        {currentAttemptResult.result.wrong_words && currentAttemptResult.result.wrong_words.length > 0 && (
-                                            <div className="p-3 bg-white rounded-lg">
-                                                <p className="text-sm text-slate-700 font-medium mb-2">Từ sai:</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {currentAttemptResult.result.wrong_words.map((word, idx) => (
-                                                        <span key={idx} className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
-                                                            {word}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                                <SentencePronunciationResult
+                                    result={currentAttemptResult.result}
+                                    recordedAudio={audioBlob}
+                                    onClose={() => {
+                                        // Keep result visible but allow user to see it's dismissible
+                                        // In test mode, we don't want to hide the result completely
+                                    }}
+                                    sentenceText={currentItem?.text || ""}
+                                />
 
                                 {/* Action Buttons */}
-                                <div className="flex gap-3">
+                                <div className="flex gap-3 mt-6">
                                     {currentAttemptCount < 2 && (
                                         <Button
                                             onClick={() => {
@@ -557,10 +806,6 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                         </div>
                     </div>
                 )}
-
-                <Button onClick={onCancel} className="w-full bg-transparent" variant="outline">
-                    ✕ Hủy và quay lại danh sách
-                </Button>
             </div>
         </div>
     )

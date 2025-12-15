@@ -29,10 +29,17 @@ const LoginForm = ({ onLogin }) => {
 
     try {
       const result = await authAPI.login(formData)
-      if (result.token) {
+      console.log("Login result:", result)
+      // Backend now returns { user: {...} } and sets httpOnly cookie
+      if (result && result.user) {
+        console.log("Login successful, redirecting...")
         onLogin()
+      } else {
+        console.error("Login response missing user:", result)
+        setError("Đăng nhập thất bại")
       }
     } catch (error) {
+      console.error("Login error:", error)
       setError(handleApiError(error))
     } finally {
       setLoading(false)

@@ -27,19 +27,27 @@ public class IseController {
             @RequestPart(value = "lineId", required = false) String lineId,
             @RequestPart(value = "vocabularyId", required = false) String vocabularyId,
             @RequestPart(value = "testId", required = false) String testId,
+            @RequestPart(value = "questionId", required = false) String questionId,
             @RequestPart(value = "includeInDaily", required = false) String includeInDaily,
             @RequestPart(value = "numSentences", required = false) String numSentences,
             @RequestPart(value = "scoreCategory", required = false) String scoreCategory,
             @RequestPart(value = "sessionDate", required = false) String sessionDate,
             @RequestPart(value = "durationSeconds", required = false) String durationSeconds,
-            @RequestPart(value = "source", required = false) String source) throws Exception {
+            @RequestPart(value = "source", required = false) String source,
+            @RequestPart(value = "initialScore", required = false) String initialScore,
+            @RequestPart(value = "finalScore", required = false) String finalScore,
+            @RequestPart(value = "toneScore", required = false) String toneScore) throws Exception {
 
         return iseService.score(principal, text, audioFile, reqSub, reqEnt,
                 scoreCategory, lessonId != null ? Long.parseLong(lessonId) : null,
                 testId != null ? Long.parseLong(testId) : null,
+                questionId != null ? Long.parseLong(questionId) : null,
                 includeInDaily != null ? Boolean.parseBoolean(includeInDaily) : null,
                 sessionDate, durationSeconds != null ? Double.parseDouble(durationSeconds) : null,
                 numSentences != null ? Integer.parseInt(numSentences) : null,
-                lineId, vocabularyId, source);
+                lineId, vocabularyId, source,
+                initialScore != null ? Double.parseDouble(initialScore) : null,
+                finalScore != null ? Double.parseDouble(finalScore) : null,
+                toneScore != null ? Double.parseDouble(toneScore) : null);
     }
 }
