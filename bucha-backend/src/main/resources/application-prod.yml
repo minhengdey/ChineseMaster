@@ -20,6 +20,11 @@ jwt:
   access-validity-ms: 900000
   refresh-validity-ms: 1209600000
 
+cookie:
+  secure: ${COOKIE_SECURE:true}
+  domain: ${COOKIE_DOMAIN:}
+  same-site: ${COOKIE_SAME_SITE:None}
+
 app:
   cors:
     allowed-origins: ${ALLOW_ORIGINS}
