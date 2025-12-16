@@ -24,15 +24,6 @@ public class AssessmentController {
 
     private final AssessmentService assessmentService;
 
-    private static final String ALLOWED_EMAIL = "dlminhanh272@gmail.com";
-
-    private boolean hasAssessmentAccess(JwtUserPrincipal principal) {
-        if (principal == null || principal.email() == null) {
-            return false;
-        }
-        return ALLOWED_EMAIL.equalsIgnoreCase(principal.email());
-    }
-
     /**
      * Get all active assessments
      * GET /api/assessments
@@ -64,11 +55,6 @@ public class AssessmentController {
             log.warn("Unauthorized access attempt to assessment {}", id);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        if (!hasAssessmentAccess(principal)) {
-            log.warn("Forbidden: User {} ({}) attempted to access assessment {}",
-                    principal.id(), principal.email(), id);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
         Long userId = principal.id();
         log.info("Fetching assessment {} for user: {}", id, userId);
         ExamDetailDTO exam = assessmentService.getExamById(id, userId);
@@ -92,11 +78,6 @@ public class AssessmentController {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        if (!hasAssessmentAccess(principal)) {
-            log.warn("Forbidden: User {} ({}) attempted to start assessment {}",
-                    principal.id(), principal.email(), id);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
         log.info("Starting assessment {} for user: {}", id, principal.id());
         assessmentService.startAssessment(id, principal.id());
         return ResponseEntity.ok().build();
@@ -113,11 +94,6 @@ public class AssessmentController {
             @AuthenticationPrincipal JwtUserPrincipal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        if (!hasAssessmentAccess(principal)) {
-            log.warn("Forbidden: User {} ({}) attempted to submit assessment {}",
-                    principal.id(), principal.email(), id);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         log.info("Submitting assessment {} for user: {}, score: {}",
                 id, principal.id(), request.getTotalScore());
@@ -141,11 +117,6 @@ public class AssessmentController {
             @AuthenticationPrincipal JwtUserPrincipal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        if (!hasAssessmentAccess(principal)) {
-            log.warn("Forbidden: User {} ({}) attempted to get results for assessment {}",
-                    principal.id(), principal.email(), id);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         log.info("Fetching test results for assessment {} and user: {}", id, principal.id());
         Object results = assessmentService.getTestResults(id, principal.id());

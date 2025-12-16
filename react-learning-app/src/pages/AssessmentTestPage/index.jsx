@@ -74,22 +74,6 @@ const AssessmentTestPage = () => {
             try {
                 setLoading(true)
 
-                // Check access permission first
-                try {
-                    const profile = await userAPI.getProfile()
-                    if (profile.email !== "dlminhanh272@gmail.com") {
-                        setError("Bạn không có quyền truy cập bài kiểm tra này")
-                        setLoading(false)
-                        setTimeout(() => navigate("/assessments"), 2000)
-                        return
-                    }
-                } catch (err) {
-                    console.error("Error checking access:", err)
-                    setError("Không thể xác thực quyền truy cập")
-                    setLoading(false)
-                    return
-                }
-
                 const assessmentData = await assessmentAPI.getAssessmentById(assessmentId)
                 setAssessment(assessmentData)
 
