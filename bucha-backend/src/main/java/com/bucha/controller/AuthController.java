@@ -4,6 +4,7 @@ import com.bucha.dto.AuthDtos.*;
 import com.bucha.entity.UserEntity;
 import com.bucha.security.JwtUtil;
 import com.bucha.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,15 @@ public class AuthController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    
+    @Value("${cookie.secure:false}")
+    private boolean cookieSecure;
+    
+    @Value("${cookie.domain:}")
+    private String cookieDomain;
+    
+    @Value("${cookie.same-site:Lax}")
+    private String cookieSameSite;
 
     public AuthController(UserService userService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userService = userService;
@@ -53,15 +63,19 @@ public class AuthController {
         String access = jwtUtil.generateAccessToken(user.getEmail(), user.getId(), user.getEmail());
 
         // Set JWT token in httpOnly cookie for security
-        // For localhost development: no domain restriction, no sameSite for cross-port
-        // access
-        ResponseCookie cookie = ResponseCookie.from("accessToken", access)
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from("accessToken", access)
                 .httpOnly(true)
-                .secure(false)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(24 * 60 * 60) // 24 hours
-                .domain("localhost") // Explicitly set domain for cross-port access
-                .build();
+                .sameSite(cookieSameSite);
+        
+        // Only set domain if configured (empty string means no domain restriction)
+        if (cookieDomain != null && !cookieDomain.isEmpty()) {
+            cookieBuilder.domain(cookieDomain);
+        }
+        
+        ResponseCookie cookie = cookieBuilder.build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         // Return only user info, NOT the token
@@ -94,13 +108,19 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
         // Clear the accessToken cookie
-        ResponseCookie cookie = ResponseCookie.from("accessToken", "")
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(0) // Delete cookie
-                .domain("localhost")
-                .build();
+                .sameSite(cookieSameSite);
+        
+        // Only set domain if configured
+        if (cookieDomain != null && !cookieDomain.isEmpty()) {
+            cookieBuilder.domain(cookieDomain);
+        }
+        
+        ResponseCookie cookie = cookieBuilder.build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
