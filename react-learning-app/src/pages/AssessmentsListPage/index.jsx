@@ -12,26 +12,12 @@ const AssessmentsListPage = () => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [filter, setFilter] = useState("all")
-    const [hasAssessmentAccess, setHasAssessmentAccess] = useState(false)
     const [showStartModal, setShowStartModal] = useState(false)
     const [selectedAssessment, setSelectedAssessment] = useState(null)
 
     useEffect(() => {
-        checkAccessAndFetch()
+        fetchAssessments()
     }, [])
-
-    const checkAccessAndFetch = async () => {
-        try {
-            const profile = await userAPI.getProfile()
-            const hasAccess = profile.email === "dlminhanh272@gmail.com"
-            setHasAssessmentAccess(hasAccess)
-            await fetchAssessments()
-        } catch (err) {
-            console.error("Error checking access:", err)
-            setError("Không thể kiểm tra quyền truy cập")
-            setLoading(false)
-        }
-    }
 
     const fetchAssessments = async () => {
         try {
@@ -61,7 +47,6 @@ const AssessmentsListPage = () => {
     }
 
     const handleStartAssessment = (assessment) => {
-        if (!hasAssessmentAccess) return
         setSelectedAssessment(assessment)
         setShowStartModal(true)
     }
@@ -233,11 +218,8 @@ const AssessmentsListPage = () => {
                                                 handleStartAssessment(assessment)
                                             }
                                         }}
-                                        disabled={!hasAssessmentAccess}
-                                        title={!hasAssessmentAccess ? "Bạn không có quyền truy cập" : ""}
                                     >
-                                        {!hasAssessmentAccess ? "🔒 Không có quyền truy cập" :
-                                            assessment.completed ? "Xem lại kết quả" : "Bắt đầu kiểm tra"}
+                                        {assessment.completed ? "Xem lại kết quả" : "Bắt đầu kiểm tra"}
                                     </Button>
                                 </div>
                             </div>
