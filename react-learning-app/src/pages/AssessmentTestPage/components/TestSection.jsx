@@ -328,23 +328,18 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
             })
             setItemAttempts(updatedAttempts)
 
-            // Update best score (backend already saved the best, we just track for UI)
+            // Always update best score with latest result from backend (backend already keeps the best)
             const updatedBestScores = [...bestScores]
-            const currentBest = updatedBestScores[currentItemIndex]
-            const currentBestTotal = currentBest?.result?.db_scores?.saved_total_score ?? 0
-
-            if (!currentBest || totalScore > currentBestTotal) {
-                updatedBestScores[currentItemIndex] = {
-                    score: sectionScore,
-                    result: normalized,
-                }
-                setBestScores(updatedBestScores)
-
-                // Store total_score for average calculation
-                const updatedScores = [...itemScores]
-                updatedScores[currentItemIndex] = totalScore
-                setItemScores(updatedScores)
+            updatedBestScores[currentItemIndex] = {
+                score: sectionScore,
+                result: normalized,
             }
+            setBestScores(updatedBestScores)
+
+            // Always update total_score (backend returns the highest score saved in DB)
+            const updatedScores = [...itemScores]
+            updatedScores[currentItemIndex] = totalScore
+            setItemScores(updatedScores)
 
             console.log("🎯 Setting currentAttemptResult:", {
                 attemptNumber: currentAttemptCount + 1,
