@@ -7,7 +7,6 @@ import { Badge } from "./ui/badge"
 const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBack, viewMode = false }) => {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState(null)
-    const [autoSubmitted, setAutoSubmitted] = useState(false)
 
     const calculateTotalScore = () => {
         const sections = ["thanh-mau", "van-mau", "thanh-dieu", "cau"]
@@ -43,41 +42,6 @@ const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBac
             setIsSubmitting(false)
         }
     }
-
-    // Auto-submit when all sections are completed (not in view mode)
-    useEffect(() => {
-        if (!viewMode && !autoSubmitted) {
-            const allSectionsCompleted = ["thanh-mau", "van-mau", "thanh-dieu", "cau"].every(
-                section => sectionResults[section] !== null
-            )
-            
-            if (allSectionsCompleted) {
-                const submit = async () => {
-                    try {
-                        setIsSubmitting(true)
-                        setError(null)
-
-                        const totalScore = calculateTotalScore()
-                        const finalResults = {
-                            assessmentId,
-                            totalScore,
-                            sections: sectionResults,
-                            completedAt: new Date().toISOString(),
-                        }
-
-                        await onSubmit(finalResults)
-                        setAutoSubmitted(true)
-                    } catch (err) {
-                        console.error("Error auto-submitting test:", err)
-                        setError("Không thể nộp bài kiểm tra. Vui lòng thử lại.")
-                        setIsSubmitting(false)
-                    }
-                }
-                submit()
-            }
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [sectionResults, viewMode, autoSubmitted, assessmentId, onSubmit])
 
     const totalScore = calculateTotalScore()
     const sections = [
