@@ -46,6 +46,7 @@ public class ProfileController {
         dto.id = u.getId();
         dto.email = u.getEmail();
         dto.name = u.getName();
+        dto.role = u.getRole();
         dto.xp = u.getXp();
         dto.streak = u.getStreak();
         dto.darkMode = u.isDarkMode();

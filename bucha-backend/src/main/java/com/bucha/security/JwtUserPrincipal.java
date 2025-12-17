@@ -1,4 +1,4 @@
 package com.bucha.security;
 
-public record JwtUserPrincipal(Long id, String username, String email) {
+public record JwtUserPrincipal(Long id, String username, String email, String role) {
 }

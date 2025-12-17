@@ -23,26 +23,28 @@ public class JwtUtil {
         this.refreshTokenValidityMs = refreshTokenValidityMs;
     }
 
-    public String generateAccessToken(String username, Long userId, String email) {
+    public String generateAccessToken(String username, Long userId, String email, String role) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + accessTokenValidityMs);
         return Jwts.builder()
                 .setSubject(username)
                 .claim("uid", userId)
                 .claim("email", email)
+                .claim("role", role)
                 .setIssuedAt(now)
                 .setExpiration(exp)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String generateRefreshToken(String username, Long userId, String email) {
+    public String generateRefreshToken(String username, Long userId, String email, String role) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + refreshTokenValidityMs);
         return Jwts.builder()
                 .setSubject(username)
                 .claim("uid", userId)
                 .claim("email", email)
+                .claim("role", role)
                 .setIssuedAt(now)
                 .setExpiration(exp)
                 .signWith(key, SignatureAlgorithm.HS256)

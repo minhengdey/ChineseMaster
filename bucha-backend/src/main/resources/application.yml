@@ -34,6 +34,10 @@ app:
       initializer:
          enabled: ${DATA_INITIALIZER_ENABLED}
          source: CLOUDINARY
+      admin:
+         email: ${ADMIN_EMAIL:admin@chinesemaster.com}
+         password: ${ADMIN_PASSWORD:ChangeMe123!}
+         name: ${ADMIN_NAME:Administrator}
 logging:
    level:
       root: ERROR

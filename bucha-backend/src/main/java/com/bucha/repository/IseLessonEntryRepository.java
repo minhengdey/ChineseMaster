@@ -37,4 +37,11 @@ public interface IseLessonEntryRepository extends JpaRepository<IseLessonEntry, 
             + "GROUP BY e.user_id", nativeQuery = true)
     List<Object[]> aggregateLessonEntryByUserAndDateRange(@Param("lessonId") Long lessonId,
             @Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
+
+    @Query(value = "SELECT e.lesson_id, e.user_id, AVG(COALESCE(e.total_score,0)) AS avg_score, "
+            + "COUNT(e.attempt_id) AS attempts, MAX(COALESCE(e.total_score,0)) AS best_score "
+            + "FROM ise_lesson_entry e "
+            + "GROUP BY e.lesson_id, e.user_id "
+            + "ORDER BY e.lesson_id ASC", nativeQuery = true)
+    List<Object[]> aggregateLessonLeaderboard();
 }

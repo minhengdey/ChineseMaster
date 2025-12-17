@@ -28,6 +28,7 @@ public class UserService {
         u.setEmail(email);
         u.setPassword(encoder.encode(password));
         u.setName(name);
+        u.setRole("USER");
         return repo.save(u);
     }
 
