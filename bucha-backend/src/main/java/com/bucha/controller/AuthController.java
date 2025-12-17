@@ -25,7 +25,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     
-    @Value("${cookie.secure:true}")
+    @Value("${cookie.secure:false}")
     private boolean cookieSecure;
     
     @Value("${cookie.domain:}")
