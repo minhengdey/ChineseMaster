@@ -68,11 +68,15 @@ public class JwtFilter extends OncePerRequestFilter {
                 String username = claims.getBody().getSubject();
                 Long uid = claims.getBody().get("uid", Long.class);
                 String email = claims.getBody().get("email", String.class);
-                // Simple authority: ROLE_USER
+                String role = claims.getBody().get("role", String.class);
+                if (role == null || role.isBlank()) {
+                    role = "USER";
+                }
+                List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                        new JwtUserPrincipal(uid, username, email),
+                        new JwtUserPrincipal(uid, username, email, role),
                         null,
-                        List.of(new SimpleGrantedAuthority("ROLE_USER")));
+                        authorities);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (Exception ex) {
                 // invalid token - ignore; request will be rejected by downstream security

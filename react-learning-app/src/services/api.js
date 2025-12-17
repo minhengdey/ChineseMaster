@@ -3,14 +3,14 @@ import axios from "axios";
 // Base API configuration (runtime override from public/env-config.js)
 // Priority: runtime `window._env_.VITE_API_URL` -> `window._env_.REACT_APP_API_URL` -> import.meta env -> fallback to relative `/api`
 // Use relative `/api` so frontend calls like `fetch('/api/login')` or axios to `/auth/login` go through the same origin proxy/router.
-const API_BASE_URL =
-typeof window !== "undefined" &&
-window._env_ &&
-(window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
-? (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
-: import.meta?.env?.VITE_API_BASE_URL || import.meta?.env?.VITE_API_URL || "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
+// const API_BASE_URL =
+//    typeof window !== "undefined" &&
+//       window._env_ &&
+//       (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
+//       ? (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
+//       : import.meta?.env?.VITE_API_BASE_URL || import.meta?.env?.VITE_API_URL || "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
 
-// const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = "http://localhost:8080/api";
 
 const apiClient = axios.create({
    baseURL: API_BASE_URL,
@@ -539,6 +539,75 @@ export const iseStatsAPI = {
       const params = {};
       if (lessonId != null) params.lessonId = lessonId;
       const response = await apiClient.get('/ise/stats/leaderboard/lesson', { params });
+      return response.data;
+   },
+};
+
+// Admin-only stats APIs
+export const adminStatsAPI = {
+   getWeeklyLeaderboards: async (startDate, endDate) => {
+      const params = {};
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+      const response = await apiClient.get('/admin/leaderboard/weekly', { params });
+      return response.data;
+   },
+   getLessonLeaderboards: async () => {
+      const response = await apiClient.get('/admin/leaderboard/lessons');
+      return response.data;
+   },
+   getTestLeaderboards: async () => {
+      const response = await apiClient.get('/admin/leaderboard/tests');
+      return response.data;
+   }, getExamLeaderboards: async () => {
+      const response = await apiClient.get("/admin/leaderboard/exams")
+      return response.data
+   }, getUsers: async () => {
+      const response = await apiClient.get('/admin/users');
+      return response.data;
+   },
+};
+
+// Admin User Management APIs
+export const adminUserAPI = {
+   // Get list of all users
+   listUsers: async () => {
+      const response = await apiClient.get('/admin/users');
+      return response.data;
+   },
+
+   // Create new user
+   createUser: async (userData) => {
+      const response = await apiClient.post('/admin/users', {
+         email: userData.email,
+         password: userData.password,
+         name: userData.name,
+         role: userData.role,
+      });
+      return response.data;
+   },
+
+   // Update user information
+   updateUser: async (userId, userData) => {
+      const response = await apiClient.put(`/admin/users/${userId}`, {
+         email: userData.email,
+         name: userData.name,
+         role: userData.role,
+      });
+      return response.data;
+   },
+
+   // Update user role only
+   updateUserRole: async (userId, role) => {
+      const response = await apiClient.patch(`/admin/users/${userId}/role`, {
+         role: role,
+      });
+      return response.data;
+   },
+
+   // Delete user
+   deleteUser: async (userId) => {
+      const response = await apiClient.delete(`/admin/users/${userId}`);
       return response.data;
    },
 };

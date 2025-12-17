@@ -25,13 +25,13 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     
-    @Value("${cookie.secure:false}")
+    @Value("${cookie.secure:true}")
     private boolean cookieSecure;
     
     @Value("${cookie.domain:}")
     private String cookieDomain;
     
-    @Value("${cookie.same-site:Lax}")
+    @Value("${cookie.same-site:None}")
     private String cookieSameSite;
 
     public AuthController(UserService userService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
@@ -60,7 +60,7 @@ public class AuthController {
         if (!passwordEncoder.matches(req.password(), user.getPassword())) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
-        String access = jwtUtil.generateAccessToken(user.getEmail(), user.getId(), user.getEmail());
+        String access = jwtUtil.generateAccessToken(user.getEmail(), user.getId(), user.getEmail(), user.getRole());
 
         // Set JWT token in httpOnly cookie for security
         ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from("accessToken", access)
@@ -83,7 +83,8 @@ public class AuthController {
                 "user", Map.of(
                         "id", user.getId(),
                         "email", user.getEmail(),
-                        "name", user.getName()));
+                "name", user.getName(),
+                "role", user.getRole()));
         return ResponseEntity.ok(out);
     }
 

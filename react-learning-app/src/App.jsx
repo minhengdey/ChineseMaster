@@ -6,6 +6,7 @@ import {
    Navigate,
 } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 import HomePage from "./pages/HomePage";
 import CurriculumPage from "./pages/CurriculumPage";
 import LessonsPage from "./pages/LessonsPage";
@@ -20,14 +21,17 @@ import AlphabetPage from "./pages/AlphabetPage";
 import AssessmentTestPage from "./pages/AssessmentTestPage";
 import AssessmentsListPage from "./pages/AssessmentsListPage";
 import Login from "./pages/LoginPage/index";
+import RoleGuard from "./components/RoleGuard";
 
 import "./App.css";
 import { authAPI } from "./services/api";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { useUserStore } from "./store/UserStore";
 
 function App() {
    const [user, setUser] = useState(null);
    const [isAuthenticated, setIsAuthenticated] = useState(false);
+   const storeUser = useUserStore((state) => state.user);
 
    useEffect(() => {
       // No localStorage - authentication is handled by httpOnly cookie
@@ -41,7 +45,9 @@ function App() {
                <Route
                   element={
                      <ProtectedRoute>
-                        <Navbar />
+                        <RoleGuard allowedRoles={["USER"]} redirectTo="/admin">
+                           <Navbar />
+                        </RoleGuard>
                      </ProtectedRoute>
                   }
                >
@@ -69,7 +75,10 @@ function App() {
                      element={<FlashCardsLessonPage />}
                   />
                   <Route path="flashcards" element={<FlashcardsIndex />} />
-                  <Route path="flashcards/:curriculumId" element={<FlashcardsCurriculum />} />
+                  <Route
+                     path="flashcards/:curriculumId"
+                     element={<FlashcardsCurriculum />}
+                  />
                   <Route
                      path="curriculum/:curriculumId/lesson/:lessonId/speaking"
                      element={<SpeakingPracticePage />}
@@ -81,9 +90,7 @@ function App() {
                   />
                   <Route
                      path="lesson/:id"
-                     element={
-                        <Navigate to="/curriculum/1/lesson/:id" replace />
-                     }
+                     element={<Navigate to="/curriculum/1/lesson/:id" replace />}
                   />
                   <Route path="pronunciation" element={<PronunciationPage />} />
                   <Route path="alphabet" element={<AlphabetPage />} />
@@ -97,6 +104,18 @@ function App() {
                      path="/speaking/daily"
                      element={<SpeakingPracticePage />}
                   />
+               </Route>
+
+               <Route
+                  element={
+                     <ProtectedRoute>
+                        <RoleGuard allowedRoles={["ADMIN"]} redirectTo="/">
+                           <Navbar />
+                        </RoleGuard>
+                     </ProtectedRoute>
+                  }
+               >
+                  <Route path="admin" element={<AdminDashboardPage />} />
                </Route>
 
                <Route path="/login" element={<Login />} />

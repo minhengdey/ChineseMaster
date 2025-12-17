@@ -6,6 +6,7 @@ public class UserProfileDto {
     public Long id;
     public String email;
     public String name;
+    public String role;
     // optional fields for update requests
     public String currentPassword;
     public String newPassword;
