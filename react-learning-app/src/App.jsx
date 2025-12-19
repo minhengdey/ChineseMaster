@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import ClassManagementPage from "./pages/ClassManagementPage";
 import HomePage from "./pages/HomePage";
 import CurriculumPage from "./pages/CurriculumPage";
 import LessonsPage from "./pages/LessonsPage";
@@ -116,6 +117,7 @@ function App() {
                   }
                >
                   <Route path="admin" element={<AdminDashboardPage />} />
+                  <Route path="admin/classes" element={<ClassManagementPage />} />
                </Route>
 
                <Route path="/login" element={<Login />} />
