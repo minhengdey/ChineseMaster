@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { authAPI, handleApiError } from "../../../services/api"
+import { useUserStore } from "../../../store/UserStore"
 import { User, Mail, Lock, CheckCircle, AlertCircle } from "lucide-react"
 
 const RegisterForm = ({ onRegister }) => {
@@ -36,16 +37,21 @@ const RegisterForm = ({ onRegister }) => {
     }
 
     try {
-      await authAPI.register({
+      const result = await authAPI.register({
         name: formData.name,
         email: formData.email,
         password: formData.password,
       })
 
-      setSuccess("Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.")
+      // If backend returns user info after registration, save it to store
+      if (result && result.user) {
+        useUserStore.getState().setUser(result.user)
+      }
+
+      setSuccess("Đăng ký thành công! Đang chuyển hướng...")
       setTimeout(() => {
         onRegister()
-      }, 2000)
+      }, 1500)
     } catch (error) {
       setError(handleApiError(error))
     } finally {

@@ -765,6 +765,81 @@ iseAPI.submitAssessmentTest = async (payload) => {
    return assessmentAPI.submitTest(payload);
 };
 
+// Class Management APIs (Admin only)
+export const classAPI = {
+   // Get all classes
+   getAll: async () => {
+      const response = await apiClient.get("/admin/classes");
+      return response.data;
+   },
+
+   // Get a single class by ID
+   getById: async (id) => {
+      const response = await apiClient.get(`/admin/classes/${id}`);
+      return response.data;
+   },
+
+   // Search classes by name
+   search: async (name) => {
+      const response = await apiClient.get("/admin/classes/search", {
+         params: { name }
+      });
+      return response.data;
+   },
+
+   // Create a new class
+   create: async (classData) => {
+      const response = await apiClient.post("/admin/classes", {
+         name: classData.name,
+         description: classData.description
+      });
+      return response.data;
+   },
+
+   // Update an existing class
+   update: async (id, classData) => {
+      const response = await apiClient.put(`/admin/classes/${id}`, {
+         name: classData.name,
+         description: classData.description
+      });
+      return response.data;
+   },
+
+   // Delete a class
+   delete: async (id) => {
+      const response = await apiClient.delete(`/admin/classes/${id}`);
+      return response.data;
+   },
+
+   // Get all members of a class
+   getMembers: async (classId) => {
+      const response = await apiClient.get(`/admin/classes/${classId}/members`);
+      return response.data;
+   },
+
+   // Add a single member to a class
+   addMember: async (classId, userId) => {
+      const response = await apiClient.post(`/admin/classes/${classId}/members`, {
+         userId
+      });
+      return response.data;
+   },
+
+   // Add multiple members to a class
+   addMultipleMembers: async (classId, userIds) => {
+      const response = await apiClient.post(`/admin/classes/${classId}/members/bulk`, {
+         userIds
+      });
+      return response.data;
+   },
+
+   // Remove a member from a class
+   removeMember: async (classId, userId) => {
+      const response = await apiClient.delete(`/admin/classes/${classId}/members/${userId}`);
+      return response.data;
+   }
+};
+
 // Helper function to handle API errors
 export const handleApiError = (error) => {
    // Prefer structured server error messages when available

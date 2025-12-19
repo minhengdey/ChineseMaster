@@ -51,9 +51,13 @@ const Navbar = ({ user, onLogout }) => {
     if (base === "/admin") {
       // Admin nav: highlight by tab key
       const targetTab = tabKey || new URLSearchParams(path.split("?")[1] || "").get("tab") || "weekly"
-      return location.pathname.startsWith("/admin") && activeAdminTab === targetTab
+      return location.pathname === "/admin" && activeAdminTab === targetTab
     }
-    return location.pathname === base || location.pathname.startsWith(base)
+    // For exact match routes like /admin/classes
+    if (base === location.pathname) {
+      return true
+    }
+    return location.pathname.startsWith(base + "/")
   }
 
   const handleLogout = () => {
@@ -71,6 +75,7 @@ const Navbar = ({ user, onLogout }) => {
       { label: "BXH theo bài", path: "/admin?tab=lesson", tab: "lesson", icon: BookOpen },
       { label: "BXH bài kiểm tra", path: "/admin?tab=test", tab: "test", icon: ClipboardCheck },
       { label: "Quản lý User", path: "/admin?tab=users", tab: "users", icon: User },
+      { label: "Quản lý Lớp", path: "/admin/classes", icon: BookOpen },
     ]
     : [
       { label: "Bài Kiểm Tra", path: "/assessments", icon: ClipboardCheck },
