@@ -8,6 +8,10 @@ import { Volume2, Type, AlertCircle, AlertTriangle } from "lucide-react"
 import { hasLetters } from "../../utils/textUtils"
 
 const AlphabetPage = () => {
+  useEffect(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  }, []);
   const [pinyinTable, setPinyinTable] = useState([])
   const [alphabetData, setAlphabetData] = useState({})
   const [loading, setLoading] = useState(true)

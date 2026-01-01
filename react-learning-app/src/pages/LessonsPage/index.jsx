@@ -8,6 +8,10 @@ import LessonProgress from "./components/LessonProgress"
 import { ChevronRight } from "lucide-react"
 
 const LessonsPage = () => {
+  useEffect(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  }, []);
   const { curriculumId } = useParams()
   const [curriculum, setCurriculum] = useState(null)
   const [lessons, setLessons] = useState([])

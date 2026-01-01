@@ -29,7 +29,7 @@ public interface IseDailyEntryRepository extends JpaRepository<IseDailyEntry, Lo
         @Query(value = "SELECT d.user_id, SUM(CASE WHEN (d.vocabulary_id IS NOT NULL OR d.line_id IS NOT NULL) AND d.session_date BETWEEN :start AND :end THEN 1 ELSE 0 END) AS cnt_d "
                         + "FROM ise_daily_entry d WHERE d.lesson_id = :lessonId AND d.session_date BETWEEN :start AND :end GROUP BY d.user_id", nativeQuery = true)
         List<Object[]> aggregateDailyCountByUserAndDateRange(@Param("lessonId") Long lessonId,
-                        @Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
+                        @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
         @Query("SELECT DISTINCT e.lineId FROM IseDailyEntry e WHERE e.user.id = :userId AND e.lessonId = :lessonId AND e.lineId IS NOT NULL")
         List<Long> findDistinctLineIdsByUserAndLesson(@Param("userId") Long userId, @Param("lessonId") Long lessonId);
@@ -58,8 +58,8 @@ public interface IseDailyEntryRepository extends JpaRepository<IseDailyEntry, Lo
                         + "AND (:end IS NULL OR d.session_date < :end) "
                         + "GROUP BY yw, week_start, d.user_id "
                         + "ORDER BY week_start ASC", nativeQuery = true)
-        List<Object[]> aggregateWeeklyLeaderboardBetween(@Param("start") java.time.LocalDateTime start,
-                        @Param("end") java.time.LocalDateTime end);
+        List<Object[]> aggregateWeeklyLeaderboardBetween(@Param("start") LocalDateTime start,
+                        @Param("end") LocalDateTime end);
 
         @Query(value = "SELECT d.user_id, AVG(COALESCE(d.total_score,0)) AS avg_score, COUNT(*) AS attempts, "
                         + "MAX(COALESCE(d.total_score,0)) AS best_score "
@@ -69,6 +69,6 @@ public interface IseDailyEntryRepository extends JpaRepository<IseDailyEntry, Lo
                         + "AND (:end IS NULL OR d.session_date < :end) "
                         + "GROUP BY d.user_id "
                         + "ORDER BY avg_score DESC", nativeQuery = true)
-        List<Object[]> aggregateRangeLeaderboard(@Param("start") java.time.LocalDateTime start,
-                        @Param("end") java.time.LocalDateTime end);
+        List<Object[]> aggregateRangeLeaderboard(@Param("start") LocalDateTime start,
+                        @Param("end") LocalDateTime end);
 }

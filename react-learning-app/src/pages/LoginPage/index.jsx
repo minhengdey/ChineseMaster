@@ -1,11 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import HeroSection from "./components/HeroSection"
 import LoginForm from "./components/LoginForm"
 import RegisterForm from "./components/RegisterForm"
 
 export default function LoginPage() {
+  useEffect(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  }, []);
   const [activeTab, setActiveTab] = useState("login")
 
   const onLogin = () => {

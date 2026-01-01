@@ -1,12 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"
 import { assessmentAPI, userAPI } from "../../services/api"
 import { Button } from "../AssessmentTestPage/components/ui/button"
 import { Badge } from "../AssessmentTestPage/components/ui/badge"
 
 const AssessmentsListPage = () => {
+    useEffect(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+    }, []);
     const navigate = useNavigate()
     const [assessments, setAssessments] = useState([])
     const [loading, setLoading] = useState(true)

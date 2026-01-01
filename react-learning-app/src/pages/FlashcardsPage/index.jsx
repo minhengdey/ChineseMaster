@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { Link, useParams } from "react-router-dom"
 import { contentAPI } from "../../services/api"
 import { Search, X, Layers, BookOpen } from "lucide-react"
