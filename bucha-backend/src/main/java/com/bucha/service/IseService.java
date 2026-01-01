@@ -6,6 +6,7 @@ import com.bucha.pronunciation.IseFileStreamer;
 import com.bucha.pronunciation.IseGlobalMessageBuilder;
 import com.bucha.pronunciation.IseGlobalUrlSigner;
 import com.bucha.pronunciation.IseGlobalWebSocketClient;
+import com.bucha.repository.*;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
@@ -13,8 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.bucha.repository.IseRepository;
-import com.bucha.repository.UserRepository;
 import com.bucha.entity.IseScore;
 import com.bucha.security.JwtUserPrincipal;
 import org.springframework.http.ResponseEntity;
@@ -66,13 +65,13 @@ public class IseService {
     UserRepository userRepository;
 
     @Autowired
-    com.bucha.repository.IseDailyEntryRepository iseDailyEntryRepository;
+    IseDailyEntryRepository iseDailyEntryRepository;
 
     @Autowired
-    com.bucha.repository.IseLessonEntryRepository iseLessonEntryRepository;
+    IseLessonEntryRepository iseLessonEntryRepository;
 
     @Autowired
-    com.bucha.repository.IseTestEntryRepository iseTestEntryRepository;
+    IseTestEntryRepository iseTestEntryRepository;
 
     public ResponseEntity<?> score(JwtUserPrincipal principal, String text, MultipartFile audioFile, String reqSub,
             String reqEnt, String scoreCategory, Long lessonId, Long testId, Long questionId, Boolean includeInDaily,

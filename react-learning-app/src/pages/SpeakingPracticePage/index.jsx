@@ -8,6 +8,10 @@ import { hasLetters } from "../../utils/textUtils"
 import SentencePronunciationResult from "../LessonDetailPage/components/SentencePronunciationResult"
 
 const SpeakingPracticePage = () => {
+  useEffect(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  }, []);
   const { curriculumId, lessonId } = useParams()
   const location = useLocation()
   const isDailyMode = location.pathname && location.pathname.includes("/speaking/daily")
@@ -30,19 +34,13 @@ const SpeakingPracticePage = () => {
   const mediaRecorderRef = useRef(null)
   const chunksRef = useRef([])
   const startTimeRef = useRef(null)
-  // whether to display sentences/vocab in random order (persisted in localStorage)
+  // whether to display sentences/vocab in random order (chỉ dùng state, không lưu storage)
   const [shuffleMode, setShuffleMode] = useState(() => {
-    try {
-      // If we're in daily speaking mode, default to shuffle (random)
-      if (typeof window !== "undefined" && location?.pathname && location.pathname.includes("/speaking/daily")) {
-        return true
-      }
-      const raw = localStorage.getItem("speaking.shuffleMode")
-      return raw ? JSON.parse(raw) : false
-    } catch (e) {
-      return false
+    if (typeof window !== "undefined" && location?.pathname && location.pathname.includes("/speaking/daily")) {
+      return true;
     }
-  })
+    return false;
+  });
   // preserve original queue (in-order) so we can toggle shuffle on/off
   const originalQueueRef = useRef(null)
   // when entering a lesson (non-vocab, non-daily) show a prompt asking order vs random
@@ -93,32 +91,13 @@ const SpeakingPracticePage = () => {
 
   // Handler called when user chooses order/random from the pre-entry prompt
   const handleOrderChoice = async (choiceIsRandom) => {
-    // apply choice to shuffleMode (do not persist unless user toggles elsewhere)
-    setShuffleMode(choiceIsRandom)
-    setShowOrderChoice(false)
-    // now preload based on choice
-    try {
-      if (choiceIsRandom) {
-        // ensure localStorage also reflects the choice for consistency during load
-        try {
-          localStorage.setItem("speaking.shuffleMode", JSON.stringify(true))
-        } catch (e) { }
-      } else {
-        try {
-          localStorage.setItem("speaking.shuffleMode", JSON.stringify(false))
-        } catch (e) { }
-      }
-    } catch (e) { }
+    setShuffleMode(choiceIsRandom);
+    setShowOrderChoice(false);
+    await preloadLessonLines(lessonId);
+  };
 
-    // start preload for lesson lines
-    await preloadLessonLines(lessonId)
-  }
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("speaking.shuffleMode", JSON.stringify(shuffleMode))
-    } catch (e) { }
-  }, [shuffleMode])
+  // Không lưu shuffleMode vào storage nữa
+  // useEffect(() => {}, [shuffleMode])
 
   // small array shuffle helper (immutable)
   const shuffleArray = (arr) => {
@@ -178,15 +157,7 @@ const SpeakingPracticePage = () => {
         // preserve original order
         originalQueueRef.current = items
         // allow toggles during load by checking localStorage first
-        const effectiveShuffle = (() => {
-          try {
-            const raw = localStorage.getItem("speaking.shuffleMode")
-            return raw !== null ? JSON.parse(raw) : shuffleMode
-          } catch (e) {
-            return shuffleMode
-          }
-        })()
-        const toSet = effectiveShuffle ? shuffleArray(items) : items
+        const toSet = shuffleMode ? shuffleArray(items) : items
         setQueue(toSet)
         setQueueIndex(0)
         setSentence(toSet[0]?.text || "")
@@ -221,15 +192,7 @@ const SpeakingPracticePage = () => {
           }))
           .filter((i) => i.text && hasLetters(i.text))
         originalQueueRef.current = normalized
-        const effectiveShuffle = (() => {
-          try {
-            const raw = localStorage.getItem("speaking.shuffleMode")
-            return raw !== null ? JSON.parse(raw) : shuffleMode
-          } catch (e) {
-            return shuffleMode
-          }
-        })()
-        const toSet = effectiveShuffle ? shuffleArray(normalized) : normalized
+        const toSet = shuffleMode ? shuffleArray(normalized) : normalized
         setQueue(toSet)
         setQueueIndex(0)
         setSentence(toSet[0]?.text || "")
@@ -283,15 +246,7 @@ const SpeakingPracticePage = () => {
       }
 
       originalQueueRef.current = items
-      const effectiveShuffle = (() => {
-        try {
-          const raw = localStorage.getItem("speaking.shuffleMode")
-          return raw !== null ? JSON.parse(raw) : shuffleMode
-        } catch (e) {
-          return shuffleMode
-        }
-      })()
-      const toSet = effectiveShuffle ? shuffleArray(items) : items
+      const toSet = shuffleMode ? shuffleArray(items) : items
       setQueue(toSet)
       setQueueIndex(0)
       setSentence(toSet[0]?.text || "")
@@ -648,9 +603,6 @@ const SpeakingPracticePage = () => {
                   }`}
                 onClick={() => {
                   const next = !shuffleMode
-                  try {
-                    localStorage.setItem("speaking.shuffleMode", JSON.stringify(next))
-                  } catch (e) { }
                   setShuffleMode(next)
 
                   const base =
@@ -770,75 +722,90 @@ const SpeakingPracticePage = () => {
               <p className="text-gray-600 font-medium">Đang tải...</p>
             </div>
           </div>
-        ) : error ? (
-          <div className="text-center bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 text-red-700 p-8 rounded-2xl font-semibold shadow-md">
-            ⚠️ {error}
-          </div>
         ) : (
-          <div className="max-w-3xl mx-auto space-y-6">
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="text-sm font-bold text-blue-600 mb-4 uppercase tracking-widest">
-                {isVocabMode ? "📝 Từ cần luyện" : "💬 Câu cần luyện"}
-              </div>
-              <div className="text-4xl md:text-5xl font-bold text-gray-900 break-words whitespace-pre-wrap leading-relaxed">
-                {sentence}
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 border border-blue-200 shadow-lg">
-              <div className="space-y-6">
-                <div className="flex justify-center">
-                  {!recording ? (
-                    <button
-                      onClick={startRecording}
-                      className="px-12 py-4 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-lg font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-                    >
-                      🎤 Ghi âm
-                    </button>
-                  ) : (
-                    <button
-                      onClick={stopRecording}
-                      className="px-12 py-4 rounded-full bg-gradient-to-r from-red-600 to-red-700 text-white text-lg font-bold shadow-lg hover:shadow-xl animate-pulse transition-all duration-300"
-                    >
-                      ⏹️ Dừng
-                    </button>
-                  )}
+          <>
+            <div className="max-w-3xl mx-auto space-y-6">
+              <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div className="text-sm font-bold text-blue-600 mb-4 uppercase tracking-widest">
+                  {isVocabMode ? "📝 Từ cần luyện" : "💬 Câu cần luyện"}
                 </div>
+                <div className="text-4xl md:text-5xl font-bold text-gray-900 break-words whitespace-pre-wrap leading-relaxed">
+                  {sentence}
+                </div>
+              </div>
 
-                {audioBlob && (
-                  <div className="bg-white rounded-xl p-6 border border-blue-200 shadow-sm">
-                    <p className="text-sm font-semibold text-gray-700 mb-4">🔊 Bản ghi của bạn:</p>
-                    <audio controls src={URL.createObjectURL(audioBlob)} className="w-full rounded-lg bg-gray-100" />
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 border border-blue-200 shadow-lg">
+                <div className="space-y-6">
+                  <div className="flex justify-center">
+                    {!recording ? (
+                      <button
+                        onClick={startRecording}
+                        className="px-12 py-4 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-lg font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                      >
+                        🎤 Ghi âm
+                      </button>
+                    ) : (
+                      <button
+                        onClick={stopRecording}
+                        className="px-12 py-4 rounded-full bg-gradient-to-r from-red-600 to-red-700 text-white text-lg font-bold shadow-lg hover:shadow-xl animate-pulse transition-all duration-300"
+                      >
+                        ⏹️ Dừng
+                      </button>
+                    )}
                   </div>
-                )}
 
-                <div className="flex justify-center">
-                  <button
-                    className={`px-12 py-3 rounded-lg font-bold text-white transition-all duration-300 ${!audioBlob || loading || recording
-                      ? "bg-gray-400 cursor-not-allowed opacity-60"
-                      : "bg-gradient-to-r from-green-600 to-green-700 hover:shadow-lg hover:scale-105"
-                      }`}
-                    onClick={submitScore}
-                    disabled={!audioBlob || loading || recording}
-                  >
-                    ✓ Gửi điểm
-                  </button>
+                  {audioBlob && (
+                    <div className="bg-white rounded-xl p-6 border border-blue-200 shadow-sm">
+                      <p className="text-sm font-semibold text-gray-700 mb-4">🔊 Bản ghi của bạn:</p>
+                      <audio controls src={URL.createObjectURL(audioBlob)} className="w-full rounded-lg bg-gray-100" />
+                    </div>
+                  )}
+
+                  <div className="flex justify-center">
+                    <button
+                      className={`px-12 py-3 rounded-lg font-bold text-white transition-all duration-300 ${!audioBlob || loading || recording
+                        ? "bg-gray-400 cursor-not-allowed opacity-60"
+                        : "bg-gradient-to-r from-green-600 to-green-700 hover:shadow-lg hover:scale-105"
+                        }`}
+                      onClick={submitScore}
+                      disabled={!audioBlob || loading || recording}
+                    >
+                      ✓ Gửi điểm
+                    </button>
+                  </div>
                 </div>
               </div>
+
+              {result && (
+                <SentencePronunciationResult
+                  result={result}
+                  recordedAudio={audioBlob}
+                  onClose={() => {
+                    setResult(null)
+                    setSelectedWord(null)
+                  }}
+                  sentenceText={sentence}
+                />
+              )}
             </div>
 
-            {result && (
-              <SentencePronunciationResult
-                result={result}
-                recordedAudio={audioBlob}
-                onClose={() => {
-                  setResult(null)
-                  setSelectedWord(null)
-                }}
-                sentenceText={sentence}
-              />
+            {error && (
+              <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-200">
+                  <h3 className="text-lg font-bold mb-2">⚠️ Thông báo</h3>
+                  <p className="text-gray-700 mb-4">{error}</p>
+                  <div className="flex justify-end">
+                    <button
+                      className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                      onClick={() => setError(null)}
+                    >
+                      OK
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>

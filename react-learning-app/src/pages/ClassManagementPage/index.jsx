@@ -1,9 +1,13 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { classAPI, adminUserAPI, handleApiError } from "../../services/api";
 import { useUserStore } from "../../store/UserStore";
 import { Plus, Edit2, Trash2, Search, Users, X, UserPlus, UserMinus } from "lucide-react";
 
 const ClassManagementPage = () => {
+    useEffect(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+    }, []);
     const user = useUserStore((state) => state.user);
     const [classes, setClasses] = useState([]);
     const [allUsers, setAllUsers] = useState([]);

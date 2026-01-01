@@ -1,8 +1,13 @@
+import { useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useUserStore } from "../../store/UserStore"
 import { BookOpen, Volume2, Sparkles, Type, ClipboardCheck } from "lucide-react"
 
 const HomePage = () => {
+  useEffect(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  }, []);
   const user = useUserStore((state) => state.user)
 
   const features = [

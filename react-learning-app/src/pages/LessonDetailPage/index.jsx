@@ -10,6 +10,10 @@ import LessonProgress from "./components/LessonProgress"
 import LessonLeaderboard from "../../components/LessonLeaderboard"
 
 const LessonDetailPage = () => {
+  useEffect(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  }, []);
   const { curriculumId, lessonId } = useParams()
   const [lesson, setLesson] = useState(null)
   const [loading, setLoading] = useState(true)

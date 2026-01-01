@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { contentAPI } from "../../services/api"
 import AudioPlayer from "../LessonDetailPage/components/AudioPlayer"
@@ -10,12 +10,16 @@ const shuffleArray = (arr) => {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
+      ;[a[i], a[j]] = [a[j], a[i]]
   }
   return a
 }
 
 const FlashCardsLessonPage = () => {
+  useEffect(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  }, []);
   const { curriculumId, lessonId } = useParams()
   const [vocabularies, setVocabularies] = useState([])
   const [loading, setLoading] = useState(true)

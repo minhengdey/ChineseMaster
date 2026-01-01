@@ -7,6 +7,10 @@ import WeeklyLeaderboard from "../../components/WeeklyLeaderboard"
 import { User, Mail, BarChart3, Volume2, Star, Flame, BookOpen, Lock } from "lucide-react"
 
 const ProfilePage = ({ user }) => {
+  useEffect(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  }, []);
   const [isEditing, setIsEditing] = useState(false)
   // Simplified user model: name, email, password fields
   const [profileData, setProfileData] = useState({

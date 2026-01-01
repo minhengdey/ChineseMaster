@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -46,8 +47,8 @@ public class AdminStatsService {
             return Collections.emptyList();
         }
 
-        java.time.LocalDateTime start = startDate.atStartOfDay();
-        java.time.LocalDateTime end = endDate.plusDays(1).atStartOfDay(); // exclusive end
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime end = endDate.plusDays(1).atStartOfDay(); // exclusive end
 
         List<Object[]> rows = iseDailyEntryRepository.aggregateRangeLeaderboard(start, end);
         Map<Long, UserEntity> users = userRepository.findAll().stream()

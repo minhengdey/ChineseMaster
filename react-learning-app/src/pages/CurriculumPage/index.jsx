@@ -6,6 +6,10 @@ import CurriculumList from "./components/CurriculumList"
 import { BookOpen } from "lucide-react"
 
 const CurriculumPage = () => {
+  useEffect(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  }, []);
   const [curriculums, setCurriculums] = useState([])
   const [loading, setLoading] = useState(true)
 

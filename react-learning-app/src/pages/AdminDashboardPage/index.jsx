@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import { adminStatsAPI, adminUserAPI } from "../../services/api"
@@ -975,6 +973,10 @@ const UsersSection = ({ users, onRefresh }) => {
 }
 
 const AdminDashboard = () => {
+    useEffect(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+    }, []);
     const [searchParams, setSearchParams] = useSearchParams()
     const [lessons, setLessons] = useState([])
     const [activeLesson, setActiveLesson] = useState(null)

@@ -9,6 +9,10 @@ import { Volume2, Search, Eye, EyeOff } from "lucide-react"
 import { Link } from "react-router-dom"
 
 const PronunciationPage = () => {
+  useEffect(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  }, []);
   // (alphabet/pinyin removed — this page now focuses on vocabulary)
   // Vocabulary states (single mode only)
   const [vocabList, setVocabList] = useState([])
