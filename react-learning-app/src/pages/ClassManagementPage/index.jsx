@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { classAPI, adminUserAPI, handleApiError } from "../../services/api";
 import { useUserStore } from "../../store/UserStore";
 import { Plus, Edit2, Trash2, Search, Users, X, UserPlus, UserMinus } from "lucide-react";
+import ScoreStatsModal from "./components/ScoreStatsModal";
 
 const ClassManagementPage = () => {
     useEffect(() => {
@@ -22,6 +23,7 @@ const ClassManagementPage = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isViewMembersModalOpen, setIsViewMembersModalOpen] = useState(false);
     const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+    const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
 
     // Form data
     const [formData, setFormData] = useState({ name: "", description: "" });
@@ -136,6 +138,11 @@ const ClassManagementPage = () => {
         setSelectedClass(classItem);
         setSelectedMembers([]);
         setIsAddMemberModalOpen(true);
+    };
+
+    const openStatsModal = (classItem) => {
+        setSelectedClass(classItem);
+        setIsStatsModalOpen(true);
     };
 
     const handleAddMembers = async () => {
@@ -276,10 +283,20 @@ const ClassManagementPage = () => {
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => openViewMembersModal(classItem)}
-                                        className="flex-1 px-3 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition text-sm font-medium"
+                                        className="px-3 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition text-sm font-medium"
                                     >
-                                        Xem học viên
+                                        <span className="hidden md:inline">Xem học viên</span>
+                                        <span className="md:hidden">Học viên</span>
                                     </button>
+
+                                    <button
+                                        onClick={() => openStatsModal(classItem)}
+                                        className="flex-1 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition text-sm font-medium"
+                                        title="Thống kê điểm"
+                                    >
+                                        Thống kê điểm
+                                    </button>
+
                                     <button
                                         onClick={() => openAddMemberModal(classItem)}
                                         className="px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
@@ -530,6 +547,15 @@ const ClassManagementPage = () => {
                         </button>
                     </div>
                 </Modal>
+            )}
+
+            {/* Stats Modal */}
+            {isStatsModalOpen && selectedClass && (
+                <ScoreStatsModal
+                    classId={selectedClass.id}
+                    className={selectedClass.name}
+                    onClose={() => setIsStatsModalOpen(false)}
+                />
             )}
         </div>
     );

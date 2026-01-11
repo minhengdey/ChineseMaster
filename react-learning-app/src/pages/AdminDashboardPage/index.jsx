@@ -334,75 +334,6 @@ const LessonTableView = ({ lessons, activeLesson }) => {
     )
 }
 
-const TestSection = ({ tests }) => (
-    <SectionCard title="BXH bài kiểm tra">
-        <div className="space-y-6">
-            {tests.length === 0 && (
-                <div className="text-center p-12 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100">
-                    <div className="text-purple-300 text-5xl mb-4">📝</div>
-                    <p className="text-slate-600 font-medium">Chưa có dữ liệu bài kiểm tra</p>
-                </div>
-            )}
-            {tests.map((t) => (
-                <div key={t.testId} className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
-                    <div className="bg-gradient-to-r from-purple-50 to-blue-50 px-6 py-4 border-b border-purple-100">
-                        <div className="flex items-center justify-between">
-                            <div className="font-semibold text-slate-800 flex items-center gap-2">
-                                <span>📝</span>
-                                Bài kiểm tra #{t.testId}
-                            </div>
-                            <div className="text-sm text-slate-600 font-medium">{t.rows?.length || 0} học viên</div>
-                        </div>
-                    </div>
-                    <div className="p-4">
-                        <UserTable
-                            rows={(t.rows || []).map((r, idx) => ({ ...r, rank: idx + 1 }))}
-                            columns={[
-                                {
-                                    key: "rank",
-                                    title: "Hạng",
-                                    headClassName: "w-16 text-center",
-                                    className: "text-center font-bold text-purple-600",
-                                    render: (r) => (
-                                        <div className="flex items-center justify-center">
-                                            {r.rank <= 3 ? (
-                                                <span className="text-2xl">{r.rank === 1 ? "🥇" : r.rank === 2 ? "🥈" : "🥉"}</span>
-                                            ) : (
-                                                <span className="font-bold">{r.rank}</span>
-                                            )}
-                                        </div>
-                                    ),
-                                },
-                                {
-                                    key: "name",
-                                    title: "Học viên",
-                                    render: (r) => (
-                                        <div className="flex flex-col">
-                                            <span className="font-semibold text-slate-900">{r.name || r.userId}</span>
-                                            {r.email && <span className="text-xs text-slate-500 mt-0.5">{r.email}</span>}
-                                        </div>
-                                    ),
-                                },
-                                { key: "attempts", title: "Số lượt", className: "font-medium text-slate-700" },
-                                {
-                                    key: "bestScore",
-                                    title: "Cao nhất",
-                                    render: (r) => <span className="font-semibold text-emerald-600">{r.bestScore}%</span>,
-                                },
-                                {
-                                    key: "avgScore",
-                                    title: "Điểm TB",
-                                    render: (r) => <span className="font-semibold text-purple-600">{r.avgScore}%</span>,
-                                },
-                            ]}
-                        />
-                    </div>
-                </div>
-            ))}
-        </div>
-    </SectionCard>
-)
-
 const ExamSection = ({ exams }) => (
     <SectionCard title="BXH bài kiểm tra">
         <div className="space-y-6">
@@ -980,7 +911,6 @@ const AdminDashboard = () => {
     const [searchParams, setSearchParams] = useSearchParams()
     const [lessons, setLessons] = useState([])
     const [activeLesson, setActiveLesson] = useState(null)
-    const [tests, setTests] = useState([])
     const [exams, setExams] = useState([])
     const [users, setUsers] = useState([])
     const [weeklyRows, setWeeklyRows] = useState([])
@@ -1000,16 +930,14 @@ const AdminDashboard = () => {
         let mounted = true
         const load = async () => {
             try {
-                const [l, t, e, u] = await Promise.all([
+                const [l, e, u] = await Promise.all([
                     adminStatsAPI.getLessonLeaderboards(),
-                    adminStatsAPI.getTestLeaderboards(),
                     adminStatsAPI.getExamLeaderboards(),
                     adminStatsAPI.getUsers(),
                 ])
                 if (!mounted) return
                 const lessonData = Array.isArray(l?.lessons) ? l.lessons : []
                 setLessons(lessonData)
-                setTests(Array.isArray(t?.tests) ? t.tests : [])
                 setExams(Array.isArray(e?.exams) ? e.exams : [])
                 setUsers(Array.isArray(u) ? u : [])
                 if (lessonData.length > 0) setActiveLesson(lessonData[0].lessonId)
