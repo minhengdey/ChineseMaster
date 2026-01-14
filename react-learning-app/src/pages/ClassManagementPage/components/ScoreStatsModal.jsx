@@ -90,9 +90,8 @@ const ScoreStatsModal = ({ classId, className, onClose }) => {
 
                 // Build rows: for each member, create scores array aligned with cols
                 const rows = (members || []).map((m) => {
-                    const userId = m.userId || m.id || m.user?.id || m.userId;
-                    const name = m.name || m.fullName || (m.user && m.user.name) || m.email || "";
-                    const email = m.email || (m.user && m.user.email) || "";
+                    const userId = m.userId || m.id || m.user?.id;
+                    const name = m.name || m.fullName || (m.user && m.user.name) || "";
 
                     const scores = cols.map((col) => {
                         // find in corresponding leaderboard raw data
@@ -101,12 +100,11 @@ const ScoreStatsModal = ({ classId, className, onClose }) => {
                         if (col.source === "lesson") {
                             // find lesson object in lessonsAll
                             const lessonObj = (lessonsAll || []).find(l => Number(l.lessonId) === Number(col.raw.lessonId));
-                            entry = (lessonObj?.rows || []).find(r => String(r.userId) === String(userId) || String(r.email) === String(email));
+                            entry = (lessonObj?.rows || []).find(r => String(r.userId) === String(userId));
                             avg = entry?.avgScore ?? entry?.avg ?? entry?.bestScore ?? null;
                         } else {
                             const testObj = (testsAll || []).find(t => String(t.testId) === String(col.raw.testId));
-                            entry = (testObj?.rows || []).find(r => String(r.userId) === String(userId) || String(r.email) === String(email));
-                            console.log(entry)
+                            entry = (testObj?.rows || []).find(r => String(r.userId) === String(userId));
                             avg = entry?.totalScore ?? null;
                         }
 
@@ -122,9 +120,8 @@ const ScoreStatsModal = ({ classId, className, onClose }) => {
                     });
 
                     return {
-                        userId: userId || `${email || name}-${Math.random()}`,
+                        userId: userId || `${name}-${Math.random()}`,
                         name,
-                        email,
                         scores,
                     };
                 });
