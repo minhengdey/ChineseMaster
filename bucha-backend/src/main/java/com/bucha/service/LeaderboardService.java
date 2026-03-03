@@ -142,8 +142,6 @@ public class LeaderboardService {
             rows.add(row);
         }
 
-        System.out.println(OVERRIDES.size());
-
         for (LeaderboardOverride override : OVERRIDES) {
             Map<String, Object> row = new HashMap<>();
             row.put("userId", override.userId);

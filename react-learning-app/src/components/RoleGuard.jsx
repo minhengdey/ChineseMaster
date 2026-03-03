@@ -3,40 +3,16 @@
 import { useEffect, useState } from "react"
 import { Navigate } from "react-router-dom"
 import { useUserStore } from "../store/UserStore"
-import { userAPI } from "../services/api"
+import { ROUTES } from "../constants/routes"
 
-// Generic role guard for pages that require specific roles.
-// Default allowedRoles = ["USER"]. Provide array of role strings (uppercase).
-// redirectTo allows sending forbidden roles to a specific landing page (e.g., admin -> /admin).
+// Profile is fetched once by ProtectedRoute; we only read from store (no duplicate API call).
 const RoleGuard = ({ allowedRoles = ["USER"], redirectTo, fallback = null, children }) => {
     const user = useUserStore((s) => s.user)
-    const setUser = useUserStore((s) => s.setUser)
     const [loading, setLoading] = useState(!user)
-    const [error, setError] = useState(null)
 
     useEffect(() => {
-        if (user) {
-            setLoading(false)
-            return
-        }
-        let mounted = true
-        const load = async () => {
-            try {
-                const profile = await userAPI.getProfile()
-                if (!mounted) return
-                setUser(profile)
-            } catch (e) {
-                if (!mounted) return
-                setError(e)
-            } finally {
-                if (mounted) setLoading(false)
-            }
-        }
-        load()
-        return () => {
-            mounted = false
-        }
-    }, [user, setUser])
+        setLoading(!user)
+    }, [user])
 
     if (loading) {
         return (
@@ -51,8 +27,8 @@ const RoleGuard = ({ allowedRoles = ["USER"], redirectTo, fallback = null, child
         )
     }
 
-    if (error || !user) {
-        return <Navigate to="/login" replace />
+    if (!user) {
+        return <Navigate to={ROUTES.LOGIN} replace />
     }
 
     const role = (user.role || "").toUpperCase()

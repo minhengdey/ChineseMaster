@@ -1,32 +1,28 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, memo } from "react"
 import { Link } from "react-router-dom"
 import { userLessonAPI } from "../../../services/api"
 
-const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
-  const [completed, setCompleted] = useState(Boolean(lesson?.completed))
-  const [inProgress, setInProgress] = useState(Boolean(lesson?.inProgress))
-
-  // If parent marks the lesson as locked, keep it locked. Additionally,
-  // enforce a rule: unlock lessons up to `UNLOCK_UP_TO` (inclusive).
-  // Compare `lesson.order` with 12 using parseInt to handle string values.
-  const UNLOCK_UP_TO = 12
-  const lessonOrder = parseInt(lesson?.order, 10) || 0
-  // Force all lessons to be unlocked for current session.
-  // Previously locking logic used `UNLOCK_UP_TO` and lessonOrder; override it.
+const LessonCard = memo(({ lesson, curriculumId, isLocked = false, completed: completedProp, inProgress: inProgressProp }) => {
+  const fromParent = completedProp !== undefined && inProgressProp !== undefined
+  const [completed, setCompleted] = useState(fromParent ? completedProp : Boolean(lesson?.completed))
+  const [inProgress, setInProgress] = useState(fromParent ? inProgressProp : Boolean(lesson?.inProgress))
   const localIsLocked = false
 
   useEffect(() => {
+    if (fromParent) {
+      setCompleted(completedProp)
+      setInProgress(inProgressProp)
+      return
+    }
+    if (!lesson?.id) return
     let mounted = true
     const fetchStatus = async () => {
-      if (!lesson?.id) return
       try {
         const data = await userLessonAPI.isCompleted(lesson.id)
         if (!mounted) return
-        const userLines = Number(
-          data?.userDistinctLineCount ?? data?.user_distinct_line_count ?? data?.scoredCount ?? 0,
-        )
+        const userLines = Number(data?.userDistinctLineCount ?? data?.user_distinct_line_count ?? data?.scoredCount ?? 0)
         const userVocabs = Number(data?.userDistinctVocabCount ?? data?.user_distinct_vocab_count ?? 0)
         const totalLines = Number(data?.totalLines ?? data?.total_lines ?? 0)
         const totalVocab = Number(data?.totalVocab ?? data?.total_vocab ?? 0)
@@ -34,15 +30,11 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
         const vocabComplete = totalVocab === 0 || userVocabs >= totalVocab
         setCompleted(linesComplete && vocabComplete)
         setInProgress(!(linesComplete && vocabComplete) && (userLines > 0 || userVocabs > 0))
-      } catch (e) {
-        // console.debug("Failed to fetch lesson completion", e)
-      }
+      } catch (e) {}
     }
     fetchStatus()
-    return () => {
-      mounted = false
-    }
-  }, [lesson?.id])
+    return () => { mounted = false }
+  }, [lesson?.id, fromParent, completedProp, inProgressProp])
 
   const getLessonStatusIcon = () => {
     if (localIsLocked) return "🔒"
@@ -116,6 +108,8 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
       </div>
     </div>
   )
-}
+})
+
+LessonCard.displayName = "LessonCard"
 
 export default LessonCard

@@ -1,37 +1,36 @@
 package com.bucha.controller;
 
-import com.bucha.dto.UserProfileDto;
+import com.bucha.dto.user.UserProfileDto;
 import com.bucha.security.JwtUserPrincipal;
 import com.bucha.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/profile")
+@RequiredArgsConstructor
 public class ProfileController {
-    private final UserService userService;
 
-    public ProfileController(UserService userService) {
-        this.userService = userService;
-    }
+    private final UserService userService;
 
     @GetMapping
     public ResponseEntity<UserProfileDto> getProfile(@AuthenticationPrincipal JwtUserPrincipal principal) {
-        var u = userService.findById(principal.id()).orElseThrow();
-        return ResponseEntity.ok(toDto(u));
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(userService.getProfile(principal.id()));
     }
 
     @PostMapping
     public ResponseEntity<?> updateProfile(@AuthenticationPrincipal JwtUserPrincipal principal,
             @RequestBody UserProfileDto patch) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("auth=" + auth); // hoặc logger
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
         try {
-            var u = userService.updateProfile(principal.id(), patch);
-            return ResponseEntity.ok(toDto(u));
+            return ResponseEntity.ok(userService.updateProfile(principal.id(), patch));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(java.util.Map.of("error", "missing_current_password", "message", e.getMessage()));
@@ -40,18 +39,4 @@ public class ProfileController {
                     .body(java.util.Map.of("error", "incorrect_current_password", "message", e.getMessage()));
         }
     }
-
-    private UserProfileDto toDto(com.bucha.entity.UserEntity u) {
-        UserProfileDto dto = new UserProfileDto();
-        dto.id = u.getId();
-        dto.email = u.getEmail();
-        dto.name = u.getName();
-        dto.role = u.getRole();
-        dto.xp = u.getXp();
-        dto.streak = u.getStreak();
-        dto.darkMode = u.isDarkMode();
-        dto.badges = u.getBadges();
-        return dto;
-    }
-
 }

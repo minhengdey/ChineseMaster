@@ -1,6 +1,8 @@
 package com.bucha.service;
 
+import com.bucha.dto.user.UserProfileDto;
 import com.bucha.entity.UserEntity;
+import com.bucha.mapper.UserMapper;
 import com.bucha.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,11 +15,13 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository repo;
     private final PasswordEncoder encoder;
+    private final UserMapper userMapper;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    public UserService(UserRepository repo, PasswordEncoder encoder) {
+    public UserService(UserRepository repo, PasswordEncoder encoder, UserMapper userMapper) {
         this.repo = repo;
         this.encoder = encoder;
+        this.userMapper = userMapper;
     }
 
     public UserEntity register(String email, String password, String name) {
@@ -44,7 +48,7 @@ public class UserService {
         return repo.save(user);
     }
 
-    public UserEntity updateProfile(Long id, com.bucha.dto.UserProfileDto patch) {
+    public UserProfileDto updateProfile(Long id, UserProfileDto patch) {
         var u = repo.findById(id).orElseThrow();
 
         // Determine if the client requests sensitive changes (name, email or password)
@@ -83,8 +87,16 @@ public class UserService {
         u.setDarkMode(patch.darkMode);
         u.setXp(patch.xp);
         u.setStreak(patch.streak);
-        var saved = repo.save(u);
+        UserEntity saved = repo.save(u);
         log.debug("updateProfile: id={} update successful", id);
-        return saved;
+        return userMapper.toProfileDto(saved);
+    }
+
+    /**
+     * Get profile DTO for API. Conversion via UserMapper.
+     */
+    public UserProfileDto getProfile(Long id) {
+        UserEntity u = repo.findById(id).orElseThrow();
+        return userMapper.toProfileDto(u);
     }
 }

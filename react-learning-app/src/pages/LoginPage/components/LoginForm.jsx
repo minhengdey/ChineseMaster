@@ -30,21 +30,14 @@ const LoginForm = ({ onLogin }) => {
 
     try {
       const result = await authAPI.login(formData)
-      console.log("Login result:", result)
-      // Backend now returns { user: {...} } and sets httpOnly cookie
       if (result && result.user) {
-        console.log("Login successful, saving user to store...")
-        // Save user to store so ProtectedRoute doesn't need to call /profile
         useUserStore.getState().setUser(result.user)
-        console.log("Redirecting to home...")
         onLogin()
       } else {
-        console.error("Login response missing user:", result)
         setError("Đăng nhập thất bại")
       }
-    } catch (error) {
-      console.error("Login error:", error)
-      setError(handleApiError(error))
+    } catch (err) {
+      setError(handleApiError(err))
     } finally {
       setLoading(false)
     }

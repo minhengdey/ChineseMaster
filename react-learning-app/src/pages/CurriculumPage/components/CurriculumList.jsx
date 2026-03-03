@@ -1,6 +1,6 @@
 import CurriculumCard from "./CurriculumCard"
 
-const CurriculumList = ({ curriculums }) => {
+const CurriculumList = ({ curriculums, lessonCountByCurriculum = {} }) => {
   if (curriculums.length === 0) {
     return (
       <div className="text-center py-16">
@@ -14,7 +14,11 @@ const CurriculumList = ({ curriculums }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {curriculums.map((curriculum) => (
-        <CurriculumCard key={curriculum.id} curriculum={curriculum} />
+        <CurriculumCard
+          key={curriculum.id}
+          curriculum={curriculum}
+          lessonCount={lessonCountByCurriculum[curriculum.id]}
+        />
       ))}
     </div>
   )

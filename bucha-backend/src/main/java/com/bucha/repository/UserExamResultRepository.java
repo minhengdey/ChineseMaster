@@ -30,6 +30,9 @@ public interface UserExamResultRepository extends JpaRepository<UserExamResult, 
         @Query("SELECT COUNT(DISTINCT uer.exam.externalId) FROM UserExamResult uer WHERE uer.user.id = :userId")
         Long countCompletedExamsByUserId(@Param("userId") Long userId);
 
+        @Query("SELECT uer FROM UserExamResult uer JOIN FETCH uer.user JOIN FETCH uer.exam WHERE uer.exam.id = :examId ORDER BY uer.totalScore DESC")
+        List<UserExamResult> findByExamIdOrderByTotalScoreDesc(@Param("examId") Long examId);
+
         @Query("""
                         SELECT uer.exam.id as examId,
                                uer.exam.title as examTitle,

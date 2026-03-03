@@ -6,12 +6,9 @@ import RecordingButton from "./components/RecordingButton"
 import PronunciationResult from "./components/PronunciationResult"
 import { Volume2, Type, AlertCircle, AlertTriangle } from "lucide-react"
 import { hasLetters } from "../../utils/textUtils"
+import PageLayout from "../../components/layout/PageLayout"
 
 const AlphabetPage = () => {
-  useEffect(() => {
-    localStorage.clear();
-    sessionStorage.clear();
-  }, []);
   const [pinyinTable, setPinyinTable] = useState([])
   const [alphabetData, setAlphabetData] = useState({})
   const [loading, setLoading] = useState(true)
@@ -191,9 +188,11 @@ const AlphabetPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-white">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
+      <PageLayout>
+        <div className="flex items-center justify-center min-h-48">
+          <span className="loading loading-spinner loading-lg text-purple-500" />
+        </div>
+      </PageLayout>
     )
   }
 
@@ -205,8 +204,8 @@ const AlphabetPage = () => {
     : []
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-8">
-      <div className="container mx-auto px-4">
+    <PageLayout>
+      <div className="space-y-6">
         <div className="mb-8 bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-500 rounded-3xl p-8 text-white shadow-lg animate-fade-in flex items-center gap-4">
           <Type size={40} />
           <div>
@@ -456,7 +455,7 @@ const AlphabetPage = () => {
             document.body
           )}
       </div>
-    </div>
+    </PageLayout>
   )
 }
 

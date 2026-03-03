@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "../../AssessmentsListPage/ui/button"
-import { Badge } from "./ui/badge"
+import { Button, Badge } from "@/components/ui"
 
 const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBack, viewMode = false }) => {
     const [isSubmitting, setIsSubmitting] = useState(false)

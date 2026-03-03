@@ -1,17 +1,23 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { useParams, Link, useLocation, useNavigate } from "react-router-dom"
-import { iseAPI, migrationAPI, contentAPI } from "../../services/api"
-import { iseStatsAPI } from "../../services/api"
+import { useParams, useLocation, useNavigate } from "react-router-dom"
+import { iseAPI, migrationAPI, contentAPI, iseStatsAPI } from "../../services/api"
+
+const _speakingPracticeIseStatsInFlight = { promise: null }
+const _speakingPracticeVocabInFlight = {}
 import { hasLetters } from "../../utils/textUtils"
 import SentencePronunciationResult from "../LessonDetailPage/components/SentencePronunciationResult"
+import PageLayout from "../../components/layout/PageLayout"
+import {
+  OrderChoiceModal,
+  PracticeToolbar,
+  SentenceCard,
+  RecordingSection,
+  ErrorModal,
+} from "./components"
 
 const SpeakingPracticePage = () => {
-  useEffect(() => {
-    localStorage.clear();
-    sessionStorage.clear();
-  }, []);
   const { curriculumId, lessonId } = useParams()
   const location = useLocation()
   const isDailyMode = location.pathname && location.pathname.includes("/speaking/daily")
@@ -50,19 +56,54 @@ const SpeakingPracticePage = () => {
     // For lesson practice, show an order/random prompt before preloading lines.
     if (lessonId && !isDailyMode) {
       if (isVocabMode) {
-        // vocab practice doesn't require the prompt
         preloadLessonVocabularies(lessonId)
       } else {
-        // show prompt to ask whether to practice in-order or random
         setShowOrderChoice(true)
-        // avoid showing global loading spinner while waiting for the user's choice
         setLoading(false)
       }
     } else {
       fetchRandomSentence()
     }
-    // fetch stats for display
-    fetchIseStats()
+    // fetch stats for display (in-flight dedupe for Strict Mode)
+    ;(async () => {
+      if (_speakingPracticeIseStatsInFlight.promise) {
+        try {
+          const r = await _speakingPracticeIseStatsInFlight.promise
+          if (r) {
+            setWeeklyRows(r.weeklyRows ?? [])
+            setLessonRows(r.lessonRows ?? [])
+            setTestRows(r.testRows ?? [])
+          }
+        } catch (_) {}
+        return
+      }
+      _speakingPracticeIseStatsInFlight.promise = (async () => {
+        try {
+          const weekly = await iseStatsAPI.getWeekly()
+          const wr = Array.isArray(weekly?.rows) ? weekly.rows : []
+          setWeeklyRows(wr)
+          let lr = []
+          let tr = []
+          try {
+            const lessons = await iseStatsAPI.getLessons()
+            lr = Array.isArray(lessons?.rows) ? lessons.rows : []
+            setLessonRows(lr)
+            try {
+              const tests = await iseStatsAPI.getTests()
+              tr = Array.isArray(tests?.rows) ? tests.rows : []
+              setTestRows(tr)
+            } catch (e) { setTestRows([]) }
+          } catch (e) { setLessonRows([]) }
+          return { weeklyRows: wr, lessonRows: lr, testRows: tr }
+        } catch (e) {
+          setWeeklyRows([])
+          throw e
+        } finally {
+          _speakingPracticeIseStatsInFlight.promise = null
+        }
+      })()
+      await _speakingPracticeIseStatsInFlight.promise
+    })()
     // cleanup
     return () => {
       // stop any active recorder and tracks
@@ -89,12 +130,48 @@ const SpeakingPracticePage = () => {
     }
   }, [lessonId, isDailyMode])
 
-  // Handler called when user chooses order/random from the pre-entry prompt
   const handleOrderChoice = async (choiceIsRandom) => {
-    setShuffleMode(choiceIsRandom);
-    setShowOrderChoice(false);
-    await preloadLessonLines(lessonId);
-  };
+    setShuffleMode(choiceIsRandom)
+    setShowOrderChoice(false)
+    await preloadLessonLines(lessonId)
+  }
+
+  const handleShuffleToggle = () => {
+    const next = !shuffleMode
+    setShuffleMode(next)
+    const base =
+      originalQueueRef.current && originalQueueRef.current.length > 0
+        ? originalQueueRef.current
+        : Array.isArray(queue)
+          ? queue.slice()
+          : []
+    const newQueue = next ? shuffleArray(base) : base.slice()
+    const currentItem = Array.isArray(queue) && queue[queueIndex] ? queue[queueIndex] : null
+    let newIndex = findIndexForCurrent(newQueue, currentItem)
+    if (newQueue && newQueue.length > 0) {
+      if (newQueue.length === 1) newIndex = 0
+      else {
+        let rnd = newIndex
+        let attempts = 0
+        while (rnd === newIndex && attempts < 10) {
+          rnd = Math.floor(Math.random() * newQueue.length)
+          attempts++
+        }
+        newIndex = rnd
+      }
+    }
+    setQueue(newQueue)
+    setQueueIndex(newIndex)
+    if (newQueue && newQueue.length > 0) setSentence((newQueue[newIndex] && newQueue[newIndex].text) || "")
+    setCurrentScored(false)
+    setAudioBlob(null)
+    setResult(null)
+  }
+
+  const handleGetNext = () => {
+    if (lessonId && !isDailyMode) playNextInQueue()
+    else fetchRandomSentence()
+  }
 
   // Không lưu shuffleMode vào storage nữa
   // useEffect(() => {}, [shuffleMode])
@@ -212,78 +289,73 @@ const SpeakingPracticePage = () => {
   }
 
   const preloadLessonVocabularies = async (lessonIdParam) => {
+    if (_speakingPracticeVocabInFlight[lessonIdParam]) {
+      try {
+        const items = await _speakingPracticeVocabInFlight[lessonIdParam]
+        if (items && items.length > 0) {
+          originalQueueRef.current = items
+          const toSet = shuffleMode ? shuffleArray(items) : items
+          setQueue(toSet)
+          setQueueIndex(0)
+          setSentence(toSet[0]?.text || "")
+          setCurrentScored(false)
+          setAudioBlob(null)
+          setResult(null)
+          setError(null)
+        }
+      } catch (_) {}
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError(null)
-    try {
-      const lesson = await contentAPI.getLessonDetail(lessonIdParam)
-      const list = lesson.vocabularies || []
-      const items = []
-      list.forEach((v) => {
-        // prefer externalId when available; fallback to id/_id for display only
-        const externalId = v?.externalId ?? v?.id ?? v?._id ?? null
-        const internalId = v?.id ?? v?._id ?? null
-        const text = v?.word || v?.zh || v?.text || v?.chinese || null
-        if (!text) return
-        if (!hasLetters(text)) return
-        items.push({
-          // keep internal id for UI keys if present, but expose externalId for backend
-          id: internalId,
-          externalId: externalId,
-          text: text,
-          pinyin: v?.pinyin || null,
-          audioAsset: v?.audioAsset || null,
-          audioUrl: v?.audioUrl || null,
-          // vocabularyId MUST be the externalId so backend can match external IDs
-          vocabularyId: externalId,
+    _speakingPracticeVocabInFlight[lessonIdParam] = (async () => {
+      try {
+        const lesson = await contentAPI.getLessonDetail(lessonIdParam)
+        const list = lesson.vocabularies || []
+        const items = []
+        list.forEach((v) => {
+          const externalId = v?.externalId ?? v?.id ?? v?._id ?? null
+          const internalId = v?.id ?? v?._id ?? null
+          const text = v?.word || v?.zh || v?.text || v?.chinese || null
+          if (!text) return
+          if (!hasLetters(text)) return
+          items.push({
+            id: internalId,
+            externalId: externalId,
+            text: text,
+            pinyin: v?.pinyin || null,
+            audioAsset: v?.audioAsset || null,
+            audioUrl: v?.audioUrl || null,
+            vocabularyId: externalId,
+          })
         })
-      })
-
-      if (items.length === 0) {
-        setError("Không tìm thấy từ vựng cho bài này")
+        if (items.length === 0) {
+          setError("Không tìm thấy từ vựng cho bài này")
+          setQueue([])
+          setSentence("")
+          return []
+        }
+        originalQueueRef.current = items
+        const toSet = shuffleMode ? shuffleArray(items) : items
+        setQueue(toSet)
+        setQueueIndex(0)
+        setSentence(toSet[0]?.text || "")
+        setCurrentScored(false)
+        setAudioBlob(null)
+        setResult(null)
+        return items
+      } catch (err) {
+        setError("Không thể lấy từ vựng từ server")
         setQueue([])
         setSentence("")
-        return
+        throw err
+      } finally {
+        delete _speakingPracticeVocabInFlight[lessonIdParam]
+        setLoading(false)
       }
-
-      originalQueueRef.current = items
-      const toSet = shuffleMode ? shuffleArray(items) : items
-      setQueue(toSet)
-      setQueueIndex(0)
-      setSentence(toSet[0]?.text || "")
-      setCurrentScored(false)
-      setAudioBlob(null)
-      setResult(null)
-      return
-    } catch (err) {
-      // console.error(err)
-      setError("Không thể lấy từ vựng từ server")
-      setQueue([])
-      setSentence("")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchIseStats = async () => {
-    try {
-      const weekly = await iseStatsAPI.getWeekly()
-      setWeeklyRows(Array.isArray(weekly?.rows) ? weekly.rows : [])
-    } catch (e) {
-      // ignore stats errors silently
-      // console.debug("weekly stats error", e)
-    }
-    try {
-      const lessons = await iseStatsAPI.getLessons()
-      setLessonRows(Array.isArray(lessons?.rows) ? lessons.rows : [])
-    } catch (e) {
-      // console.debug("lesson stats error", e)
-    }
-    try {
-      const tests = await iseStatsAPI.getTests()
-      setTestRows(Array.isArray(tests?.rows) ? tests.rows : [])
-    } catch (e) {
-      // console.debug("test stats error", e)
-    }
+    })()
+    await _speakingPracticeVocabInFlight[lessonIdParam]
   }
 
   const fetchRandomSentence = async () => {
@@ -528,287 +600,65 @@ const SpeakingPracticePage = () => {
     }
   }
 
-  const toPercent = (value, type = "total") => {
-    if (value == null) return 0
-    return Math.min(100, Math.round(value))
-  }
-
-  const highlightSentence = (text, wrongWords = []) => {
-    if (!text) return text
-    if (!wrongWords || wrongWords.length === 0) return text
-
-    const words = Array.from(new Set(wrongWords.filter(Boolean))).sort((a, b) => b.length - a.length)
-    const escaped = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-    const pattern = new RegExp(`(${escaped.join("|")})`, "g")
-
-    const parts = text.split(pattern)
-    return parts.map((part, idx) => {
-      if (pattern.test(part)) {
-        return (
-          <span
-            key={idx}
-            className="text-red-600 font-semibold"
-            style={{ backgroundColor: "rgba(255,200,200,0.4)", padding: "0 2px", borderRadius: 4 }}
-          >
-            {part}
-          </span>
-        )
-      }
-      return <span key={idx}>{part}</span>
-    })
-  }
-
-  const Stars = ({ percent = 0 }) => {
-    const pct = Math.max(0, Math.min(100, percent))
-    return (
-      <div className="relative inline-block align-middle">
-        <div style={{ color: "#e5e7eb" }}>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <svg key={i} className="w-5 h-5 inline-block" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.965a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.286 3.966c.3.92-.755 1.688-1.54 1.118l-3.37-2.447a1 1 0 00-1.175 0l-3.37 2.447c-.784.57-1.84-.197-1.54-1.118l1.286-3.966a1 1 0 00-.364-1.118L2.063 9.392c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.965z" />
-            </svg>
-          ))}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            overflow: "hidden",
-            width: `${pct}%`,
-            whiteSpace: "nowrap",
-            color: "#f6c700",
-          }}
-        >
-          {Array.from({ length: 5 }).map((_, i) => (
-            <svg key={i} className="w-5 h-5 inline-block" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.965a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.286 3.966c.3.92-.755 1.688-1.54 1.118l-3.37-2.447a1 1 0 00-1.175 0l-3.37 2.447c-.784.57-1.84-.197-1.54-1.118l1.286-3.966a1 1 0 00-.364-1.118L2.063 9.392c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.965z" />
-            </svg>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-blue-50 py-8 px-4">
+    <PageLayout>
       <div className="max-w-3xl mx-auto">
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            {!isVocabMode && !isDailyMode && !(lessonId && !isDailyMode) && (
-              <button
-                className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${shuffleMode
-                  ? "bg-blue-600 text-white shadow-md hover:bg-blue-700"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                onClick={() => {
-                  const next = !shuffleMode
-                  setShuffleMode(next)
-
-                  const base =
-                    originalQueueRef.current && originalQueueRef.current.length > 0
-                      ? originalQueueRef.current
-                      : Array.isArray(queue)
-                        ? queue.slice()
-                        : []
-                  const newQueue = next ? shuffleArray(base) : base.slice()
-
-                  const currentItem = Array.isArray(queue) && queue[queueIndex] ? queue[queueIndex] : null
-                  let newIndex = findIndexForCurrent(newQueue, currentItem)
-                  if (newQueue && newQueue.length > 0) {
-                    if (newQueue.length === 1) newIndex = 0
-                    else {
-                      let rnd = newIndex
-                      let attempts = 0
-                      while (rnd === newIndex && attempts < 10) {
-                        rnd = Math.floor(Math.random() * newQueue.length)
-                        attempts++
-                      }
-                      newIndex = rnd
-                    }
-                  }
-
-                  setQueue(newQueue)
-                  setQueueIndex(newIndex)
-                  if (newQueue && newQueue.length > 0)
-                    setSentence((newQueue[newIndex] && newQueue[newIndex].text) || "")
-                  setCurrentScored(false)
-                  setAudioBlob(null)
-                  setResult(null)
-                }}
-              >
-                {shuffleMode ? "🔀 Ngẫu nhiên: Bật" : "🔀 Ngẫu nhiên"}
-              </button>
-            )}
-
-            {isDailyMode ? (
-              <button
-                className={`px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all duration-200 ${recording ? "opacity-50 cursor-not-allowed" : ""}`}
-                onClick={() => navigate(-1)}
-              >
-                ← Quay lại
-              </button>
-            ) : (
-              <Link
-                to={`/curriculum/${curriculumId}/lesson/${lessonId}`}
-                className={`px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all duration-200 ${recording ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                ← Quay lại bài học
-              </Link>
-            )}
-
-            <button
-              className={`px-4 py-2 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 transition-all duration-200 ${recording || (!isDailyMode && !currentScored) || (queueIndex + 1 === queue.length) ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              onClick={() => {
-                if (lessonId && !isDailyMode) playNextInQueue()
-                else fetchRandomSentence()
-              }}
-              disabled={recording || (!isDailyMode && !currentScored) || queueIndex + 1 == queue.length}
-              title={
-                recording
-                  ? "Đang ghi âm"
-                  : !isDailyMode && !currentScored
-                    ? "Phải ghi âm và gửi điểm trước khi lấy câu mới"
-                    : "Lấy câu mới"
-              }
-            >
-              ➕ Lấy câu mới
-            </button>
-
-            {queue && queue.length > 0 && lessonId && !isDailyMode && (
-              <div className="inline-flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm">
-                <div className="text-sm font-semibold text-gray-700">
-                  {queueIndex + 1} / {queue.length}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <PracticeToolbar
+          isVocabMode={isVocabMode}
+          isDailyMode={isDailyMode}
+          lessonId={lessonId}
+          curriculumId={curriculumId}
+          shuffleMode={shuffleMode}
+          recording={recording}
+          currentScored={currentScored}
+          queue={queue}
+          queueIndex={queueIndex}
+          onShuffleToggle={handleShuffleToggle}
+          onGetNext={handleGetNext}
+          navigate={navigate}
+        />
 
         {showOrderChoice && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-200 animate-in fade-in zoom-in-95 duration-300">
-              <h2 className="text-2xl font-bold mb-4 text-gray-900">Chọn chế độ luyện</h2>
-              <p className="text-gray-600 mb-8 leading-relaxed">Bạn muốn luyện theo thứ tự của bài hay ngẫu nhiên?</p>
-              <div className="flex gap-3 justify-end">
-                <button
-                  className="px-6 py-2 rounded-lg font-semibold bg-gray-300 text-gray-800 hover:bg-gray-400 transition-all duration-200"
-                  onClick={() => navigate(-1)}
-                >
-                  Hủy
-                </button>
-                <button
-                  className="px-6 py-2 rounded-lg font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
-                  onClick={() => handleOrderChoice(false)}
-                >
-                  Theo thứ tự
-                </button>
-                <button
-                  className="px-6 py-2 rounded-lg font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-all duration-200"
-                  onClick={() => handleOrderChoice(true)}
-                >
-                  Ngẫu nhiên
-                </button>
-              </div>
-            </div>
-          </div>
+          <OrderChoiceModal
+            onCancel={() => navigate(-1)}
+            onOrder={() => handleOrderChoice(false)}
+            onRandom={() => handleOrderChoice(true)}
+          />
         )}
 
         {loading ? (
           <div className="min-h-96 flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
-              <span className="loading loading-spinner loading-lg text-blue-600"></span>
+              <span className="loading loading-spinner loading-lg text-blue-600" />
               <p className="text-gray-600 font-medium">Đang tải...</p>
             </div>
           </div>
         ) : (
           <>
             <div className="max-w-3xl mx-auto space-y-6">
-              <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <div className="text-sm font-bold text-blue-600 mb-4 uppercase tracking-widest">
-                  {isVocabMode ? "📝 Từ cần luyện" : "💬 Câu cần luyện"}
-                </div>
-                <div className="text-4xl md:text-5xl font-bold text-gray-900 break-words whitespace-pre-wrap leading-relaxed">
-                  {sentence}
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 border border-blue-200 shadow-lg">
-                <div className="space-y-6">
-                  <div className="flex justify-center">
-                    {!recording ? (
-                      <button
-                        onClick={startRecording}
-                        className="px-12 py-4 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-lg font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-                      >
-                        🎤 Ghi âm
-                      </button>
-                    ) : (
-                      <button
-                        onClick={stopRecording}
-                        className="px-12 py-4 rounded-full bg-gradient-to-r from-red-600 to-red-700 text-white text-lg font-bold shadow-lg hover:shadow-xl animate-pulse transition-all duration-300"
-                      >
-                        ⏹️ Dừng
-                      </button>
-                    )}
-                  </div>
-
-                  {audioBlob && (
-                    <div className="bg-white rounded-xl p-6 border border-blue-200 shadow-sm">
-                      <p className="text-sm font-semibold text-gray-700 mb-4">🔊 Bản ghi của bạn:</p>
-                      <audio controls src={URL.createObjectURL(audioBlob)} className="w-full rounded-lg bg-gray-100" />
-                    </div>
-                  )}
-
-                  <div className="flex justify-center">
-                    <button
-                      className={`px-12 py-3 rounded-lg font-bold text-white transition-all duration-300 ${!audioBlob || loading || recording
-                        ? "bg-gray-400 cursor-not-allowed opacity-60"
-                        : "bg-gradient-to-r from-green-600 to-green-700 hover:shadow-lg hover:scale-105"
-                        }`}
-                      onClick={submitScore}
-                      disabled={!audioBlob || loading || recording}
-                    >
-                      ✓ Gửi điểm
-                    </button>
-                  </div>
-                </div>
-              </div>
-
+              <SentenceCard sentence={sentence} isVocabMode={isVocabMode} />
+              <RecordingSection
+                recording={recording}
+                audioBlob={audioBlob}
+                loading={loading}
+                onStartRecording={startRecording}
+                onStopRecording={stopRecording}
+                onSubmitScore={submitScore}
+              />
               {result && (
                 <SentencePronunciationResult
                   result={result}
                   recordedAudio={audioBlob}
-                  onClose={() => {
-                    setResult(null)
-                    setSelectedWord(null)
-                  }}
+                  onClose={() => { setResult(null); setSelectedWord(null) }}
                   sentenceText={sentence}
                 />
               )}
             </div>
-
-            {error && (
-              <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-200">
-                  <h3 className="text-lg font-bold mb-2">⚠️ Thông báo</h3>
-                  <p className="text-gray-700 mb-4">{error}</p>
-                  <div className="flex justify-end">
-                    <button
-                      className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-                      onClick={() => setError(null)}
-                    >
-                      OK
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            {error && <ErrorModal message={error} onClose={() => setError(null)} />}
           </>
         )}
       </div>
-    </div>
+    </PageLayout>
   )
 }
 

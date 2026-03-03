@@ -65,8 +65,7 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/h2-console/**"),
                                 new AntPathRequestMatcher("/api/ise/score"),
                                 new AntPathRequestMatcher("/api/ise/score-json"),
-                                new AntPathRequestMatcher("/api/ise/job/**"),
-                                new AntPathRequestMatcher("/api/profile"))
+                                new AntPathRequestMatcher("/api/ise/job/**"))
                         .permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
                         .anyRequest().permitAll())

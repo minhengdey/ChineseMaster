@@ -1,8 +1,8 @@
 package com.bucha.service;
 
-import com.bucha.dto.ClassDto;
-import com.bucha.dto.ClassMemberDto;
-import com.bucha.dto.ClassRequests;
+import com.bucha.dto.classmgmt.ClassDto;
+import com.bucha.dto.classmgmt.ClassMemberDto;
+import com.bucha.dto.classmgmt.ClassRequests;
 import com.bucha.entity.ClassEntity;
 import com.bucha.entity.ClassMembership;
 import com.bucha.entity.UserEntity;

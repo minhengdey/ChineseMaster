@@ -1,8 +1,9 @@
 package com.bucha.service;
 
-import com.bucha.dto.AdminUserDto;
-import com.bucha.dto.AdminUserRequests;
+import com.bucha.dto.admin.AdminUserDto;
+import com.bucha.dto.admin.AdminUserRequests;
 import com.bucha.entity.UserEntity;
+import com.bucha.mapper.UserMapper;
 import com.bucha.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,11 +23,12 @@ public class AdminUserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     public List<AdminUserDto> list() {
         return userRepository.findAll().stream()
                 .map(this::ensureRole)
-                .map(this::toDto)
+                .map(userMapper::toAdminUserDto)
                 .collect(Collectors.toList());
     }
 
@@ -42,7 +44,7 @@ public class AdminUserService {
         u.setRole(normalizedRole);
         u = userRepository.save(u);
         log.info("Admin created user id={} email={} role={}", u.getId(), u.getEmail(), u.getRole());
-        return toDto(u);
+        return userMapper.toAdminUserDto(u);
     }
 
     public AdminUserDto update(Long id, AdminUserRequests.Update req) {
@@ -72,7 +74,7 @@ public class AdminUserService {
 
         u = userRepository.save(u);
         log.info("Admin updated user id={} email={} role={}", u.getId(), u.getEmail(), u.getRole());
-        return toDto(u);
+        return userMapper.toAdminUserDto(u);
     }
 
     public void delete(Long id) {
@@ -89,7 +91,7 @@ public class AdminUserService {
         u.setRole(normalizeRole(req.role()));
         u = userRepository.save(u);
         log.info("Admin changed role id={} role={}", u.getId(), u.getRole());
-        return toDto(u);
+        return userMapper.toAdminUserDto(u);
     }
 
     private String normalizeRole(String role) {
@@ -110,18 +112,5 @@ public class AdminUserService {
             log.info("Auto-set missing role to USER for user id={} email={}", u.getId(), u.getEmail());
         }
         return u;
-    }
-
-    private AdminUserDto toDto(UserEntity u) {
-        return new AdminUserDto(
-                u.getId(),
-                u.getEmail(),
-                u.getName(),
-                u.getRole(),
-                u.getXp(),
-                u.getStreak(),
-                u.isDarkMode(),
-                u.getBadges(),
-                u.getCreatedAt());
     }
 }

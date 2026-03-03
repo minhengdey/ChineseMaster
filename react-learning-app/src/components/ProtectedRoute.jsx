@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Outlet } from "react-router-dom"
+import { Outlet, Navigate } from "react-router-dom"
 import { useUserStore } from "../store/UserStore"
 import { userAPI } from "../services/api"
-import { Navigate } from "react-router-dom"
+import { ROUTES } from "../constants/routes"
 
 export default function ProtectedRoute({ children }) {
   const user = useUserStore((state) => state.user)
@@ -12,19 +12,13 @@ export default function ProtectedRoute({ children }) {
   const [authError, setAuthError] = useState(false)
 
   useEffect(() => {
-    // If user already in store, no need to fetch
     if (user != null) {
-      console.log("User already in store:", user)
       setIsLoading(false)
       return
     }
-
-    console.log("Fetching user profile from API...")
-    // Fetch user from API using httpOnly cookie
     userAPI
       .getProfile()
       .then((userData) => {
-        console.log("User profile fetched:", userData)
         useUserStore.getState().setUser(userData)
         setIsLoading(false)
       })
@@ -48,7 +42,7 @@ export default function ProtectedRoute({ children }) {
 
   // If auth error or no user after loading, redirect to login
   if (authError || user == null) {
-    return <Navigate to="/login" replace />
+    return <Navigate to={ROUTES.LOGIN} replace />
   }
 
   return (

@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { classAPI, adminUserAPI, handleApiError } from "../../services/api";
 import { useUserStore } from "../../store/UserStore";
-import { Plus, Edit2, Trash2, Search, Users, X, UserPlus, UserMinus } from "lucide-react";
+import { UserMinus } from "lucide-react";
+import PageLayout from "../../components/layout/PageLayout";
+import Modal from "./components/Modal";
+import ClassCard from "./components/ClassCard";
+import SearchBar from "./components/SearchBar";
 import ScoreStatsModal from "./components/ScoreStatsModal";
 
+// Cache + in-flight: chỉ gọi classes + users 1 lần khi vào trang
+const _classPageCache = { classes: null, users: null };
+const _classPageInFlight = { promise: null };
+
 const ClassManagementPage = () => {
-    useEffect(() => {
-        localStorage.clear();
-        sessionStorage.clear();
-    }, []);
     const user = useUserStore((state) => state.user);
     const [classes, setClasses] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
@@ -37,17 +41,71 @@ const ClassManagementPage = () => {
         }
     }, [user]);
 
-    // Load classes
+    // Load classes + users một lần (cache + in-flight dedupe)
     useEffect(() => {
-        loadClasses();
-        loadAllUsers();
-    }, []);
+        if (!user || user.role !== "ADMIN") return;
+        let mounted = true;
+        setLoading(true);
+        const run = async () => {
+            if (_classPageCache.classes != null && _classPageCache.users != null) {
+                setClasses(_classPageCache.classes);
+                setAllUsers(_classPageCache.users);
+                setLoading(false);
+                setError(null);
+                return;
+            }
+            if (_classPageInFlight.promise) {
+                try {
+                    const r = await _classPageInFlight.promise;
+                    if (mounted && r) {
+                        setClasses(r.classes ?? []);
+                        setAllUsers(r.users ?? []);
+                        setError(null);
+                    }
+                } catch (err) {
+                    if (mounted) setError(handleApiError(err));
+                } finally {
+                    if (mounted) setLoading(false);
+                }
+                return;
+            }
+            _classPageInFlight.promise = (async () => {
+                try {
+                    const [classesData, usersData] = await Promise.all([
+                        classAPI.getAll(),
+                        adminUserAPI.listUsers(),
+                    ]);
+                    const classesList = Array.isArray(classesData) ? classesData : [];
+                    const usersList = (Array.isArray(usersData) ? usersData : []).filter(u => u.role !== "ADMIN");
+                    _classPageCache.classes = classesList;
+                    _classPageCache.users = usersList;
+                    if (mounted) {
+                        setClasses(classesList);
+                        setAllUsers(usersList);
+                        setError(null);
+                    }
+                    return { classes: classesList, users: usersList };
+                } catch (err) {
+                    if (mounted) setError(handleApiError(err));
+                    throw err;
+                } finally {
+                    _classPageInFlight.promise = null;
+                    if (mounted) setLoading(false);
+                }
+            })();
+            await _classPageInFlight.promise;
+        };
+        run();
+        return () => { mounted = false; };
+    }, [user?.role]);
 
     const loadClasses = async () => {
         try {
             setLoading(true);
             const data = await classAPI.getAll();
-            setClasses(data);
+            const list = Array.isArray(data) ? data : [];
+            _classPageCache.classes = list;
+            setClasses(list);
             setError(null);
         } catch (err) {
             setError(handleApiError(err));
@@ -59,11 +117,36 @@ const ClassManagementPage = () => {
     const loadAllUsers = async () => {
         try {
             const data = await adminUserAPI.listUsers();
-            setAllUsers(data.filter(u => u.role !== "ADMIN")); // Exclude admins
+            const list = (Array.isArray(data) ? data : []).filter(u => u.role !== "ADMIN");
+            _classPageCache.users = list;
+            setAllUsers(list);
         } catch (err) {
             console.error("Failed to load users:", err);
         }
     };
+
+    // Debounce search: khi rỗng dùng lại cache, khi có chữ gọi search API
+    useEffect(() => {
+        const t = setTimeout(() => {
+            if (!searchQuery.trim()) {
+                if (_classPageCache.classes != null) setClasses(_classPageCache.classes);
+                return;
+            }
+            let mounted = true;
+            (async () => {
+                try {
+                    setLoading(true);
+                    const data = await classAPI.search(searchQuery.trim());
+                    if (mounted) setClasses(Array.isArray(data) ? data : []), setError(null);
+                } catch (err) {
+                    if (mounted) setError(handleApiError(err));
+                } finally {
+                    if (mounted) setLoading(false);
+                }
+            })();
+        }, 400);
+        return () => clearTimeout(t);
+    }, [searchQuery]);
 
     const handleSearch = async () => {
         if (!searchQuery.trim()) {
@@ -72,7 +155,7 @@ const ClassManagementPage = () => {
         }
         try {
             setLoading(true);
-            const data = await classAPI.search(searchQuery);
+            const data = await classAPI.search(searchQuery.trim());
             setClasses(data);
             setError(null);
         } catch (err) {
@@ -197,26 +280,23 @@ const ClassManagementPage = () => {
 
     if (loading && classes.length === 0) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-                    <p className="mt-4 text-slate-600">Đang tải...</p>
+            <PageLayout>
+                <div className="flex items-center justify-center min-h-48">
+                    <span className="loading loading-spinner loading-lg text-purple-500" />
                 </div>
-            </div>
+            </PageLayout>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8 px-4">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
+        <PageLayout>
+            <div className="space-y-6">
+                <div>
                     <h1 className="text-3xl font-bold text-slate-800 mb-2">Quản lý lớp học</h1>
                 </div>
 
-                {/* Success Message */}
                 {success && (
-                    <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
+                    <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-6 flex items-center gap-2">
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
@@ -224,108 +304,35 @@ const ClassManagementPage = () => {
                     </div>
                 )}
 
-                {/* Search and Actions */}
-                <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 flex gap-2">
-                            <input
-                                type="text"
-                                placeholder="Tìm kiếm lớp học..."
-                                className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                            />
-                            <button
-                                onClick={handleSearch}
-                                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center gap-2"
-                            >
-                                <Search size={18} /> Tìm kiếm
-                            </button>
-                        </div>
-                        <button
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 justify-center"
-                        >
-                            <Plus size={18} /> Tạo lớp mới
-                        </button>
-                    </div>
-                </div>
+                <SearchBar
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    onSearch={handleSearch}
+                    onCreateClass={() => setIsCreateModalOpen(true)}
+                />
 
-                {/* Error Display */}
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
                         {error}
                     </div>
                 )}
 
-                {/* Classes Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {classes.map((classItem) => (
-                        <div key={classItem.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                            <div className="p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex-1">
-                                        <h3 className="text-xl font-bold text-slate-800 mb-1">{classItem.name}</h3>
-                                        <p className="text-sm text-slate-500 line-clamp-2">{classItem.description || "Không có mô tả"}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-2 text-slate-600 mb-4">
-                                    <Users size={18} className="text-purple-600" />
-                                    <span className="text-sm font-medium">{classItem.memberCount || 0} học viên</span>
-                                </div>
-
-                                <div className="text-xs text-slate-400 mb-4">
-                                    Tạo: {new Date(classItem.createdAt).toLocaleDateString("vi-VN")}
-                                </div>
-
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => openViewMembersModal(classItem)}
-                                        className="px-3 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition text-sm font-medium"
-                                    >
-                                        <span className="hidden md:inline">Xem học viên</span>
-                                        <span className="md:hidden">Học viên</span>
-                                    </button>
-
-                                    <button
-                                        onClick={() => openStatsModal(classItem)}
-                                        className="flex-1 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition text-sm font-medium"
-                                        title="Thống kê điểm"
-                                    >
-                                        Thống kê điểm
-                                    </button>
-
-                                    <button
-                                        onClick={() => openAddMemberModal(classItem)}
-                                        className="px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
-                                        title="Thêm học viên"
-                                    >
-                                        <UserPlus size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => openEditModal(classItem)}
-                                        className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
-                                        title="Sửa"
-                                    >
-                                        <Edit2 size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(classItem.id)}
-                                        className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
-                                        title="Xóa"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <ClassCard
+                            key={classItem.id}
+                            classItem={classItem}
+                            onViewMembers={openViewMembersModal}
+                            onStats={openStatsModal}
+                            onAddMember={openAddMemberModal}
+                            onEdit={openEditModal}
+                            onDelete={handleDelete}
+                        />
                     ))}
                 </div>
 
                 {classes.length === 0 && !loading && (
-                    <div className="text-center py-12">
+                    <div className="text-center py-12 rounded-xl bg-slate-50 border border-slate-200">
                         <div className="text-6xl mb-4">📚</div>
                         <p className="text-slate-600 text-lg">Chưa có lớp học nào</p>
                     </div>
@@ -549,7 +556,6 @@ const ClassManagementPage = () => {
                 </Modal>
             )}
 
-            {/* Stats Modal */}
             {isStatsModalOpen && selectedClass && (
                 <ScoreStatsModal
                     classId={selectedClass.id}
@@ -557,29 +563,7 @@ const ClassManagementPage = () => {
                     onClose={() => setIsStatsModalOpen(false)}
                 />
             )}
-        </div>
-    );
-};
-
-// Modal Component
-const Modal = ({ title, children, onClose, wide = false }) => {
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50 p-4">
-            <div className={`bg-white rounded-xl shadow-xl ${wide ? "max-w-4xl" : "max-w-md"} w-full max-h-[90vh] overflow-y-auto`}>
-                <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-slate-800">{title}</h2>
-                    <button
-                        onClick={onClose}
-                        className="text-slate-400 hover:text-slate-600 transition"
-                    >
-                        <X size={24} />
-                    </button>
-                </div>
-                <div className="p-6">
-                    {children}
-                </div>
-            </div>
-        </div>
+        </PageLayout>
     );
 };
 

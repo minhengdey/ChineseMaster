@@ -1,6 +1,6 @@
 package com.bucha.service;
 
-import com.bucha.dto.CurriculumMetadataDto;
+import com.bucha.dto.content.CurriculumMetadataDto;
 import com.bucha.dto.migration.ConversationMigrationDTO;
 import com.bucha.dto.migration.LessonMigrationDTO;
 import com.bucha.dto.migration.LineMigrationDTO;

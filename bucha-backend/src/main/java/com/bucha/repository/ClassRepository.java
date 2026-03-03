@@ -15,10 +15,8 @@ import java.util.Optional;
 @Repository
 public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
 
-    /**
-     * Find class by exact name
-     */
-    Optional<ClassEntity> findByName(String name);
+    @Query("SELECT c FROM ClassEntity c WHERE c.name = :name")
+    Optional<ClassEntity> findByName(@Param("name") String name);
 
     /**
      * Find all classes with member count
@@ -44,8 +42,6 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM ClassEntity c WHERE LOWER(c.name) = LOWER(:name) AND c.id != :id")
     boolean existsByNameIgnoreCaseAndIdNot(@Param("name") String name, @Param("id") Long id);
 
-    /**
-     * Find classes by name containing (search)
-     */
-    List<ClassEntity> findByNameContainingIgnoreCase(String name);
+    @Query("SELECT c FROM ClassEntity c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    List<ClassEntity> findByNameContainingIgnoreCase(@Param("name") String name);
 }

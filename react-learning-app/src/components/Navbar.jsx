@@ -1,7 +1,8 @@
 "use client"
 import { Link, useLocation } from "react-router-dom"
 import { useUserStore } from "../store/UserStore"
-import { authAPI, userAPI } from "../services/api"
+import { authAPI } from "../services/api"
+import { ROUTES } from "../constants/routes"
 import { Menu, X, LogOut, User, BookOpen, Volume2, Layers, Type, ClipboardCheck } from "lucide-react"
 import { useState, useEffect } from "react"
 
@@ -13,27 +14,10 @@ const Navbar = ({ user, onLogout }) => {
   const storeUser = useUserStore((state) => state.user)
   const setUser = useUserStore((state) => state.setUser)
 
+  // Sync prop user into store once. Profile is fetched only by ProtectedRoute; Navbar only reads store.
   useEffect(() => {
-    if (user && !storeUser) {
-      setUser(user)
-    }
+    if (user && !storeUser) setUser(user)
   }, [user, storeUser, setUser])
-
-  useEffect(() => {
-    if (storeUser) return
-
-      // No localStorage - fetch user from API using httpOnly cookie
-      ; (async () => {
-        try {
-          const profile = await userAPI.getProfile()
-          if (profile) {
-            setUser(profile)
-          }
-        } catch (e) {
-          // not authenticated or fetch failed - leave store null
-        }
-      })()
-  }, [storeUser, setUser])
 
   const normalizePath = (p) => p.split("?")[0]
 
@@ -60,10 +44,10 @@ const Navbar = ({ user, onLogout }) => {
     return location.pathname.startsWith(base + "/")
   }
 
-  const handleLogout = () => {
-    authAPI.logout()
+  const handleLogout = async () => {
     useUserStore.getState().setUser(null)
-    window.location.href = "/login"
+    await authAPI.logout()
+    window.location.href = ROUTES.LOGIN
   }
 
   const resolvedUser = storeUser || user

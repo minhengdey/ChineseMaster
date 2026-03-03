@@ -2,7 +2,7 @@
   <xml_result>
       <read_sentence lan="cn" type="study" version="7,0,0,1024">
           <rec_paper>
-              <read_sentence accuracy_score="0.000000" beg_pos="0" content="你好。" emotion_score="0.000000" end_pos="172" except_info="28675" fluency_score="0.000000" integrity_score="0.000000" is_rejected="true" phone_score="0.000000" time_len="172" tone_score="0.000000" total_score="0.000000">
+              <read_sentence accuracy_score="0.000000" beg_pos="0" content="你好。" emotion_score="0.000000" end_pos="70" except_info="28675" fluency_score="0.000000" integrity_score="0.000000" is_rejected="true" phone_score="0.000000" time_len="70" tone_score="0.000000" total_score="0.000000">
                   <sentence beg_pos="0" content="你好" end_pos="0" fluency_score="0.000000" phone_score="0.000000" time_len="0" tone_score="0.000000" total_score="0.000000">
                       <word beg_pos="0" content="你" end_pos="0" symbol="ni2" time_len="0">
                           <syll beg_pos="0" content="你" dp_message="16" end_pos="0" rec_node_type="paper" symbol="ni2" time_len="0">

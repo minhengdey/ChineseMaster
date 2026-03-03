@@ -1,4 +1,5 @@
 import axios from "axios";
+import { ROUTES } from "../constants/routes";
 // import "window._env_";
 // Base API configuration (runtime override from public/env-config.js)
 // Priority: runtime `window._env_.VITE_API_URL` -> `window._env_.REACT_APP_API_URL` -> import.meta env -> fallback to relative `/api`
@@ -12,32 +13,200 @@ const API_BASE_URL =
 
 // const API_BASE_URL = "http://localhost:8080/api";
 
+const AUTH_PATHS = {
+   LOGIN: "/auth/login",
+   REGISTER: "/auth/register",
+   REFRESH: "/auth/refresh",
+   LOGOUT: "/auth/logout",
+   VERIFY: "/auth/verify",
+};
+
+const LOGIN_ROUTE = ROUTES.LOGIN;
+
+const isAuthPath = (url, path) => {
+   if (!url) return false;
+   const normalized = url.replace(API_BASE_URL, "").split("?")[0];
+   return normalized === path || normalized.endsWith(path);
+};
+
+const isRefreshRequest = (config) => Boolean(config?.skipAuthRefresh);
+const isRetriedRequest = (config) => Boolean(config?._retried);
+
+/**
+ * Axios client with 401 handling:
+ * - On 401: call refresh once (queue concurrent requests), then retry failed requests.
+ * - On 401/403 from refresh: clear session via logout API and redirect to /login.
+ * - Login/register 401 are not retried; 403 on normal requests are not refreshed.
+ */
 const apiClient = axios.create({
    baseURL: API_BASE_URL,
-   withCredentials: true, // Enable sending cookies with requests
+   withCredentials: true,
 });
 
-// Response interceptor to handle common errors
+let refreshPromise = null;
+const failedQueue = [];
+let isRedirecting = false;
+
+const forceLogout = () => {
+   if (isRedirecting) return;
+   isRedirecting = true;
+   apiCache.invalidateAll();
+   apiClient.post(AUTH_PATHS.LOGOUT, null, { skipAuthRefresh: true }).catch(() => {}).finally(() => {
+      if (typeof window !== "undefined") {
+         window.location.href = LOGIN_ROUTE;
+      }
+   });
+};
+
+const callRefresh = () => {
+   return apiClient.post(AUTH_PATHS.REFRESH, null, { skipAuthRefresh: true });
+};
+
+const processQueue = (error, token = null) => {
+   failedQueue.forEach((promise) => {
+      if (error) {
+         promise.reject(error);
+      } else {
+         promise.resolve(token);
+      }
+   });
+   failedQueue.length = 0;
+};
+
 apiClient.interceptors.response.use(
    (response) => response,
-   (error) => {
-      if (error.response?.status === 401) {
-         // Token expired or invalid - redirect to login
-         window.location.href = "/";
+   async (error) => {
+      const status = error.response?.status;
+      const config = error.config;
+      if (!config) return Promise.reject(error);
+
+      if (status === 403 && !isRefreshRequest(config)) {
+         return Promise.reject(error);
       }
-      return Promise.reject(error);
+      if (status !== 401 && status !== 403) {
+         return Promise.reject(error);
+      }
+
+      if (isRefreshRequest(config)) {
+         processQueue(error, null);
+         refreshPromise = null;
+         forceLogout();
+         return Promise.reject(error);
+      }
+
+      if (isRetriedRequest(config)) {
+         forceLogout();
+         return Promise.reject(error);
+      }
+
+      if (
+         isAuthPath(config?.url, AUTH_PATHS.LOGIN) ||
+         isAuthPath(config?.url, AUTH_PATHS.REGISTER) ||
+         isAuthPath(config?.url, AUTH_PATHS.VERIFY) ||
+         isAuthPath(config?.url, AUTH_PATHS.LOGOUT)
+      ) {
+         return Promise.reject(error);
+      }
+
+      if (isAuthPath(config?.url, AUTH_PATHS.REFRESH)) {
+         processQueue(error, null);
+         refreshPromise = null;
+         forceLogout();
+         return Promise.reject(error);
+      }
+
+      const queuePromise = new Promise((resolve, reject) => {
+         failedQueue.push({ resolve, reject });
+      });
+
+      if (refreshPromise === null) {
+         refreshPromise = callRefresh()
+            .then(() => {
+               processQueue(null, true);
+               refreshPromise = null;
+            })
+            .catch((refreshError) => {
+               processQueue(refreshError ?? error, null);
+               refreshPromise = null;
+               forceLogout();
+            });
+      }
+
+      return queuePromise.then(() => {
+         config._retried = true;
+         return apiClient.request(config);
+      }).catch((err) => Promise.reject(err));
    }
 );
-export const userAPI = {
-   getProfile: async () => {
-      const response = await apiClient.get("/profile");
-      return response.data;
+
+// In-memory cache to reduce duplicate API calls (TTL in ms)
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const cache = {
+   profile: null,
+   profileTs: 0,
+   curriculums: null,
+   curriculumsTs: 0,
+   curriculumLessons: Object.create(null), // { [curriculumId]: { data, ts } }
+   lessons: Object.create(null), // { [lessonId]: { data, ts } }
+   leaderboardWeekly: null,
+   leaderboardWeeklyTs: 0,
+};
+export const apiCache = {
+   invalidateProfile: () => {
+      cache.profile = null;
+      cache.profileTs = 0;
+   },
+   invalidateCurriculums: () => {
+      cache.curriculums = null;
+      cache.curriculumsTs = 0;
+      Object.keys(cache.curriculumLessons || {}).forEach((k) => delete cache.curriculumLessons[k]);
+   },
+   invalidateLesson: (id) => {
+      if (id != null) delete cache.lessons[String(id)];
+   },
+   invalidateAll: () => {
+      cache.profile = null;
+      cache.profileTs = 0;
+      cache.curriculums = null;
+      cache.curriculumsTs = 0;
+      cache.leaderboardWeekly = null;
+      cache.leaderboardWeeklyTs = 0;
+      Object.keys(cache.lessons).forEach((k) => delete cache.lessons[k]);
+      Object.keys(cache.curriculumLessons || {}).forEach((k) => delete cache.curriculumLessons[k]);
    },
 };
-// Authentication APIs
+
+const inFlight = Object.create(null);
+
+const getProfileFresh = async () => {
+   const response = await apiClient.get("/profile");
+   return response.data;
+};
+
+export const userAPI = {
+   getProfile: async (bypassCache = false) => {
+      if (!bypassCache && cache.profile != null && Date.now() - cache.profileTs < CACHE_TTL) {
+         return cache.profile;
+      }
+      const key = "profile";
+      if (!inFlight[key]) {
+         inFlight[key] = getProfileFresh()
+            .then((data) => {
+               cache.profile = data;
+               cache.profileTs = Date.now();
+               return data;
+            })
+            .finally(() => {
+               delete inFlight[key];
+            });
+      }
+      return inFlight[key];
+   },
+};
+// Authentication APIs (paths aligned with backend /api/auth/*)
 export const authAPI = {
    register: async (userData) => {
-      const response = await apiClient.post("/auth/register", {
+      const response = await apiClient.post(AUTH_PATHS.REGISTER, {
          email: userData.email,
          password: userData.password,
          name: userData.username || userData.name,
@@ -46,28 +215,27 @@ export const authAPI = {
    },
 
    login: async (credentials) => {
-      const response = await apiClient.post("/auth/login", {
+      const response = await apiClient.post(AUTH_PATHS.LOGIN, {
          email: credentials.email,
          password: credentials.password,
       });
-
-      // Backend returns { user: { id, email, name } } and sets httpOnly cookie
-      // No localStorage - user will be fetched from API on app load
+      // Backend returns { user } and sets accessToken + refreshToken httpOnly cookies
       return response.data;
    },
 
    logout: async () => {
       try {
-         // Call backend to clear cookie
-         await apiClient.post("/auth/logout");
+         await apiClient.post(AUTH_PATHS.LOGOUT);
       } catch (e) {
-         console.warn('Failed to call logout API', e);
+         console.warn("Failed to call logout API", e);
+      } finally {
+         apiCache.invalidateAll();
       }
    },
 
    verifyToken: async () => {
-      // Token is automatically sent via cookie, no need to pass it
-      const response = await apiClient.get("/auth/verify");
+      // Backend /auth/verify expects Bearer header; for cookie-based auth use userAPI.getProfile()
+      const response = await apiClient.get(AUTH_PATHS.VERIFY);
       return response.data;
    },
 };
@@ -115,15 +283,21 @@ export const flashcardsAPI = {
    },
 };
 
-// Profile APIs
+// Profile APIs (get uses same cache as userAPI.getProfile)
 export const profileAPI = {
-   get: async () => {
-      const response = await apiClient.get("/profile");
-      return response.data;
+   get: async (bypassCache = false) => {
+      if (!bypassCache && cache.profile != null && Date.now() - cache.profileTs < CACHE_TTL) {
+         return cache.profile;
+      }
+      const data = await getProfileFresh();
+      cache.profile = data;
+      cache.profileTs = Date.now();
+      return data;
    },
 
    update: async (profileData) => {
       const response = await apiClient.post("/profile", profileData);
+      apiCache.invalidateProfile();
       return response.data;
    },
 };
@@ -155,36 +329,145 @@ export const quizAPI = {
    },
 };
 
-// Content APIs (for curriculum and lessons)
+const CONTENT_PATHS = {
+   CURRICULUMS: "/content/curriculums",
+   CURRICULUMS_SUMMARY: "/content/curriculums/summary",
+   CURRICULUM_BY_ID: (id) => `/content/curriculums/${id}`,
+   CURRICULUM_LESSONS: (id) => `/content/curriculums/${id}/lessons`,
+   LESSON_BY_ID: (id) => `/content/lessons/${id}`,
+   LESSONS_BATCH: "/content/lessons/batch",
+   VOCABULARY_SEARCH: "/content/vocabulary/search",
+};
+
+// Content APIs (for curriculum and lessons) with cache to reduce duplicate calls
 export const contentAPI = {
-   // Get all curriculums
-   getCurriculums: async () => {
-      const response = await apiClient.get("/content/curriculums");
-      return response.data;
+   getCurriculums: async (bypassCache = false) => {
+      if (!bypassCache && cache.curriculums != null && Date.now() - cache.curriculumsTs < CACHE_TTL) {
+         return cache.curriculums;
+      }
+      const key = "curriculums";
+      if (!inFlight[key]) {
+         inFlight[key] = apiClient.get(CONTENT_PATHS.CURRICULUMS)
+            .then((res) => {
+               cache.curriculums = res.data;
+               cache.curriculumsTs = Date.now();
+               return res.data;
+            })
+            .finally(() => { delete inFlight[key]; });
+      }
+      return inFlight[key];
    },
 
-   // Get curriculum by ID with lessons
+   /** Curriculums with lessonCount (one API call for list page). */
+   getCurriculumsSummary: async (bypassCache = false) => {
+      if (!bypassCache && cache.curriculums != null && Date.now() - cache.curriculumsTs < CACHE_TTL) {
+         return cache.curriculums;
+      }
+      const key = "curriculumsSummary";
+      if (!inFlight[key]) {
+         inFlight[key] = apiClient.get(CONTENT_PATHS.CURRICULUMS_SUMMARY)
+            .then((res) => {
+               cache.curriculums = res.data;
+               cache.curriculumsTs = Date.now();
+               return res.data;
+            })
+            .finally(() => { delete inFlight[key]; });
+      }
+      return inFlight[key];
+   },
+
    getCurriculumById: async (id) => {
-      const response = await apiClient.get(`/content/curriculums/${id}`);
+      const response = await apiClient.get(CONTENT_PATHS.CURRICULUM_BY_ID(id));
       return response.data;
    },
 
-   // Get lessons of a curriculum
-   getCurriculumLessons: async (curriculumId) => {
-      const response = await apiClient.get(
-         `/content/curriculums/${curriculumId}/lessons`
-      );
-      return response.data;
+   getCurriculumLessons: async (curriculumId, bypassCache = false) => {
+      if (curriculumId == null) return [];
+      const key = String(curriculumId);
+      const entry = cache.curriculumLessons[key];
+      if (!bypassCache && entry && Date.now() - entry.ts < CACHE_TTL) {
+         return entry.data;
+      }
+      const flightKey = `curriculumLessons:${key}`;
+      if (!inFlight[flightKey]) {
+         inFlight[flightKey] = apiClient.get(CONTENT_PATHS.CURRICULUM_LESSONS(curriculumId))
+            .then((res) => {
+               cache.curriculumLessons[key] = { data: res.data, ts: Date.now() };
+               return res.data;
+            })
+            .finally(() => { delete inFlight[flightKey]; });
+      }
+      return inFlight[flightKey];
    },
 
-   // Get lesson detail with conversations and vocabulary
-   getLessonDetail: async (lessonId) => {
+   getLessonDetail: async (lessonId, bypassCache = false) => {
       if (lessonId == null || lessonId === "") {
-         // Defensive: avoid sending requests like /content/lessons/undefined to the server
          throw new Error("getLessonDetail requires a valid lessonId");
       }
-      const response = await apiClient.get(`/content/lessons/${lessonId}`);
+      const key = String(lessonId);
+      const entry = cache.lessons[key];
+      if (!bypassCache && entry && Date.now() - entry.ts < CACHE_TTL) {
+         return entry.data;
+      }
+      const response = await apiClient.get(CONTENT_PATHS.LESSON_BY_ID(lessonId));
+      cache.lessons[key] = { data: response.data, ts: Date.now() };
       return response.data;
+   },
+
+   /**
+    * Search vocabulary (word, pinyin, meaning, example). BE requires q length >= 2.
+    * Returns { content, totalElements, totalPages, number, size }.
+    */
+   searchVocabulary: async (q, page = 0, size = 24) => {
+      const response = await apiClient.get(CONTENT_PATHS.VOCABULARY_SEARCH, {
+         params: { q: q || "", page, size },
+      });
+      const data = response.data || {};
+      return {
+         content: data.content || [],
+         totalElements: data.totalElements ?? 0,
+         totalPages: data.totalPages ?? 0,
+         number: data.number ?? page,
+         size: data.size ?? size,
+      };
+   },
+
+   /** Paginated batch from BE: GET /content/lessons/batch?page=0&size=24 */
+   getLessonDetailsBatchPaginated: async (page = 0, size = 24) => {
+      const response = await apiClient.get(CONTENT_PATHS.LESSONS_BATCH, {
+         params: { page, size },
+      });
+      const data = response.data || {};
+      const list = data.content || [];
+      list.forEach((detail) => {
+         if (detail && detail.id != null) {
+            const key = String(detail.id);
+            cache.lessons[key] = { data: detail, ts: Date.now() };
+         }
+      });
+      return {
+         content: list,
+         totalElements: data.totalElements ?? list.length,
+         totalPages: data.totalPages ?? 1,
+         number: data.number ?? page,
+         size: data.size ?? size,
+      };
+   },
+
+   /** Legacy: batch by ids (BE supports ids param for backward compatibility). */
+   getLessonDetailsBatch: async (ids) => {
+      if (!Array.isArray(ids) || ids.length === 0) return [];
+      const query = ids.map((id) => `ids=${encodeURIComponent(id)}`).join("&");
+      const response = await apiClient.get(`${CONTENT_PATHS.LESSONS_BATCH}?${query}`);
+      const data = response.data || {};
+      const list = Array.isArray(data) ? data : (data.content || []);
+      list.forEach((detail) => {
+         if (detail && detail.id != null) {
+            const key = String(detail.id);
+            cache.lessons[key] = { data: detail, ts: Date.now() };
+         }
+      });
+      return list;
    },
 };
 
@@ -490,6 +773,9 @@ export const iseAPI = {
    },
 };
 
+// In-flight dedupe for GET /ise/stats/weekly (no params). Assign before any await so a second caller always sees the same promise.
+let _iseStatsWeeklyInFlight = null;
+
 // ISE stats for frontend displays (daily/lesson/test summaries)
 export const iseStatsAPI = {
    // Weekly performance: replaced daily with weekly. Keep getDaily as a compatibility alias.
@@ -497,6 +783,20 @@ export const iseStatsAPI = {
       const params = {};
       if (fromIsoDate) params.from = fromIsoDate;
       if (toIsoDate) params.to = toIsoDate;
+      const noParams = !fromIsoDate && !toIsoDate;
+      if (noParams && _iseStatsWeeklyInFlight) {
+         return _iseStatsWeeklyInFlight;
+      }
+      if (noParams) {
+         const p = new Promise((resolve, reject) => {
+            _iseStatsWeeklyInFlight = p;
+            apiClient.get("/ise/stats/weekly", { params })
+               .then((r) => resolve(r.data))
+               .catch(reject);
+         });
+         p.finally(() => { _iseStatsWeeklyInFlight = null; });
+         return p;
+      }
       const response = await apiClient.get("/ise/stats/weekly", { params });
       return response.data;
    },
@@ -522,18 +822,30 @@ export const iseStatsAPI = {
       });
       return response.data;
    },
+   /** Batch: GET /ise/stats/pronounced-batch?lessonIds=1,2,3 → { "1": { ... }, "2": { ... } } */
+   getPronouncedForLessonsBatch: async (lessonIds) => {
+      if (!Array.isArray(lessonIds) || lessonIds.length === 0) return {};
+      const param = lessonIds.map((id) => String(id)).join(",");
+      const response = await apiClient.get("/ise/stats/pronounced-batch", {
+         params: { lessonIds: param },
+      });
+      return response.data || {};
+   },
    getDistinctVocabForUser: async () => {
       const response = await apiClient.get('/ise/stats/distinct-vocab');
       return response.data;
    },
-   // Leaderboard endpoints (optional on backend)
-   getLeaderboardWeekly: async () => {
+   getLeaderboardWeekly: async (bypassCache = false) => {
+      if (!bypassCache && cache.leaderboardWeekly != null && Date.now() - cache.leaderboardWeeklyTs < CACHE_TTL) {
+         return cache.leaderboardWeekly;
+      }
       const response = await apiClient.get('/ise/stats/leaderboard/weekly');
+      cache.leaderboardWeekly = response.data;
+      cache.leaderboardWeeklyTs = Date.now();
       return response.data;
    },
    getLeaderboardDaily: async () => {
-      // Deprecated alias
-      return iseStatsAPI.getLeaderboardWeekly()
+      return iseStatsAPI.getLeaderboardWeekly();
    },
    getLeaderboardByLesson: async (lessonId) => {
       const params = {};
@@ -644,6 +956,7 @@ export const userLessonAPI = {
    complete: async (lessonId, completed) => {
       const response = await apiClient.post(
          `/user-lessons/${lessonId}/complete`,
+         null,
          { params: { completed } }
       );
       return response.data;
@@ -657,6 +970,15 @@ export const userLessonAPI = {
          `/user-lessons/${lessonId}/isCompleted`
       );
       return response.data;
+   },
+   /** Batch: GET /user-lessons/completion?lessonIds=1,2,3 → { "1": { completed, ... }, "2": { ... } } */
+   getCompletionBatch: async (lessonIds) => {
+      if (!Array.isArray(lessonIds) || lessonIds.length === 0) return {};
+      const param = lessonIds.map((id) => String(id)).join(",");
+      const response = await apiClient.get("/user-lessons/completion", {
+         params: { lessonIds: param },
+      });
+      return response.data || {};
    },
 };
 

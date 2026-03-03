@@ -2,6 +2,7 @@ package com.bucha.repository;
 
 import com.bucha.entity.ClassMembership;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -15,35 +16,25 @@ import java.util.Optional;
 @Repository
 public interface ClassMembershipRepository extends JpaRepository<ClassMembership, Long> {
 
-    /**
-     * Find all memberships for a specific class
-     */
-    List<ClassMembership> findByClassEntityId(Long classId);
+    @Query("SELECT cm FROM ClassMembership cm WHERE cm.classEntity.id = :classId")
+    List<ClassMembership> findByClassEntityId(@Param("classId") Long classId);
 
-    /**
-     * Find all memberships for a specific user
-     */
-    List<ClassMembership> findByUserId(Long userId);
+    @Query("SELECT cm FROM ClassMembership cm WHERE cm.user.id = :userId")
+    List<ClassMembership> findByUserId(@Param("userId") Long userId);
 
-    /**
-     * Check if a user is already a member of a class
-     */
-    boolean existsByClassEntityIdAndUserId(Long classId, Long userId);
+    @Query("SELECT CASE WHEN COUNT(cm) > 0 THEN true ELSE false END FROM ClassMembership cm WHERE cm.classEntity.id = :classId AND cm.user.id = :userId")
+    boolean existsByClassEntityIdAndUserId(@Param("classId") Long classId, @Param("userId") Long userId);
 
-    /**
-     * Find a specific membership by class and user
-     */
-    Optional<ClassMembership> findByClassEntityIdAndUserId(Long classId, Long userId);
+    @Query("SELECT cm FROM ClassMembership cm WHERE cm.classEntity.id = :classId AND cm.user.id = :userId")
+    Optional<ClassMembership> findByClassEntityIdAndUserId(@Param("classId") Long classId, @Param("userId") Long userId);
 
-    /**
-     * Delete all memberships for a specific class
-     */
-    void deleteByClassEntityId(Long classId);
+    @Modifying
+    @Query("DELETE FROM ClassMembership cm WHERE cm.classEntity.id = :classId")
+    void deleteByClassEntityId(@Param("classId") Long classId);
 
-    /**
-     * Delete a specific membership
-     */
-    void deleteByClassEntityIdAndUserId(Long classId, Long userId);
+    @Modifying
+    @Query("DELETE FROM ClassMembership cm WHERE cm.classEntity.id = :classId AND cm.user.id = :userId")
+    void deleteByClassEntityIdAndUserId(@Param("classId") Long classId, @Param("userId") Long userId);
 
     /**
      * Count members in a class

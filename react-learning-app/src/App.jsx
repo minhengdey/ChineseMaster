@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import {
    BrowserRouter as Router,
    Routes,
@@ -6,28 +6,35 @@ import {
    Navigate,
 } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import AdminDashboardPage from "./pages/AdminDashboardPage";
-import ClassManagementPage from "./pages/ClassManagementPage";
 import HomePage from "./pages/HomePage";
 import CurriculumPage from "./pages/CurriculumPage";
 import LessonsPage from "./pages/LessonsPage";
-import LessonDetailPage from "./pages/LessonDetailPage";
 import VocabularyPracticePage from "./pages/VocabularyPracticePage";
-import FlashcardsIndex, { FlashcardsCurriculum } from "./pages/FlashcardsPage";
-import FlashCardsLessonPage from "./pages/FlashCardsLessonPage";
-import SpeakingPracticePage from "./pages/SpeakingPracticePage";
 import PronunciationPage from "./pages/PronunciationPage";
-import ProfilePage from "./pages/ProfilePage";
-import AlphabetPage from "./pages/AlphabetPage";
-import AssessmentTestPage from "./pages/AssessmentTestPage";
 import AssessmentsListPage from "./pages/AssessmentsListPage";
 import Login from "./pages/LoginPage/index";
 import RoleGuard from "./components/RoleGuard";
-
 import "./App.css";
-import { authAPI } from "./services/api";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useUserStore } from "./store/UserStore";
+import { ROUTES } from "./constants/routes";
+
+const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
+const ClassManagementPage = lazy(() => import("./pages/ClassManagementPage"));
+const LessonDetailPage = lazy(() => import("./pages/LessonDetailPage"));
+const FlashcardsIndex = lazy(() => import("./pages/FlashcardsPage").then((m) => ({ default: m.default })));
+const FlashcardsCurriculum = lazy(() => import("./pages/FlashcardsPage").then((m) => ({ default: m.FlashcardsCurriculum })));
+const FlashCardsLessonPage = lazy(() => import("./pages/FlashCardsLessonPage"));
+const SpeakingPracticePage = lazy(() => import("./pages/SpeakingPracticePage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const AlphabetPage = lazy(() => import("./pages/AlphabetPage"));
+const AssessmentTestPage = lazy(() => import("./pages/AssessmentTestPage"));
+
+const PageFallback = () => (
+   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-white">
+      <span className="loading loading-spinner loading-lg text-purple-500" />
+   </div>
+);
 
 function App() {
    const [user, setUser] = useState(null);
@@ -42,6 +49,7 @@ function App() {
    return (
       <Router>
          <div className="min-h-screen bg-base-100">
+            <Suspense fallback={<PageFallback />}>
             <Routes>
                <Route
                   element={
@@ -120,9 +128,10 @@ function App() {
                   <Route path="admin/classes" element={<ClassManagementPage />} />
                </Route>
 
-               <Route path="/login" element={<Login />} />
+               <Route path={ROUTES.LOGIN} element={<Login />} />
                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            </Suspense>
          </div>
       </Router>
    );

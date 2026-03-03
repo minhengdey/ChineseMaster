@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import AudioPlayer from "./AudioPlayer"
 import SentenceRecordingButton from "./SentenceRecordingButton"
 import SentencePronunciationResult from "./SentencePronunciationResult"
-import { iseStatsAPI } from "../../../services/api"
 import { hasLetters } from "../../../utils/textUtils"
 
 const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds = [], refreshPronounced }) => {
@@ -13,51 +12,21 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
   const [showPronunciationResult, setShowPronunciationResult] = useState(false)
   const [recordedAudio, setRecordedAudio] = useState(null)
   const [activeLineId, setActiveLineId] = useState(null)
-  const [localHighlightedLineIds, setLocalHighlightedLineIds] = useState([])
+  const [localHighlightedLineIds, setLocalHighlightedLineIds] = useState(() =>
+    Array.isArray(highlightedLineIds) ? highlightedLineIds.map(String) : [],
+  )
   const [showPinyin, setShowPinyin] = useState(true)
+
+  // Sync from parent (single source: parent fetches pronounced once)
+  useEffect(() => {
+    if (Array.isArray(highlightedLineIds) && highlightedLineIds.length >= 0) {
+      setLocalHighlightedLineIds(highlightedLineIds.map(String))
+    }
+  }, [lessonId, highlightedLineIds])
 
   const toggleSection = (index) => {
     setExpandedSection(expandedSection === index ? null : index)
   }
-
-  // Debug: print highlighted IDs received from backend so we can verify matching
-  if (process.env.NODE_ENV !== "production") {
-    try {
-      // console.debug(
-      //   "[ConversationSection] highlightedLineIds (from API):",
-      //   highlightedLineIds,
-      //   "local:",
-      //   localHighlightedLineIds,
-      // )
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  useEffect(() => {
-    let mounted = true
-    const fetchPronounced = async () => {
-      if (!lessonId) return
-      try {
-        const stats = await iseStatsAPI.getPronouncedForLesson(lessonId)
-        // stats may contain lineIds (array) or entries; prefer aggregated lineIds
-        const ids =
-          stats && Array.isArray(stats.lineIds) && stats.lineIds.length
-            ? stats.lineIds.map(String)
-            : Array.isArray(stats.entries)
-              ? stats.entries.map((e) => String(e.lineId)).filter(Boolean)
-              : []
-        if (mounted) setLocalHighlightedLineIds(ids)
-      } catch (e) {
-        // console.warn("Failed to fetch pronounced stats for lesson", lessonId, e)
-      }
-    }
-
-    fetchPronounced()
-    return () => {
-      mounted = false
-    }
-  }, [lessonId])
 
   const handlePronunciationScore = async (result, audioBlob, returnedLineId, internalLineId, externalLineId) => {
     // returnedLineId may be externalId or internal id depending on recorder logic.

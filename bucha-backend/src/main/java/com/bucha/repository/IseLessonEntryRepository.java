@@ -9,11 +9,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface IseLessonEntryRepository extends JpaRepository<IseLessonEntry, Long> {
-    List<IseLessonEntry> findByUser_Id(Long userId);
 
-    List<IseLessonEntry> findByUser_IdAndLessonId(Long userId, Long lessonId);
+    @Query("SELECT e FROM IseLessonEntry e WHERE e.user.id = :userId")
+    List<IseLessonEntry> findByUser_Id(@Param("userId") Long userId);
 
-    boolean existsByUserAndLessonId(UserEntity user, Long lessonId);
+    @Query("SELECT e FROM IseLessonEntry e WHERE e.user.id = :userId AND e.lessonId = :lessonId")
+    List<IseLessonEntry> findByUser_IdAndLessonId(@Param("userId") Long userId, @Param("lessonId") Long lessonId);
+
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM IseLessonEntry e WHERE e.user = :user AND e.lessonId = :lessonId")
+    boolean existsByUserAndLessonId(@Param("user") UserEntity user, @Param("lessonId") Long lessonId);
 
     @Query("SELECT COUNT(DISTINCT e.attemptId) FROM IseLessonEntry e WHERE e.user.id = :userId AND e.lessonId = :lessonId")
     long countDistinctAttemptsByUserAndLesson(@Param("userId") Long userId, @Param("lessonId") Long lessonId);

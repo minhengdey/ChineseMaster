@@ -2,16 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom"
-import { assessmentAPI, userAPI } from "../../services/api"
+import { assessmentAPI } from "../../services/api"
 import TestSection from "./components/TestSection"
 import TestResults from "./components/TestResults"
-import { Button } from "./components/ui/button"
+import { Button } from "@/components/ui"
+import PageLayout from "../../components/layout/PageLayout"
 
 const AssessmentTestPage = () => {
-    useEffect(() => {
-        localStorage.clear();
-        sessionStorage.clear();
-    }, []);
     const { assessmentId } = useParams()
     const navigate = useNavigate()
 
@@ -192,42 +189,42 @@ const AssessmentTestPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-white">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-500 rounded-full animate-spin"></div>
+            <PageLayout>
+                <div className="flex flex-col items-center justify-center min-h-48 gap-4">
+                    <span className="loading loading-spinner loading-lg text-purple-500" />
                     <p className="text-slate-600">Đang tải...</p>
                 </div>
-            </div>
+            </PageLayout>
         )
     }
 
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-white">
-                <div className="text-center">
+            <PageLayout>
+                <div className="text-center py-16">
                     <div className="text-6xl mb-4">⚠️</div>
                     <h2 className="text-2xl font-bold mb-4 text-slate-900">{error}</h2>
                     <Button onClick={() => window.location.reload()}>Thử lại</Button>
                 </div>
-            </div>
+            </PageLayout>
         )
     }
 
     if (!assessment || !testData) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-white">
-                <div className="text-center">
+            <PageLayout>
+                <div className="text-center py-16">
                     <div className="text-6xl mb-4">📋</div>
                     <h2 className="text-2xl font-bold mb-4 text-slate-900">Không tìm thấy bài kiểm tra</h2>
                     <Button onClick={() => navigate("/assessments")}>Quay lại danh sách</Button>
                 </div>
-            </div>
+            </PageLayout>
         )
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-8">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageLayout>
+            <div className="max-w-7xl mx-auto">
                 {currentSection === "results" ? (
                     <TestResults
                         sectionResults={sectionResults}
@@ -288,7 +285,7 @@ const AssessmentTestPage = () => {
                     </div>
                 </div>
             )}
-        </div>
+        </PageLayout>
     )
 }
 

@@ -9,18 +9,21 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface IseDailyEntryRepository extends JpaRepository<IseDailyEntry, Long> {
-        List<IseDailyEntry> findByUser_IdAndSessionDateBetween(Long userId, LocalDateTime start, LocalDateTime end);
+
+        @Query("SELECT e FROM IseDailyEntry e WHERE e.user.id = :userId AND e.sessionDate BETWEEN :start AND :end ORDER BY e.sessionDate")
+        List<IseDailyEntry> findByUser_IdAndSessionDateBetween(@Param("userId") Long userId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
         @Query("SELECT COUNT(DISTINCT e.attemptId) FROM IseDailyEntry e WHERE e.user.id = :userId AND e.lessonId = :lessonId")
         long countDistinctAttemptsByUserAndLesson(@Param("userId") Long userId, @Param("lessonId") Long lessonId);
 
-        List<IseDailyEntry> findBySessionDateBetween(LocalDateTime start, LocalDateTime end);
+        @Query("SELECT e FROM IseDailyEntry e WHERE e.sessionDate BETWEEN :start AND :end ORDER BY e.sessionDate")
+        List<IseDailyEntry> findBySessionDateBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-        List<IseDailyEntry> findByLessonIdAndSessionDateBetween(Long lessonId, LocalDateTime start,
-                        LocalDateTime end);
+        @Query("SELECT e FROM IseDailyEntry e WHERE e.lessonId = :lessonId AND e.sessionDate BETWEEN :start AND :end ORDER BY e.sessionDate")
+        List<IseDailyEntry> findByLessonIdAndSessionDateBetween(@Param("lessonId") Long lessonId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-        // fetch all entries for a lesson (no date filtering)
-        List<IseDailyEntry> findByLessonId(Long lessonId);
+        @Query("SELECT e FROM IseDailyEntry e WHERE e.lessonId = :lessonId")
+        List<IseDailyEntry> findByLessonId(@Param("lessonId") Long lessonId);
 
         @Query(value = "SELECT d.user_id, SUM(CASE WHEN (d.vocabulary_id IS NOT NULL OR d.line_id IS NOT NULL) THEN 1 ELSE 0 END) AS cnt_d "
                         + "FROM ise_daily_entry d WHERE d.lesson_id = :lessonId GROUP BY d.user_id", nativeQuery = true)
@@ -71,4 +74,17 @@ public interface IseDailyEntryRepository extends JpaRepository<IseDailyEntry, Lo
                         + "ORDER BY avg_score DESC", nativeQuery = true)
         List<Object[]> aggregateRangeLeaderboard(@Param("start") LocalDateTime start,
                         @Param("end") LocalDateTime end);
+
+        /** Row: [DATE(session_date), avg_score, cnt_attempts, cnt_rows, duration_sum] */
+        @Query(value = "SELECT DATE(session_date) AS day, AVG(total_score) AS avg_score, "
+                        + "COUNT(DISTINCT attempt_id) AS cnt_attempts, COUNT(*) AS cnt_rows, COALESCE(SUM(duration_seconds),0) AS duration_sum "
+                        + "FROM ise_daily_entry WHERE user_id = :userId AND session_date BETWEEN :start AND :end "
+                        + "GROUP BY DATE(session_date)", nativeQuery = true)
+        List<Object[]> aggregateDailyStatsByUserAndDateRange(@Param("userId") Long userId,
+                        @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+        /** Row: [user_id, avg_score, cnt, best_score, ts] */
+        @Query(value = "SELECT user_id, AVG(total_score) AS avg_score, COUNT(*) AS cnt, MAX(total_score) AS best_score, MIN(created_at) AS ts "
+                        + "FROM ise_daily_entry WHERE session_date BETWEEN :start AND :end GROUP BY user_id", nativeQuery = true)
+        List<Object[]> aggregateUserStatsByDateRange(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

@@ -1,6 +1,6 @@
 package com.bucha.controller;
 
-import com.bucha.dto.AuthDtos.*;
+import com.bucha.dto.auth.AuthDtos.*;
 import com.bucha.entity.UserEntity;
 import com.bucha.security.JwtUtil;
 import com.bucha.service.UserService;
@@ -14,7 +14,10 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.util.Date;
 import java.util.Map;
 
 @RestController
@@ -61,22 +64,10 @@ public class AuthController {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
         String access = jwtUtil.generateAccessToken(user.getEmail(), user.getId(), user.getEmail(), user.getRole());
+        String refresh = jwtUtil.generateRefreshToken(user.getEmail(), user.getId(), user.getEmail(), user.getRole());
 
-        // Set JWT token in httpOnly cookie for security
-        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from("accessToken", access)
-                .httpOnly(true)
-                .secure(cookieSecure)
-                .path("/")
-                .maxAge(24 * 60 * 60) // 24 hours
-                .sameSite(cookieSameSite);
-        
-        // Only set domain if configured (empty string means no domain restriction)
-        if (cookieDomain != null && !cookieDomain.isEmpty()) {
-            cookieBuilder.domain(cookieDomain);
-        }
-        
-        ResponseCookie cookie = cookieBuilder.build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        addCookie(response, "accessToken", access, 24 * 60 * 60); // 24 hours
+        addCookie(response, "refreshToken", refresh, 14 * 24 * 60 * 60); // 14 days
 
         // Return only user info, NOT the token
         Map<String, Object> out = Map.of(
@@ -106,23 +97,78 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = getCookieValue(request, "refreshToken");
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return ResponseEntity.status(401).body(Map.of("error", "Missing refresh token"));
+        }
+        try {
+            Jws<Claims> claims = jwtUtil.validateToken(refreshToken);
+            if (claims.getBody().getExpiration().before(new Date())) {
+                return ResponseEntity.status(401).body(Map.of("error", "Refresh token expired"));
+            }
+            String email = claims.getBody().get("email", String.class);
+            Long uid = claims.getBody().get("uid", Long.class);
+            String username = claims.getBody().getSubject();
+            String role = claims.getBody().get("role", String.class);
+            if (email == null || uid == null || role == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "Invalid refresh token"));
+            }
+            var opt = userService.findByEmail(email);
+            if (opt.isEmpty()) {
+                return ResponseEntity.status(401).body(Map.of("error", "User not found"));
+            }
+            var user = opt.get();
+            String newAccess = jwtUtil.generateAccessToken(user.getEmail(), user.getId(), user.getEmail(), user.getRole());
+            String newRefresh = jwtUtil.generateRefreshToken(user.getEmail(), user.getId(), user.getEmail(), user.getRole());
+            addCookie(response, "accessToken", newAccess, 24 * 60 * 60);
+            addCookie(response, "refreshToken", newRefresh, 14 * 24 * 60 * 60);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception ex) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid or expired refresh token"));
+        }
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
-        // Clear the accessToken cookie
-        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from("accessToken", "")
+        clearCookie(response, "accessToken");
+        clearCookie(response, "refreshToken");
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+    }
+
+    private void addCookie(HttpServletResponse response, String name, String value, int maxAgeSeconds) {
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(name, value)
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .path("/")
-                .maxAge(0) // Delete cookie
+                .maxAge(maxAgeSeconds)
                 .sameSite(cookieSameSite);
-        
-        // Only set domain if configured
         if (cookieDomain != null && !cookieDomain.isEmpty()) {
-            cookieBuilder.domain(cookieDomain);
+            builder.domain(cookieDomain);
         }
-        
-        ResponseCookie cookie = cookieBuilder.build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+        response.addHeader(HttpHeaders.SET_COOKIE, builder.build().toString());
+    }
+
+    private void clearCookie(HttpServletResponse response, String name) {
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(name, "")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .path("/")
+                .maxAge(0)
+                .sameSite(cookieSameSite);
+        if (cookieDomain != null && !cookieDomain.isEmpty()) {
+            builder.domain(cookieDomain);
+        }
+        response.addHeader(HttpHeaders.SET_COOKIE, builder.build().toString());
+    }
+
+    private String getCookieValue(HttpServletRequest request, String name) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) return null;
+        for (Cookie c : cookies) {
+            if (name.equals(c.getName())) return c.getValue();
+        }
+        return null;
     }
 }

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { createRecorder, computeSha256Hex, playBlobSafely } from "../../../utils/audioUtils"
 import { iseAPI } from "../../../services/api"
 import { assessmentAPI } from "../../../services/api"
-import { Button } from "../../AssessmentsListPage/ui/button"
+import { Button } from "@/components/ui"
 import SentencePronunciationResult from "../../LessonDetailPage/components/SentencePronunciationResult"
 
 const TestSection = ({ section, assessmentId, testData, assessment, onComplete, onCancel }) => {

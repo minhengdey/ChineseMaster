@@ -59,9 +59,7 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token);
         } catch (ExpiredJwtException ex) {
-            // Nếu token hết hạn, chúng ta sẽ tự tạo lại đối tượng Jws
-            System.out.println("Token expired, but signature is valid. Re-wrapping in a custom Jws object.");
-
+            // Token expired but signature valid: re-wrap in custom Jws for downstream handling
             String[] chunks = token.split("\\.");
             String signature = (chunks.length == 3) ? chunks[2] : "";
 

@@ -3,7 +3,7 @@ package com.bucha.config;
 import com.bucha.entity.Curriculum;
 import com.bucha.service.LessonMigrationService;
 import com.bucha.service.CloudinaryService;
-import com.bucha.dto.CurriculumMetadataDto;
+import com.bucha.dto.content.CurriculumMetadataDto;
 import com.bucha.dto.content.ConversationDto;
 import com.bucha.dto.migration.ConversationMigrationDTO;
 import com.bucha.dto.migration.LessonMigrationDTO;

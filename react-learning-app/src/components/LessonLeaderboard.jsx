@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react"
 import { iseStatsAPI } from "../services/api"
 
+// In-flight dedupe: only one request per lessonId; second run (Strict Mode) awaits the same promise.
+const _leaderboardInFlight = {}
+
 const LessonLeaderboard = ({ lessonId, className }) => {
   const [rows, setRows] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -15,33 +18,49 @@ const LessonLeaderboard = ({ lessonId, className }) => {
       setLoading(false)
       return
     }
-    const load = async () => {
-      setLoading(true)
-      try {
-        const data = await iseStatsAPI.getLeaderboardByLesson(lessonId)
-        if (!mounted) return
-        const rows = Array.isArray(data?.rows) ? data.rows : []
-        // ensure numeric score
-        const enriched = rows.map((r) => ({
-          ...r,
-          bestScore: Number(r.bestScore ?? r.score ?? 0),
-          avgScore: Number(r.avgScore ?? 0),
-          attempts: Number(r.attempts ?? 0),
-        }))
-
-        // sort by avgScore desc (user-requested)
-        const withScores = enriched.map((r) => ({ ...r }))
-        withScores.sort((a, b) => (b.avgScore ?? 0) - (a.avgScore ?? 0))
-        setRows(withScores)
-      } catch (e) {
-        console.debug("Failed to load lesson leaderboard", e)
-        setError("Không thể tải BXH theo bài")
-        setRows([])
-      } finally {
-        setLoading(false)
+    const run = async () => {
+      if (_leaderboardInFlight[lessonId]) {
+        try {
+          const enriched = await _leaderboardInFlight[lessonId]
+          if (mounted) {
+            setRows(enriched)
+            setLoading(false)
+          }
+        } catch (_) {
+          if (mounted) setLoading(false)
+        }
+        return
       }
+      setLoading(true)
+      const promise = (async () => {
+        try {
+          const data = await iseStatsAPI.getLeaderboardByLesson(lessonId)
+          const rawRows = Array.isArray(data?.rows) ? data.rows : []
+          const enriched = rawRows.map((r) => ({
+            ...r,
+            bestScore: Number(r.bestScore ?? r.score ?? 0),
+            avgScore: Number(r.avgScore ?? 0),
+            attempts: Number(r.attempts ?? 0),
+          }))
+          enriched.sort((a, b) => (b.avgScore ?? 0) - (a.avgScore ?? 0))
+          if (mounted) setRows(enriched)
+          return enriched
+        } catch (e) {
+          console.debug("Failed to load lesson leaderboard", e)
+          if (mounted) {
+            setError("Không thể tải BXH theo bài")
+            setRows([])
+          }
+          throw e
+        } finally {
+          delete _leaderboardInFlight[lessonId]
+          if (mounted) setLoading(false)
+        }
+      })()
+      _leaderboardInFlight[lessonId] = promise
+      await promise
     }
-    load()
+    run()
     return () => {
       mounted = false
     }

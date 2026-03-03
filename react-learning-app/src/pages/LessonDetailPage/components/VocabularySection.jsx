@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import AudioPlayer from "./AudioPlayer"
 import WordRecordingButton from "./WordRecordingButton"
 import SentencePronunciationResult from "./SentencePronunciationResult"
-import { iseStatsAPI } from "../../../services/api"
 import { hasLetters } from "../../../utils/textUtils"
 
 const VocabularySection = ({
@@ -20,54 +19,16 @@ const VocabularySection = ({
   const [recordedAudio, setRecordedAudio] = useState(null)
   // activeItemKey is a string like 'word-<id>' or 'example-<id>' to support both word and example recordings
   const [activeItemKey, setActiveItemKey] = useState(null)
-  // local highlighted vocabulary ids (stringified) to update UI instantly after scoring
-  const [localHighlightedVocabularyIds, setLocalHighlightedVocabularyIds] = useState([])
+  const [localHighlightedVocabularyIds, setLocalHighlightedVocabularyIds] = useState(() =>
+    Array.isArray(highlightedVocabularyIds) ? highlightedVocabularyIds.map(String) : [],
+  )
 
-  // Debug: print highlighted IDs received from backend so we can verify matching
-  if (process.env.NODE_ENV !== "production") {
-    try {
-      // console.debug(
-      //   "[VocabularySection] highlightedVocabularyIds (from API):",
-      //   highlightedVocabularyIds,
-      //   "local:",
-      //   localHighlightedVocabularyIds,
-      // )
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  // Debug: log when localHighlightedVocabularyIds changes
+  // Sync from parent (single source: parent fetches pronounced once)
   useEffect(() => {
-    // console.log("[VocabularySection] localHighlightedVocabularyIds changed:", localHighlightedVocabularyIds)
-  }, [localHighlightedVocabularyIds])
-
-  // Fetch pronounced stats for this lesson (vocabulary ids) so server-side practiced words
-  // are highlighted on initial render — mirrors ConversationSection behavior.
-  useEffect(() => {
-    let mounted = true
-    const fetchPronounced = async () => {
-      if (!lessonId) return
-      try {
-        const stats = await iseStatsAPI.getPronouncedForLesson(lessonId)
-        // stats may contain vocabularyIds (array) or entries; prefer aggregated vocabularyIds
-        const ids =
-          stats && Array.isArray(stats.vocabularyIds) && stats.vocabularyIds.length
-            ? stats.vocabularyIds.map(String)
-            : Array.isArray(stats.entries)
-              ? stats.entries.map((e) => String(e.vocabularyId || e.wordId || e.vocabulary || e.id)).filter(Boolean)
-              : []
-        if (mounted) setLocalHighlightedVocabularyIds(ids)
-      } catch (e) {
-        // console.warn("Failed to fetch pronounced stats for lesson", lessonId, e)
-      }
+    if (Array.isArray(highlightedVocabularyIds)) {
+      setLocalHighlightedVocabularyIds(highlightedVocabularyIds.map(String))
     }
-
-    fetchPronounced()
-    return () => {
-      mounted = false
-    }
-  }, [lessonId])
+  }, [lessonId, highlightedVocabularyIds])
 
   const handlePronunciationScore = async (result, audioBlob, returnedKey, internalKey) => {
     // returnedKey may be something like 'word-<externalId>' or undefined; internalKey is 'word-<internalId>' constructed by the caller
