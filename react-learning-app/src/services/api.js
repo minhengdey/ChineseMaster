@@ -4,13 +4,13 @@ import { ROUTES } from "../constants/routes";
 // Base API configuration (runtime override from public/env-config.js)
 // Priority: runtime `window._env_.VITE_API_URL` -> `window._env_.REACT_APP_API_URL` -> import.meta env -> fallback to relative `/api`
 // Use relative `/api` so frontend calls like `fetch('/api/login')` or axios to `/auth/login` go through the same origin proxy/router.
-const API_BASE_URL =
-   typeof window !== "undefined" &&
-      window._env_ &&
-      (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
-      ? (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
-      : import.meta?.env?.VITE_API_BASE_URL || import.meta?.env?.VITE_API_URL || "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
-
+// const API_BASE_URL =
+//    typeof window !== "undefined" &&
+//       window._env_ &&
+//       (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
+//       ? (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
+//       : import.meta?.env?.VITE_API_BASE_URL || import.meta?.env?.VITE_API_URL || "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
+const API_BASE_URL = "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
 // const API_BASE_URL = "http://localhost:8080/api";
 
 const AUTH_PATHS = {
