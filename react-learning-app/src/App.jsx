@@ -29,6 +29,7 @@ const SpeakingPracticePage = lazy(() => import("./pages/SpeakingPracticePage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const AlphabetPage = lazy(() => import("./pages/AlphabetPage"));
 const AssessmentTestPage = lazy(() => import("./pages/AssessmentTestPage"));
+const HSKKExamPage = lazy(() => import("./pages/HSKKExamPage"));
 
 const PageFallback = () => (
    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-white">
@@ -103,6 +104,7 @@ function App() {
                   />
                   <Route path="pronunciation" element={<PronunciationPage />} />
                   <Route path="alphabet" element={<AlphabetPage />} />
+                  <Route path="hskk-exam" element={<HSKKExamPage />} />
                   <Route path="profile" element={<ProfilePage user={user} />} />
                   <Route
                      path="/curriculum/:curriculumId/lesson/:lessonId/speaking"

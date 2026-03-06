@@ -43,6 +43,12 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
             except_info: null,
             warning: null,
             db_scores: null,
+            overallFeedback: null,
+            pronunciationIssue: null,
+            toneIssue: null,
+            fluencyIssue: null,
+            improvementTip: null,
+            feedback: null,
         }
 
         const sent = raw?.sentence || {}
@@ -61,6 +67,13 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
             except_info: sent?.except_info ?? raw?.except_info ?? null,
             warning: sent?.warning ?? raw?.warning ?? null,
             db_scores: raw?.db_scores ?? null,
+            sentence: raw?.sentence ?? sent,
+            overallFeedback: raw?.overallFeedback ?? null,
+            pronunciationIssue: raw?.pronunciationIssue ?? null,
+            toneIssue: raw?.toneIssue ?? null,
+            fluencyIssue: raw?.fluencyIssue ?? null,
+            improvementTip: raw?.improvementTip ?? null,
+            feedback: raw?.feedback ?? raw?.overallFeedback ?? null,
         }
     }
 

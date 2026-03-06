@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { pronunciationAPI } from "../../../services/api"
 import { Volume2, Info, AlertCircle, CheckCircle, X } from "lucide-react"
+import StructuredFeedbackView from "../../../components/StructuredFeedbackView"
 
 const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = "" }) => {
   const [selectedWordIndex, setSelectedWordIndex] = useState(null)
@@ -280,6 +281,18 @@ const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = ""
           </>
         )}
       </div>
+
+      {/* Nhận xét AI (Điểm tổng, Nhận xét, Lỗi, Gợi ý) */}
+      {(result.overallFeedback || result.improvementTip || result.feedback) && (
+        <StructuredFeedbackView
+          score={result.total_score ?? result.totalScore ?? result.score}
+          overallFeedback={result.overallFeedback ?? result.feedback}
+          pronunciationIssue={result.pronunciationIssue}
+          toneIssue={result.toneIssue}
+          fluencyIssue={result.fluencyIssue}
+          improvementTip={result.improvementTip}
+        />
+      )}
 
       {wrongWords.size > 0 && (
         <div className="alert alert-warning">

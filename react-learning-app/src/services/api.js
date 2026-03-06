@@ -10,8 +10,8 @@ import { ROUTES } from "../constants/routes";
 //       (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
 //       ? (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
 //       : import.meta?.env?.VITE_API_BASE_URL || import.meta?.env?.VITE_API_URL || "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
-const API_BASE_URL = "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
-// const API_BASE_URL = "http://localhost:8080/api";
+// const API_BASE_URL = "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
+const API_BASE_URL = "http://localhost:8080/api";
 
 const AUTH_PATHS = {
    LOGIN: "/auth/login",
@@ -501,15 +501,14 @@ export const audioAPI = {
    },
 };
 
-// ISE (pronunciation scoring) APIs
+// ISE (pronunciation scoring) APIs — unified flow via POST /api/pronunciation/evaluate (ISE + Doubao)
 export const iseAPI = {
-   // scoreSentence should post multipart/form-data matching backend signature
-   // Supports optional parts: scoreCategory, lessonId, testId, includeInDaily, sessionDate, durationSeconds, numSentences
+   // Uses pronunciationAPI.evaluate so all scoring gets same flow: ISE + Doubao feedback + rawIseData
    scoreSentence: async ({
       text,
       audioFile,
-      sub = "ise",
-      ent = "cn_vip",
+      sub,
+      ent,
       scoreCategory,
       lessonId,
       lineId,
@@ -523,73 +522,41 @@ export const iseAPI = {
       numSentences,
    }) => {
       try {
-         const formData = new FormData();
-         // required parts
-         formData.append("text", text ?? "");
-
-         // Ensure the audio part includes a filename (some mobile browsers/webviews omit it for plain Blob)
-         try {
-            let audioPart = audioFile;
-            if (typeof File !== "undefined" && audioFile instanceof Blob && !(audioFile instanceof File)) {
-               audioPart = new File([audioFile], "recording.webm", { type: audioFile.type || "audio/webm" });
-            }
-            formData.append("audio", audioPart);
-         } catch (e) {
-            // fallback: append as-is
-            formData.append("audio", audioFile);
-         }
-
-         // append simple string parts for compatibility across mobile WebViews
-         formData.append("sub", String(sub ?? ""));
-         formData.append("ent", String(ent ?? ""));
-
-         // optional parts - append as plain strings for better compatibility on mobile
-         if (scoreCategory != null) formData.append("scoreCategory", String(scoreCategory));
-         if (lessonId != null) formData.append("lessonId", String(lessonId));
-         if (lineId != null) formData.append("lineId", String(lineId));
-         if (vocabularyId != null) formData.append("vocabularyId", String(vocabularyId));
-         if (source != null) formData.append("source", String(source));
-         if (testId != null) formData.append("testId", String(testId));
-         if (questionId != null) formData.append("questionId", String(questionId));
-         if (includeInDaily != null) formData.append("includeInDaily", String(includeInDaily));
-         if (sessionDate != null) formData.append("sessionDate", String(sessionDate));
-         if (durationSeconds != null) formData.append("durationSeconds", String(durationSeconds));
-         if (numSentences != null) formData.append("numSentences", String(numSentences));
-
-         // Debug: list FormData entries (helps verify the file object and parts the browser will send)
-         try {
-            for (const entry of formData.entries()) {
-               const [k, v] = entry;
-               if (v instanceof File) {
-                  // console.debug("[iseAPI] formData entry:", k, "File", v.name, v.type, v.size);
-               } else if (v instanceof Blob) {
-                  // console.debug("[iseAPI] formData entry:", k, "Blob", v.type);
-               } else {
-                  // console.debug("[iseAPI] formData entry:", k, typeof v, v);
-               }
-            }
-         } catch (e) {
-            // console.debug("[iseAPI] formData debug failed", e);
-         }
-
-         // Do not set Content-Type so the browser can add the multipart boundary automatically.
-         // Token is automatically sent via cookie (withCredentials: true)
-         const response = await apiClient.post("/ise/score", formData);
-
-         return response.data;
+         const data = await pronunciationAPI.evaluate({
+            text,
+            audioFile,
+            lessonId,
+            lineId,
+            vocabularyId,
+            source,
+            includeInDaily,
+            scoreCategory: scoreCategory ?? "hskk",
+         });
+         const raw = data.rawIseData || {};
+         return {
+            ...raw,
+            score: data.score,
+            total_score: data.score,
+            totalScore: data.score,
+            feedback: data.feedback ?? data.overallFeedback,
+            fluency: data.fluency ?? raw.sentence?.fluency,
+            completeness: data.completeness ?? raw.sentence?.completeness,
+            success: true,
+            overallFeedback: data.overallFeedback,
+            pronunciationIssue: data.pronunciationIssue,
+            toneIssue: data.toneIssue,
+            fluencyIssue: data.fluencyIssue,
+            improvementTip: data.improvementTip,
+         };
       } catch (error) {
-         // Handle 422 responses from backend which indicate ISE rejected the
-         // recording and request a re-pronunciation. Normalize into a return
-         // object so callers can show a retry UI instead of a generic error.
          if (error.response && error.response.status === 422 && error.response.data) {
             return {
-               require_retry: Boolean(error.response.data.require_retry),
+               require_retry: true,
                error: error.response.data.error || null,
                message: error.response.data.message || null,
                detail: error.response.data,
             };
          }
-
          throw new Error(
             error.response?.data?.message ||
             error.message ||
@@ -598,176 +565,50 @@ export const iseAPI = {
       }
    },
 
-   // NEW: scoreWord for vocabulary using the new IseWordController
+   // Uses same pronunciation flow (ISE + Doubao) as scoreSentence
    scoreWord: async ({ text, audioFile, testId, questionId, scoreCategory }) => {
       try {
-         const formData = new FormData();
-         formData.append("text", text);
-
-         // Ensure audioFile has proper name and type
-         const audioFileWithName = new File([audioFile], "recording.webm", {
-            type: audioFile.type || "audio/webm",
+         const data = await pronunciationAPI.evaluate({
+            text,
+            audioFile,
+            testId,
+            questionId,
+            scoreCategory: scoreCategory ?? "hskk",
          });
-         formData.append("audio", audioFileWithName);
-         // assessment mode: only attach testId
-         if (testId != null) {
-            formData.append("testId", String(testId));
-         }
-         if (questionId != null) {
-            formData.append("questionId", String(questionId));
-         }
-         // optional: attach scoreCategory for backend categorization (e.g., thanh-mau/van-mau/...)
-         if (scoreCategory != null) {
-            formData.append("scoreCategory", String(scoreCategory));
-         }
-
-         // console.log("Sending to ISE Word API:", {
-         //    text: text,
-         //    audioFileName: audioFileWithName.name,
-         //    audioSize: audioFileWithName.size,
-         //    audioType: audioFileWithName.type,
-         //    endpoint: "/ise/score",
-         // });
-
-         // Debug: list FormData entries (helps verify the file object and parts the browser will send)
-         try {
-            for (const entry of formData.entries()) {
-               const [k, v] = entry;
-               if (v instanceof File) {
-                  // console.debug(
-                  //       "[iseAPI.scoreWord] formData entry:",
-                  //       k,
-                  //       "File",
-                  //       v.name,
-                  //       v.type,
-                  //       v.size
-                  //    );
-               } else if (v instanceof Blob) {
-                  // console.debug(
-                  //    "[iseAPI.scoreWord] formData entry:",
-                  //    k,
-                  //    "Blob",
-                  //    v.type
-                  // );
-               } else {
-                  // console.debug(
-                  //    "[iseAPI.scoreWord] formData entry:",
-                  //    k,
-                  //    typeof v,
-                  //    v
-                  // );
-               }
-            }
-         } catch (e) {
-            // console.debug("[iseAPI.scoreWord] formData debug failed", e);
-         }
-
-         const response = await apiClient.post("/ise/score", formData);
-
-         // IseWordController may return different shapes:
-         // - a JSON string
-         // - an object like { result: { ... } } or { data: { ... } }
-         // - an array [ {...} ]
-         // Normalize into a consistent scoring object when possible.
-         let result = response.data;
-
-         // If it's a string, try to parse it as JSON
-         if (typeof result === "string") {
-            try {
-               result = JSON.parse(result);
-            } catch (parseError) {
-               // console.warn(
-               //    "Failed to parse ISE Word response as JSON:",
-               //    parseError
-               // );
-               return { raw_response: result };
-            }
-         }
-
-         // If wrapped in { result: ... } or { data: ... }, unwrap it
-         if (result && typeof result === "object") {
-            if (result.result && typeof result.result === "object") {
-               result = result.result;
-            } else if (result.data && typeof result.data === "object") {
-               result = result.data;
-            }
-         }
-
-         // If it's an array, take the first element
-         if (Array.isArray(result)) {
-            result = result.length > 0 ? result[0] : { raw_response: [] };
-         }
-
-         // Build a normalized object exactly like scoreSentence normalization
-         if (result && typeof result === "object") {
-            const sent = result.sentence || {};
-            const normalized = {
-               total_score:
-                  sent.total_score ??
-                  result.total_score ??
-                  result.totalScore ??
-                  result.overall ??
-                  null,
-               fluency:
-                  sent.fluency ?? result.fluency ?? result.fluencyScore ?? null,
-               completeness:
-                  sent.completeness ??
-                  result.completeness ??
-                  result.completenessScore ??
-                  null,
-               wrong_words:
-                  sent.wrong_words ??
-                  result.wrong_words ??
-                  result.wrongWords ??
-                  result.wrong ??
-                  [],
-               sid: sent.sid ?? result.sid ?? null,
-               status: sent.status ?? result.status ?? null,
-               raw_xml:
-                  sent.raw_xml ??
-                  result.raw_xml ??
-                  result.rawXml ??
-                  result.rawXML ??
-                  null,
-               words: result.words ?? sent.words ?? [],
-               db_scores: result.db_scores ?? null,
-            };
-            return normalized;
-         }
-
-         // Fallback: return as-is if structure unknown
-         return { raw_response: result };
+         const raw = data.rawIseData || {};
+         const sent = raw.sentence || {};
+         return {
+            ...raw,
+            total_score: data.score,
+            totalScore: data.score,
+            fluency: data.fluency ?? sent.fluency,
+            completeness: data.completeness ?? sent.completeness,
+            wrong_words: sent.wrong_words ?? raw.wrong_words ?? [],
+            words: raw.words ?? sent.words ?? [],
+            feedback: data.feedback ?? data.overallFeedback,
+            sid: sent.sid,
+            status: sent.status,
+            db_scores: raw.db_scores,
+            overallFeedback: data.overallFeedback,
+            pronunciationIssue: data.pronunciationIssue,
+            toneIssue: data.toneIssue,
+            fluencyIssue: data.fluencyIssue,
+            improvementTip: data.improvementTip,
+         };
       } catch (error) {
-         // If backend returned 422 / require_retry, normalize the response so
-         // callers can present a retry prompt.
          if (error.response && error.response.status === 422 && error.response.data) {
             return {
-               require_retry: Boolean(error.response.data.require_retry),
+               require_retry: true,
                error: error.response.data.error || null,
                message: error.response.data.message || null,
                detail: error.response.data,
             };
          }
-
-         // console.error("ISE Word API Error:", error);
-
-         // Extract meaningful error message
-         let errorMessage = "Không thể đánh giá phát âm từ vựng.";
-
-         if (error.response?.data?.error) {
-            errorMessage = error.response.data.error;
-         } else if (error.response?.data?.detail) {
-            errorMessage = error.response.data.detail;
-         } else if (error.message) {
-            errorMessage = error.message;
-         }
-
-         // Handle specific ISE API errors
+         let errorMessage =
+            error.response?.data?.message || error.message || "Không thể đánh giá phát âm từ vựng.";
          if (errorMessage.includes("48195") || errorMessage.includes("8195")) {
-            errorMessage =
-               "Từ này có thể quá phức tạp để đánh giá. Hãy thử nói rõ ràng hơn.";
+            errorMessage = "Từ này có thể quá phức tạp để đánh giá. Hãy thử nói rõ ràng hơn.";
          }
-
          throw new Error(errorMessage);
       }
    },
@@ -924,8 +765,45 @@ export const adminUserAPI = {
    },
 };
 
-// Pronunciation guide lookup (uses backend /api/pronunciation endpoints)
+// Pronunciation guide lookup and evaluation (unified flow: ISE + Doubao feedback)
 export const pronunciationAPI = {
+   /**
+    * Evaluate pronunciation via POST /api/pronunciation/evaluate (ISE + Doubao).
+    * Returns { score, feedback, fluency, completeness, rawIseData }.
+    * On 422, throws so caller can catch and show retry UI (check error.response.status).
+    */
+   evaluate: async ({
+      text,
+      audioFile,
+      lessonId,
+      lineId,
+      vocabularyId,
+      source,
+      includeInDaily,
+      scoreCategory,
+      testId,
+      questionId,
+   }) => {
+      const formData = new FormData();
+      formData.append("text", text ?? "");
+      const audioPart =
+         typeof File !== "undefined" && audioFile instanceof Blob && !(audioFile instanceof File)
+            ? new File([audioFile], "recording.webm", { type: audioFile.type || "audio/webm" })
+            : audioFile;
+      formData.append("audioFile", audioPart);
+      if (lessonId != null) formData.append("lessonId", String(lessonId));
+      if (lineId != null) formData.append("lineId", String(lineId));
+      if (vocabularyId != null) formData.append("vocabularyId", String(vocabularyId));
+      if (source != null) formData.append("source", String(source));
+      if (includeInDaily != null) formData.append("includeInDaily", String(includeInDaily));
+      if (scoreCategory != null) formData.append("scoreCategory", String(scoreCategory));
+      if (testId != null) formData.append("testId", String(testId));
+      if (questionId != null) formData.append("questionId", String(questionId));
+
+      const response = await apiClient.post("/pronunciation/evaluate", formData);
+      return response.data;
+   },
+
    // New unified lookup endpoint. Pass `q` which may be an initial, final or tone.
    lookup: async (q) => {
       if (!q) return null;
@@ -1085,6 +963,38 @@ iseAPI.getAssessmentTestData = async (lessonId) => {
 // Add method to iseAPI for submitting assessment
 iseAPI.submitAssessmentTest = async (payload) => {
    return assessmentAPI.submitTest(payload);
+};
+
+// HSKK Basic Exam APIs
+export const hskkAPI = {
+   getQuestions: async () => {
+      const response = await apiClient.get("/hskk/questions");
+      return response.data;
+   },
+   startExam: async () => {
+      const response = await apiClient.post("/hskk/start-exam");
+      return response.data;
+   },
+   submitAnswer: async (examResultId, questionId, referenceText, audioFile) => {
+      const formData = new FormData();
+      formData.append("examResultId", String(examResultId));
+      formData.append("questionId", String(questionId));
+      if (referenceText != null && referenceText !== "") formData.append("referenceText", referenceText);
+      const file = audioFile instanceof File ? audioFile : new File([audioFile], "recording.webm", { type: audioFile.type || "audio/webm" });
+      formData.append("audio", file);
+      const response = await apiClient.post("/hskk/submit-answer", formData, {
+         headers: { "Content-Type": "multipart/form-data" },
+      });
+      return response.data;
+   },
+   finishExam: async (examResultId) => {
+      const response = await apiClient.post("/hskk/finish-exam", { examResultId });
+      return response.data;
+   },
+   getHistory: async (limit = 20) => {
+      const response = await apiClient.get("/hskk/history", { params: { limit } });
+      return response.data;
+   },
 };
 
 // Class Management APIs (Admin only)

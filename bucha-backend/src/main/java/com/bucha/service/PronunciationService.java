@@ -1,107 +1,144 @@
 package com.bucha.service;
 
-import com.bucha.dto.pronunciation.PronunciationGuideDto;
-import com.bucha.entity.InitialSound;
-import com.bucha.entity.FinalSound;
-import com.bucha.entity.Tone;
-import com.bucha.repository.InitialSoundRepository;
-import com.bucha.repository.FinalSoundRepository;
-import com.bucha.repository.ToneRepository;
-import lombok.RequiredArgsConstructor;
+import com.bucha.client.DoubaoClient;
+import com.bucha.dto.pronunciation.PronunciationResponseDto;
+import com.bucha.dto.pronunciation.SpeechEvaluationResult;
+import com.bucha.dto.pronunciation.StructuredFeedbackDto;
+import com.bucha.exception.PronunciationEvaluationException;
+import com.bucha.security.JwtUserPrincipal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 
+/**
+ * Orchestrates the pronunciation evaluation pipeline:
+ *
+ * <ol>
+ *   <li>Send audio to iFlytek ISE via existing {@link IseService} (through {@link SpeechEvaluationService})</li>
+ *   <li>Send score + text to Doubao AI → get short feedback</li>
+ *   <li>Return combined result to caller</li>
+ * </ol>
+ *
+ * <p>Doubao failure is non-fatal: a built-in default feedback is used instead.</p>
+ */
 @Service
-@RequiredArgsConstructor
 public class PronunciationService {
-   private final InitialSoundRepository initialSoundRepository;
-   private final FinalSoundRepository finalSoundRepository;
-   private final ToneRepository toneRepository;
 
-   public PronunciationGuideDto findByInitial(String initial) {
-      Optional<InitialSound> maybe = initialSoundRepository.findFirstByText(initial);
-      if (maybe.isEmpty())
-         return null;
-      InitialSound s = maybe.get();
-      PronunciationGuideDto dto = new PronunciationGuideDto();
-      dto.setType("initial");
-      dto.setKey(s.getText());
-      dto.setIpa(s.getIpa());
-      dto.setPronunciation(s.getPronunciation());
-      return dto;
-   }
+    private static final Logger logger = LoggerFactory.getLogger(PronunciationService.class);
 
-   public PronunciationGuideDto findByFinal(String finalText) {
-      Optional<FinalSound> maybe = finalSoundRepository.findFirstByText(finalText);
-      if (maybe.isEmpty())
-         return null;
-      FinalSound s = maybe.get();
-      PronunciationGuideDto dto = new PronunciationGuideDto();
-      dto.setType("final");
-      dto.setKey(s.getText());
-      dto.setIpa(s.getIpa());
-      dto.setPronunciation(s.getPronunciation());
-      return dto;
-   }
+    private final SpeechEvaluationService speechEvaluationService;
+    private final DoubaoClient doubaoClient;
 
-   public PronunciationGuideDto findByTone(String toneName) {
-      // try matching by name first (backwards compat)
-      Optional<Tone> maybe = toneRepository.findByName(toneName);
+    public PronunciationService(SpeechEvaluationService speechEvaluationService, DoubaoClient doubaoClient) {
+        this.speechEvaluationService = speechEvaluationService;
+        this.doubaoClient = doubaoClient;
+    }
 
-      // Normalize common frontend formats: "TONE2" or "2" or multi-digit marks like
-      // "214"
-      String normalizedToneMark = null;
-      if (maybe.isEmpty() && toneName != null) {
-         String upper = toneName.trim().toUpperCase();
-         // TONE2 -> 2
-         java.util.regex.Matcher m = java.util.regex.Pattern
-               .compile("TONE(\\d+)", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(upper);
-         if (m.find()) {
-            normalizedToneMark = m.group(1);
-         } else {
-            // any digits in the string
-            java.util.regex.Matcher m2 = java.util.regex.Pattern.compile("(\\d+)").matcher(toneName);
-            if (m2.find())
-               normalizedToneMark = m2.group(1);
-         }
-      }
+    /**
+     * Evaluate pronunciation of the given recording against the reference text.
+     * Uses SpeechEvaluationService (ISE) for scoring, then Doubao for feedback.
+     * Optional params are forwarded to ISE for persistence (lesson/line stats).
+     *
+     * @param referenceText Chinese sentence the user was asked to read
+     * @param audioFile     User's recorded audio (webm / wav / mp3)
+     * @param principal     Current user (required by ISE)
+     * @param lessonId      optional — for persistence
+     * @param lineId        optional — for persistence
+     * @param vocabularyId  optional — for persistence
+     * @param source        optional — for persistence
+     * @param includeInDaily optional — for persistence
+     * @param scoreCategory optional — for persistence
+     * @param testId        optional — for assessment persistence
+     * @param questionId    optional — for assessment persistence
+     * @return evaluation result with score, feedback, rawIseData
+     * @throws PronunciationEvaluationException if the recording cannot be evaluated
+     * @throws IllegalArgumentException         if inputs are null/empty
+     */
+    public PronunciationResponseDto evaluatePronunciation(String referenceText, MultipartFile audioFile,
+                                                          JwtUserPrincipal principal,
+                                                          Long lessonId, String lineId, String vocabularyId,
+                                                          String source, Boolean includeInDaily, String scoreCategory,
+                                                          Long testId, Long questionId) {
+        validateInputs(referenceText, audioFile);
 
-      // try tone_mark using normalized value first, then raw input as fallback
-      if (maybe.isEmpty()) {
-         // If normalizedToneMark looks like a number, try matching by sortOrder first
-         if (normalizedToneMark != null) {
-            try {
-               Integer idx = Integer.valueOf(normalizedToneMark);
-               maybe = toneRepository.findByOrder(idx);
-            } catch (NumberFormatException ignored) {
-            }
-            // if not found by sortOrder, fall back to toneMark match
-            if (maybe.isEmpty()) {
-               maybe = toneRepository.findByToneMark(normalizedToneMark);
-            }
-         }
-         if (maybe.isEmpty()) {
-            // try raw input as toneMark
-            maybe = toneRepository.findByToneMark(toneName);
-         }
-      }
-      if (maybe.isEmpty())
-         return null;
-      Tone s = maybe.get();
-      PronunciationGuideDto dto = new PronunciationGuideDto();
-      dto.setType("tone");
-      // prefer returning tone_mark when available as the key, otherwise fall back to
-      // sortOrder or name
-      if (s.getToneMark() != null) {
-         dto.setKey(s.getToneMark());
-      } else if (s.getOrder() != null) {
-         dto.setKey(String.valueOf(s.getOrder()));
-      } else {
-         dto.setKey(s.getName());
-      }
-      dto.setIpa(s.getPitchValue());
-      dto.setPronunciation(s.getPronunciation());
-      return dto;
-   }
+        Map<String, String> optionalForm = buildOptionalForm(lessonId, lineId, vocabularyId, source, includeInDaily, scoreCategory, testId, questionId);
+
+        // Step 1 ─ Full ISE evaluation → SpeechEvaluationResult with all sub-scores
+        SpeechEvaluationResult evalResult;
+        try {
+            logger.info("[PronunciationService] Evaluating: text='{}' audioSize={}",
+                    referenceText, audioFile.getSize());
+            evalResult = speechEvaluationService.evaluate(referenceText, audioFile, principal, optionalForm);
+            logger.info("[PronunciationService] ISE result: {}", evalResult);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (IllegalStateException e) {
+            throw new PronunciationEvaluationException(e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("[PronunciationService] Unexpected ISE error", e);
+            throw new PronunciationEvaluationException(
+                    "Pronunciation evaluation failed. Please try again.", e);
+        }
+
+        // Step 2 ─ Structured AI feedback via Doubao (HSKK judge style)
+        StructuredFeedbackDto structured;
+        try {
+            structured = doubaoClient.generateStructuredFeedback(evalResult);
+            logger.debug("[PronunciationService] Doubao structured feedback: {}", structured.getOverallFeedback());
+        } catch (Exception e) {
+            logger.warn("[PronunciationService] Doubao call threw unexpectedly: {}", e.getMessage());
+            structured = DoubaoClient.defaultStructuredFeedback(evalResult.getTotalScore(), evalResult.isRejected());
+        }
+        String feedbackText = structured.getOverallFeedback() != null ? structured.getOverallFeedback() : DoubaoClient.defaultFeedback(evalResult.getTotalScore(), evalResult.isRejected());
+
+        // Step 3 ─ Build response with all sub-scores, raw ISE data, and structured feedback
+        return PronunciationResponseDto.builder()
+                .score(evalResult.getTotalScore())
+                .feedback(feedbackText)
+                .fluency(evalResult.getFluencyScore() > 0 ? evalResult.getFluencyScore() : null)
+                .completeness(evalResult.getCompletenessScore() > 0 ? evalResult.getCompletenessScore() : null)
+                .rawIseData(evalResult.getRawIseData())
+                .overallFeedback(structured.getOverallFeedback())
+                .pronunciationIssue(structured.getPronunciationIssue())
+                .toneIssue(structured.getToneIssue())
+                .fluencyIssue(structured.getFluencyIssue())
+                .improvementTip(structured.getImprovementTip())
+                .build();
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Private helpers
+    // ─────────────────────────────────────────────────────────────────
+
+    private static void validateInputs(String text, MultipartFile file) {
+        if (text == null || text.isBlank()) {
+            throw new IllegalArgumentException("Reference text must not be empty.");
+        }
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Audio file must not be empty.");
+        }
+        long maxBytes = 20 * 1024 * 1024; // 20 MB guard
+        if (file.getSize() > maxBytes) {
+            throw new IllegalArgumentException("Audio file exceeds the 20 MB size limit.");
+        }
+    }
+
+    private static Map<String, String> buildOptionalForm(Long lessonId, String lineId, String vocabularyId,
+                                                         String source, Boolean includeInDaily, String scoreCategory,
+                                                         Long testId, Long questionId) {
+        Map<String, String> m = new HashMap<>();
+        if (lessonId != null)        m.put("lessonId", String.valueOf(lessonId));
+        if (lineId != null)          m.put("lineId", lineId);
+        if (vocabularyId != null)    m.put("vocabularyId", vocabularyId);
+        if (source != null)          m.put("source", source);
+        if (includeInDaily != null)  m.put("includeInDaily", String.valueOf(includeInDaily));
+        if (scoreCategory != null)   m.put("scoreCategory", scoreCategory);
+        if (testId != null)          m.put("testId", String.valueOf(testId));
+        if (questionId != null)      m.put("questionId", String.valueOf(questionId));
+        return m.isEmpty() ? null : m;
+    }
 }

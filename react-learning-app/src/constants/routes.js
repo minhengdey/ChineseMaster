@@ -18,6 +18,7 @@ export const ROUTES = {
   ALPHABET: "/alphabet",
   PROFILE: "/profile",
   SPEAKING_DAILY: "/speaking/daily",
+  HSKK_EXAM: "/hskk-exam",
   ADMIN: "/admin",
   ADMIN_CLASSES: "/admin/classes",
 }

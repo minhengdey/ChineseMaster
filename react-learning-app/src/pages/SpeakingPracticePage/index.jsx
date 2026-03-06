@@ -558,6 +558,13 @@ const SpeakingPracticePage = () => {
         is_rejected: sent?.is_rejected ?? resp?.is_rejected ?? false,
         except_info: sent?.except_info ?? resp?.except_info ?? null,
         warning: sent?.warning ?? resp?.warning ?? null,
+        sentence: sent,
+        overallFeedback: resp?.overallFeedback ?? null,
+        pronunciationIssue: resp?.pronunciationIssue ?? null,
+        toneIssue: resp?.toneIssue ?? null,
+        fluencyIssue: resp?.fluencyIssue ?? null,
+        improvementTip: resp?.improvementTip ?? null,
+        feedback: resp?.feedback ?? resp?.overallFeedback ?? null,
       }
       setSelectedWord(null)
       setResult(normalized)

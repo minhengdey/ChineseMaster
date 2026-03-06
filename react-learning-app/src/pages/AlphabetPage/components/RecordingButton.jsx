@@ -146,17 +146,22 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = "xs" }
           warning: sent.warning ?? raw.warning ?? null,
         }
 
-        // Mirror important fields at top-level as well so caller code that checks either
-        // `result.sentence` or `result` finds consistent data.
+        // Mirror important fields at top-level; preserve structured AI feedback for display
         normalized = {
           sentence: sentenceObj,
           words: wordsArr,
           phonemes: phonemesArr,
-          total_score: sentenceObj.total_score,
-          fluency: sentenceObj.fluency,
-          completeness: sentenceObj.completeness,
-          pronunciation: sentenceObj.pronunciation,
-          tone: sentenceObj.tone,
+          total_score: sentenceObj.total_score ?? raw.total_score ?? raw.totalScore,
+          fluency: sentenceObj.fluency ?? raw.fluency,
+          completeness: sentenceObj.completeness ?? raw.completeness,
+          pronunciation: sentenceObj.pronunciation ?? raw.pronunciation,
+          tone: sentenceObj.tone ?? raw.tone,
+          overallFeedback: raw.overallFeedback,
+          pronunciationIssue: raw.pronunciationIssue,
+          toneIssue: raw.toneIssue,
+          fluencyIssue: raw.fluencyIssue,
+          improvementTip: raw.improvementTip,
+          feedback: raw.feedback ?? raw.overallFeedback,
         }
       }
 
