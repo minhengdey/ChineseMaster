@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { pronunciationAPI } from "../../../services/api";
+import StructuredFeedbackView from "../../../components/StructuredFeedbackView";
 
 const WordPronunciationResult = ({
    result,
@@ -195,6 +196,18 @@ const WordPronunciationResult = ({
                </div>
             </div>
          </div>
+
+         {/* Nhận xét AI (Điểm tổng, Nhận xét, Lỗi, Gợi ý) */}
+         {(result.overallFeedback || result.improvementTip || result.feedback) && (
+            <StructuredFeedbackView
+               score={result.total_score ?? result.totalScore ?? result.score}
+               overallFeedback={result.overallFeedback ?? result.feedback}
+               pronunciationIssue={result.pronunciationIssue}
+               toneIssue={result.toneIssue}
+               fluencyIssue={result.fluencyIssue}
+               improvementTip={result.improvementTip}
+            />
+         )}
 
          {/* Detailed scores grid (star style like speaking practice).
              Hide fluency/completeness for single-character word mode because

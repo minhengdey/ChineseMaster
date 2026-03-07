@@ -1,6 +1,8 @@
 spring:
    profiles:
       active: dev
+   # Optional: set servlet.multipart.location (e.g. D:/temp) if system temp disk is full
+   # Example: SPRING_SERVLET_MULTIPART_LOCATION=D:/temp
    datasource:
       driver-class-name: com.mysql.cj.jdbc.Driver
       url: ${DB_URL}
@@ -76,3 +78,13 @@ cloudinary:
    api-key: ${CLOUD_API_KEY}
    api-secret: ${CLOUD_API_SECRET}
    upload-folder: chinese-master
+
+# Internal ISE score endpoint (used by SpeechEvaluationService for backend-to-backend call)
+ise:
+   score-url: ${ISE_SCORE_URL:http://localhost:8080/api/ise/score}
+
+# Doubao AI for HSKK short feedback (optional; leave empty to use default text feedback)
+doubao:
+   api-url: ${DOUBAO_API_URL:https://api.doubao-ai.com/v1/chat/completions}
+   api-key: ${DOUBAO_API_KEY:}
+   model: ${DOUBAO_MODEL:doubao-pro-32k}

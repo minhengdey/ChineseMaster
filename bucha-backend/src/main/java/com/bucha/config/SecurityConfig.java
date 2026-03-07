@@ -67,6 +67,8 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/api/ise/score-json"),
                                 new AntPathRequestMatcher("/api/ise/job/**"))
                         .permitAll()
+                        // Pronunciation evaluate requires authentication
+                        .requestMatchers(new AntPathRequestMatcher("/api/pronunciation/evaluate")).authenticated()
                         .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
                         .anyRequest().permitAll())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

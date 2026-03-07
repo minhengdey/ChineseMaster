@@ -1,7 +1,7 @@
 import { useUserStore } from "../../store/UserStore"
 import PageLayout from "../../components/layout/PageLayout"
 import { HeroSection, FeatureCard } from "./components"
-import { BookOpen, Volume2, Sparkles, Type, ClipboardCheck } from "lucide-react"
+import { BookOpen, Volume2, Sparkles, Type, ClipboardCheck, Mic } from "lucide-react"
 
 const FEATURES = [
   {
@@ -12,6 +12,15 @@ const FEATURES = [
     gradient: "from-pink-500 to-rose-500",
     bgGradient: "from-pink-50 to-rose-50",
     iconColor: "text-pink-600",
+  },
+  {
+    icon: Mic,
+    title: "Thi nói HSKK",
+    description: "Luyện thi nói HSKK sơ cấp (mô phỏng đề thật)",
+    link: "/hskk-exam",
+    gradient: "from-amber-500 to-orange-500",
+    bgGradient: "from-amber-50 to-orange-50",
+    iconColor: "text-amber-600",
   },
   {
     icon: BookOpen,
@@ -57,7 +66,7 @@ const HomePage = () => {
   return (
     <PageLayout>
       <HeroSection userName={user?.name} />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-6">
         {FEATURES.map((feature, index) => (
           <FeatureCard key={index} {...feature} />
         ))}

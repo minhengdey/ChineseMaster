@@ -1,5 +1,6 @@
 import React from "react";
 import { pronunciationAPI } from "../../../services/api";
+import StructuredFeedbackView from "../../../components/StructuredFeedbackView";
 
 const SentencePronunciationResult = ({
   result,
@@ -326,6 +327,18 @@ const SentencePronunciationResult = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Structured AI feedback (Điểm tổng, Nhận xét, Lỗi, Gợi ý) when available */}
+      {(result.overallFeedback || result.improvementTip || result.feedback) && (
+        <StructuredFeedbackView
+          score={result.total_score ?? result.totalScore ?? result.score}
+          overallFeedback={result.overallFeedback ?? result.feedback}
+          pronunciationIssue={result.pronunciationIssue}
+          toneIssue={result.toneIssue}
+          fluencyIssue={result.fluencyIssue}
+          improvementTip={result.improvementTip}
+        />
       )}
 
       {/* Annotated sentence: show whole sentence; click a character to view word details */}
