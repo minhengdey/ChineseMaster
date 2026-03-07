@@ -81,7 +81,7 @@ cloudinary:
 
 # Internal ISE score endpoint (used by SpeechEvaluationService for backend-to-backend call)
 ise:
-   score-url: ${ISE_SCORE_URL:http://localhost:8080/api/ise/score}
+   score-url: ${ISE_SCORE_URL:https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api/ise/score}
 
 # Doubao AI for HSKK short feedback (optional; leave empty to use default text feedback)
 doubao:

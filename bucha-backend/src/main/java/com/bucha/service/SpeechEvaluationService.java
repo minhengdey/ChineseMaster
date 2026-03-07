@@ -32,7 +32,7 @@ public class SpeechEvaluationService {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /** Internal URL of POST /api/ise/score — set via ise.score-url in application.yml */
-    @Value("${ise.score-url:http://localhost:8080/api/ise/score}")
+    @Value("${ise.score-url:https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api/ise/score}")
     private String iseScoreUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
