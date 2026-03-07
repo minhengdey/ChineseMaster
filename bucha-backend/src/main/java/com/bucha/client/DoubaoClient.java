@@ -97,24 +97,68 @@ public class DoubaoClient {
         String wordAnalysis = formatWordAnalysis(eval);
 
         StringBuilder sb = new StringBuilder();
-        sb.append("Bạn là giám khảo HSKK Sơ cấp.\n\n");
+
+        sb.append("Bạn là giám khảo HSKK Sơ cấp và giáo viên dạy phát âm tiếng Trung.\n\n");
+
         sb.append("Dựa trên dữ liệu phát âm sau:\n\n");
+
         sb.append("Sentence: ").append(sentence).append("\n\n");
+
         sb.append("Scores:\n");
         sb.append("- Total: ").append(String.format("%.2f", total)).append("\n");
         sb.append("- Pronunciation: ").append(String.format("%.2f", phone)).append("\n");
         sb.append("- Tone: ").append(String.format("%.2f", tone)).append("\n");
         sb.append("- Fluency: ").append(String.format("%.2f", fluency)).append("\n\n");
+
         sb.append("Word analysis:\n").append(wordAnalysis).append("\n\n");
-        sb.append("Hãy trả về JSON với đúng key sau (chỉ trả lời bằng JSON, không thêm markdown):\n");
+
+        sb.append("Hãy phân tích lỗi phát âm và trả về JSON đúng format sau ");
+        sb.append("(chỉ trả lời bằng JSON hợp lệ, không thêm markdown hoặc giải thích):\n\n");
+
         sb.append("{\n");
         sb.append("  \"overall_feedback\": \"nhận xét tổng thể <100 chữ>\",\n");
-        sb.append("  \"pronunciation_issue\": \"lỗi phụ âm/nguyên âm nếu có\",\n");
-        sb.append("  \"tone_issue\": \"lỗi thanh điệu nếu có\",\n");
+        sb.append("  \"pronunciation_issue\": \"mô tả lỗi thanh mẫu hoặc vận mẫu nếu có\",\n");
+        sb.append("  \"tone_issue\": \"phân tích lỗi thanh điệu nếu có\",\n");
         sb.append("  \"fluency_issue\": \"lỗi độ trôi chảy nếu có\",\n");
-        sb.append("  \"improvement_tip\": \"gợi ý luyện tập\"\n");
-        sb.append("}\n");
-        sb.append("Nếu không có lỗi nào thì để chuỗi rỗng \"\" cho các field _issue. Chỉ dùng tiếng Việt.");
+        sb.append("  \"improvement_tip\": \"gợi ý luyện tập\",\n");
+        sb.append("  \"detailed_errors\": [\n");
+        sb.append("    {\n");
+        sb.append("      \"character\": \"chữ Hán sai\",\n");
+        sb.append("      \"pinyin_correct\": \"pinyin đúng\",\n");
+        sb.append("      \"tone_correct\": \"thanh đúng\",\n");
+        sb.append("      \"tone_spoken\": \"thanh người học nói\",\n");
+        sb.append("      \"issue\": \"mô tả ngắn lỗi phát âm\"\n");
+        sb.append("    }\n");
+        sb.append("  ]\n");
+        sb.append("}\n\n");
+
+        sb.append("Yêu cầu phân tích:\n");
+
+        sb.append("1. pronunciation_issue:\n");
+        sb.append("- Chỉ ra lỗi phát âm liên quan đến thanh mẫu (initial) hoặc vận mẫu (final).\n");
+        sb.append("- Ví dụ thanh mẫu: zh, ch, sh, r, z, c, s, j, q, x.\n");
+        sb.append("- Ví dụ vận mẫu: a, e, i, u, ü, ang, eng, ong...\n");
+        sb.append("- Nếu một thanh mẫu hoặc vận mẫu bị sai nhiều lần trong câu thì phải nói rõ lỗi đó lặp lại nhiều lần.\n");
+
+        sb.append("2. tone_issue:\n");
+        sb.append("- Chỉ ra lỗi thanh điệu cụ thể nếu có.\n");
+        sb.append("- Nêu rõ thanh đúng là thanh 1,2,3,4.\n");
+        sb.append("- So sánh với thanh người học nói.\n");
+
+        sb.append("3. detailed_errors:\n");
+        sb.append("- Liệt kê từng chữ Hán phát âm sai.\n");
+        sb.append("- Phải ghi rõ pinyin chuẩn của chữ đó.\n");
+        sb.append("- Chỉ ra thanh đúng và thanh người học nói.\n");
+        sb.append("- Nếu không phát hiện lỗi thì trả về mảng rỗng [].\n");
+
+        sb.append("4. fluency_issue:\n");
+        sb.append("- Nhận xét về tốc độ nói, ngắt nghỉ hoặc độ trôi chảy.\n");
+
+        sb.append("5. improvement_tip:\n");
+        sb.append("- Gợi ý cách luyện tập để sửa lỗi phát âm.\n");
+
+        sb.append("Tất cả nội dung phải viết bằng tiếng Việt.\n");
+        sb.append("Chỉ trả về JSON hợp lệ.\n");
         return sb.toString();
     }
 
@@ -175,16 +219,20 @@ public class DoubaoClient {
     }
 
     /**
-     * If Doubao response was truncated (e.g. "improvement_tip": "Luyện lặp... có l), close the string and object so we can still use the data.
+     * If Doubao response was truncated (e.g. "fluency_issue": "Độ trôi chảy... đầy đủ t), close the string,
+     * add missing fields with empty values, and close the object so we can still parse and use the data.
      */
     private static String repairTruncatedJson(String json) {
         if (json == null || json.length() < 10) return null;
         String trimmed = json.trim();
         if (trimmed.endsWith("}")) return null; // already complete
-        if (trimmed.endsWith("\"")) return trimmed + "}";
-        if (trimmed.endsWith(",")) return trimmed + "\"\"}";
-        // Cut mid-string: e.g. ... "improvement_tip": "Luyện lặp lại từng âm tiết có l
-        return trimmed + "\"}";
+        // Truncated after a value's closing quote: "...", or "...",
+        if (trimmed.endsWith("\"")) return trimmed + ", \"improvement_tip\": \"\", \"detailed_errors\": []}";
+        if (trimmed.endsWith(",\"")) return trimmed + "\"\", \"detailed_errors\": []}";
+        // Truncated after key, before value: "improvement_tip":
+        if (trimmed.endsWith(",")) return trimmed + "\"improvement_tip\": \"\", \"detailed_errors\": []}";
+        // Cut mid-string: e.g. ... "fluency_issue": "Độ trôi chảy khá tốt, bạn đọc đầy đủ t
+        return trimmed + "\", \"improvement_tip\": \"\", \"detailed_errors\": []}";
     }
 
     private static String text(JsonNode root, String key) {

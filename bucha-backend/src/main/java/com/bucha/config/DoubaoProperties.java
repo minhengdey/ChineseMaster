@@ -20,8 +20,8 @@ public class DoubaoProperties {
     /** Model identifier (e.g. doubao-pro-32k, doubao-1.5-pro-32k). */
     private String model = "doubao-pro-32k";
 
-    /** Maximum tokens in the model response (structured JSON needs ~400 for 5 fields). */
-    private int maxTokens = 400;
+    /** Maximum tokens in the model response (structured JSON + Vietnamese text; 400 was often truncated). */
+    private int maxTokens = 1024;
 
     /** Sampling temperature (lower = more deterministic). */
     private double temperature = 0.5;
