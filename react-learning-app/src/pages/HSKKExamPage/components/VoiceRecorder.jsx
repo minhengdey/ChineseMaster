@@ -49,7 +49,7 @@ export default function VoiceRecorder({ onRecordingComplete, disabled = false, m
                type="button"
                onClick={startRecording}
                disabled={disabled}
-               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
+               className="flex items-center gap-2.5 px-5 py-3 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 disabled:opacity-50 transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
             >
                <Mic className="w-5 h-5" />
                Bắt đầu ghi âm
@@ -58,9 +58,9 @@ export default function VoiceRecorder({ onRecordingComplete, disabled = false, m
             <button
                type="button"
                onClick={stopRecording}
-               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-700 text-white hover:bg-slate-800 transition-colors"
+               className="flex items-center gap-2.5 px-5 py-3 rounded-xl bg-slate-600 text-white font-medium hover:bg-slate-700 transition-all shadow-md hover:shadow-lg active:scale-[0.98] animate-pulse"
             >
-               <Square className="w-5 h-5" />
+               <Square className="w-4 h-4 fill-current" />
                Dừng ghi âm
             </button>
          )}

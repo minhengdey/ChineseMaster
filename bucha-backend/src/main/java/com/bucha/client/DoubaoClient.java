@@ -1,6 +1,7 @@
 package com.bucha.client;
 
 import com.bucha.config.DoubaoProperties;
+import com.bucha.dto.hskk.Part2DoubaoResult;
 import com.bucha.dto.pronunciation.SpeechEvaluationResult;
 import com.bucha.dto.pronunciation.StructuredFeedbackDto;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -64,6 +66,60 @@ public class DoubaoClient {
     }
 
     /**
+     * Evaluate HSKK Part 3 answer: question + transcript + pronunciation/fluency scores → content/fluency/pronunciation/sample (5–6 câu).
+     * Same JSON shape as Part 2; sample_answer is longer (5–6 sentences).
+     */
+    public Part2DoubaoResult evaluatePart3(String questionText, String transcript, double pronunciationScore, double fluencyScore) {
+        if (!isConfigured()) {
+            logger.debug("[DoubaoClient] API key not configured – returning default Part3 result");
+            return defaultPart2Result();
+        }
+        try {
+            String prompt = buildPart3Prompt(questionText, transcript, pronunciationScore, fluencyScore);
+            String content = callApi(prompt);
+            Part2DoubaoResult parsed = parsePart2Json(content);
+            if (parsed != null) return parsed;
+        } catch (DoubaoApiException e) {
+            if (e.getCause() instanceof HttpStatusCodeException) {
+                int code = ((HttpStatusCodeException) e.getCause()).getStatusCode().value();
+                if (code == 429) {
+                    logger.warn("[DoubaoClient] Part3 rate limited (429), returning friendly message.");
+                    return defaultPart2ResultForRateLimit();
+                }
+            }
+            logger.warn("[DoubaoClient] Part3 API call failed ({}), using default.", e.getMessage());
+        }
+        return defaultPart2Result();
+    }
+
+    /**
+     * Evaluate HSKK Part 2 answer: question + transcript → content/fluency/pronunciation/sample.
+     * Builds prompt with questionText and transcript, calls API, parses JSON into Part2DoubaoResult.
+     */
+    public Part2DoubaoResult evaluatePart2(String questionText, String transcript) {
+        if (!isConfigured()) {
+            logger.debug("[DoubaoClient] API key not configured – returning default Part2 result");
+            return defaultPart2Result();
+        }
+        try {
+            String prompt = buildPart2Prompt(questionText, transcript);
+            String content = callApi(prompt);
+            Part2DoubaoResult parsed = parsePart2Json(content);
+            if (parsed != null) return parsed;
+        } catch (DoubaoApiException e) {
+            if (e.getCause() instanceof HttpStatusCodeException) {
+                int code = ((HttpStatusCodeException) e.getCause()).getStatusCode().value();
+                if (code == 429) {
+                    logger.warn("[DoubaoClient] Part2 rate limited (429), returning friendly message.");
+                    return defaultPart2ResultForRateLimit();
+                }
+            }
+            logger.warn("[DoubaoClient] Part2 API call failed ({}), using default.", e.getMessage());
+        }
+        return defaultPart2Result();
+    }
+
+    /**
      * Generate plain feedback string (returns overall_feedback from structured response).
      */
     public String generateFeedback(SpeechEvaluationResult eval) {
@@ -98,64 +154,67 @@ public class DoubaoClient {
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append("Bạn là giám khảo HSKK Sơ cấp và giáo viên dạy phát âm tiếng Trung.\n\n");
+        sb.append("Bạn là giám khảo kỳ thi HSKK Sơ cấp và giáo viên dạy phát âm tiếng Trung.\n");
+        sb.append("Nhiệm vụ của bạn là phân tích lỗi phát âm của người học dựa trên điểm số hệ thống.\n\n");
 
-        sb.append("Dựa trên dữ liệu phát âm sau:\n\n");
+        sb.append("=== DỮ LIỆU PHÁT ÂM ===\n");
 
         sb.append("Sentence: ").append(sentence).append("\n\n");
 
         sb.append("Scores:\n");
-        sb.append("- Total: ").append(String.format("%.2f", total)).append("\n");
-        sb.append("- Pronunciation: ").append(String.format("%.2f", phone)).append("\n");
-        sb.append("- Tone: ").append(String.format("%.2f", tone)).append("\n");
-        sb.append("- Fluency: ").append(String.format("%.2f", fluency)).append("\n\n");
+        sb.append("Total: ").append(String.format("%.2f", total)).append("\n");
+        sb.append("Pronunciation: ").append(String.format("%.2f", phone)).append("\n");
+        sb.append("Tone: ").append(String.format("%.2f", tone)).append("\n");
+        sb.append("Fluency: ").append(String.format("%.2f", fluency)).append("\n\n");
 
-        sb.append("Word analysis:\n").append(wordAnalysis).append("\n\n");
+        sb.append("Word analysis:\n");
+        sb.append(wordAnalysis).append("\n\n");
 
-        sb.append("Hãy phân tích lỗi phát âm và trả về JSON đúng format sau ");
-        sb.append("(chỉ trả lời bằng JSON hợp lệ, không thêm markdown hoặc giải thích):\n\n");
+        sb.append("=== YÊU CẦU PHÂN TÍCH ===\n");
+
+        sb.append("1. overall_feedback\n");
+        sb.append("- Nhận xét tổng thể dưới 100 chữ.\n");
+
+        sb.append("2. pronunciation_issue\n");
+        sb.append("- Phân tích lỗi thanh mẫu (initial) hoặc vận mẫu (final).\n");
+        sb.append("- Ví dụ thanh mẫu: zh ch sh r z c s j q x\n");
+        sb.append("- Ví dụ vận mẫu: a e i u ü ang eng ong\n");
+        sb.append("- Nếu lỗi lặp lại nhiều lần thì phải nói rõ.\n\n");
+
+        sb.append("3. tone_issue\n");
+        sb.append("- Phân tích lỗi thanh điệu.\n");
+        sb.append("- Nêu rõ thanh đúng (1,2,3,4).\n");
+        sb.append("- So sánh với thanh người học nói.\n\n");
+
+        sb.append("4. fluency_issue\n");
+        sb.append("- Nhận xét tốc độ nói, ngắt nghỉ và độ trôi chảy.\n\n");
+
+        sb.append("5. detailed_errors\n");
+        sb.append("- Liệt kê từng chữ Hán phát âm sai.\n");
+        sb.append("- Nếu không có lỗi thì trả về mảng rỗng [].\n\n");
+
+        sb.append("6. improvement_tip\n");
+        sb.append("- Đưa ra lời khuyên luyện tập ngắn gọn.\n\n");
+
+        sb.append("=== FORMAT TRẢ VỀ ===\n");
+        sb.append("Chỉ trả về JSON hợp lệ, KHÔNG thêm giải thích.\n");
 
         sb.append("{\n");
-        sb.append("  \"overall_feedback\": \"nhận xét tổng thể <100 chữ>\",\n");
-        sb.append("  \"pronunciation_issue\": \"mô tả lỗi thanh mẫu hoặc vận mẫu nếu có\",\n");
-        sb.append("  \"tone_issue\": \"phân tích lỗi thanh điệu nếu có\",\n");
-        sb.append("  \"fluency_issue\": \"lỗi độ trôi chảy nếu có\",\n");
-        sb.append("  \"improvement_tip\": \"gợi ý luyện tập\",\n");
+        sb.append("  \"overall_feedback\": \"...\",\n");
+        sb.append("  \"pronunciation_issue\": \"...\",\n");
+        sb.append("  \"tone_issue\": \"...\",\n");
+        sb.append("  \"fluency_issue\": \"...\",\n");
+        sb.append("  \"improvement_tip\": \"...\",\n");
         sb.append("  \"detailed_errors\": [\n");
         sb.append("    {\n");
-        sb.append("      \"character\": \"chữ Hán sai\",\n");
-        sb.append("      \"pinyin_correct\": \"pinyin đúng\",\n");
-        sb.append("      \"tone_correct\": \"thanh đúng\",\n");
-        sb.append("      \"tone_spoken\": \"thanh người học nói\",\n");
-        sb.append("      \"issue\": \"mô tả ngắn lỗi phát âm\"\n");
+        sb.append("      \"character\": \"...\",\n");
+        sb.append("      \"pinyin_correct\": \"...\",\n");
+        sb.append("      \"tone_correct\": \"...\",\n");
+        sb.append("      \"tone_spoken\": \"...\",\n");
+        sb.append("      \"issue\": \"...\"\n");
         sb.append("    }\n");
         sb.append("  ]\n");
         sb.append("}\n\n");
-
-        sb.append("Yêu cầu phân tích:\n");
-
-        sb.append("1. pronunciation_issue:\n");
-        sb.append("- Chỉ ra lỗi phát âm liên quan đến thanh mẫu (initial) hoặc vận mẫu (final).\n");
-        sb.append("- Ví dụ thanh mẫu: zh, ch, sh, r, z, c, s, j, q, x.\n");
-        sb.append("- Ví dụ vận mẫu: a, e, i, u, ü, ang, eng, ong...\n");
-        sb.append("- Nếu một thanh mẫu hoặc vận mẫu bị sai nhiều lần trong câu thì phải nói rõ lỗi đó lặp lại nhiều lần.\n");
-
-        sb.append("2. tone_issue:\n");
-        sb.append("- Chỉ ra lỗi thanh điệu cụ thể nếu có.\n");
-        sb.append("- Nêu rõ thanh đúng là thanh 1,2,3,4.\n");
-        sb.append("- So sánh với thanh người học nói.\n");
-
-        sb.append("3. detailed_errors:\n");
-        sb.append("- Liệt kê từng chữ Hán phát âm sai.\n");
-        sb.append("- Phải ghi rõ pinyin chuẩn của chữ đó.\n");
-        sb.append("- Chỉ ra thanh đúng và thanh người học nói.\n");
-        sb.append("- Nếu không phát hiện lỗi thì trả về mảng rỗng [].\n");
-
-        sb.append("4. fluency_issue:\n");
-        sb.append("- Nhận xét về tốc độ nói, ngắt nghỉ hoặc độ trôi chảy.\n");
-
-        sb.append("5. improvement_tip:\n");
-        sb.append("- Gợi ý cách luyện tập để sửa lỗi phát âm.\n");
 
         sb.append("Tất cả nội dung phải viết bằng tiếng Việt.\n");
         sb.append("Chỉ trả về JSON hợp lệ.\n");
@@ -242,6 +301,117 @@ public class DoubaoClient {
         return s.isEmpty() ? null : s;
     }
 
+    private static Double extractDouble(JsonNode root, String key) {
+        JsonNode n = root.path(key);
+        if (n.isMissingNode() || n.isNull() || !n.isNumber()) return null;
+        double v = n.asDouble();
+        if (Double.isNaN(v) || v < 0) return 0.0;
+        if (v > 100) return 100.0;
+        return v;
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Part 2: question + transcript → evaluation JSON
+    // ─────────────────────────────────────────────────────────────────
+
+    static String buildPart2Prompt(String questionText, String transcript) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Bạn là giám khảo kỳ thi HSKK Sơ cấp Part 2 (trả lời câu hỏi).\n\n");
+        sb.append("=== CÂU HỎI ===\n").append(questionText != null ? questionText : "").append("\n\n");
+        sb.append("=== CÂU TRẢ LỜI CỦA NGƯỜI HỌC (đã nhận diện giọng nói) ===\n").append(transcript != null ? transcript : "").append("\n\n");
+        sb.append("=== YÊU CẦU ===\n");
+        sb.append("1. content_score: Chấm điểm cho câu trả lời đó từ 0 đến 100 (một số nguyên hoặc thập phân). Điểm càng cao càng đúng nội dung, đủ ý, phù hợp câu hỏi.\n");
+        sb.append("2. content_evaluation: Đánh giá câu trả lời có đúng nội dung câu hỏi không (ngắn gọn, tiếng Việt).\n");
+        sb.append("3. fluency_comment: Nhận xét độ lưu loát.\n");
+        sb.append("4. pronunciation_comment: Nhận xét phát âm tổng quan (không có điểm chi tiết từng từ).\n");
+        sb.append("5. improvement_tip: Gợi ý cải thiện.\n");
+        sb.append("6. sample_answer: Đưa ra một câu trả lời mẫu đơn giản, trình độ HSK3, bằng tiếng Trung.\n\n");
+        sb.append("=== FORMAT TRẢ VỀ ===\n");
+        sb.append("Chỉ trả về JSON hợp lệ, KHÔNG thêm giải thích.\n");
+        sb.append("{\n");
+        sb.append("  \"content_score\": 75,\n");
+        sb.append("  \"content_evaluation\": \"...\",\n");
+        sb.append("  \"fluency_comment\": \"...\",\n");
+        sb.append("  \"pronunciation_comment\": \"...\",\n");
+        sb.append("  \"improvement_tip\": \"...\",\n");
+        sb.append("  \"sample_answer\": \"...\"\n");
+        sb.append("}\n\n");
+        sb.append("Tất cả nội dung (trừ sample_answer) phải viết bằng tiếng Việt. content_score phải là số.\n");
+        return sb.toString();
+    }
+
+    /**
+     * Part 3 prompt: question + transcript + pronunciation/fluency scores; sample_answer 5–6 câu.
+     */
+    static String buildPart3Prompt(String questionText, String transcript, double pronunciationScore, double fluencyScore) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Bạn là giám khảo kỳ thi HSKK Sơ cấp Part 3 (nói tự do, 1.5 phút).\n\n");
+        sb.append("=== CÂU HỎI ===\n").append(questionText != null ? questionText : "").append("\n\n");
+        sb.append("=== CÂU TRẢ LỜI CỦA NGƯỜI HỌC (đã nhận diện giọng nói) ===\n").append(transcript != null ? transcript : "").append("\n\n");
+        sb.append("=== ĐIỂM PHÁT ÂM (từ hệ thống) ===\n");
+        sb.append("pronunciationScore: ").append(String.format("%.2f", pronunciationScore)).append("\n");
+        sb.append("fluencyScore: ").append(String.format("%.2f", fluencyScore)).append("\n\n");
+        sb.append("=== YÊU CẦU ===\n");
+        sb.append("1. content_evaluation: Đánh giá nội dung câu trả lời so với câu hỏi (ngắn gọn, tiếng Việt).\n");
+        sb.append("2. fluency_comment: Nhận xét độ lưu loát.\n");
+        sb.append("3. pronunciation_comment: Nhận xét phát âm tổng quan (dựa trên điểm pronunciationScore và fluencyScore).\n");
+        sb.append("4. improvement_tip: Gợi ý cải thiện.\n");
+        sb.append("5. sample_answer: Đưa ra câu trả lời mẫu gồm 5–6 câu đơn giản, trình độ HSK3, bằng tiếng Trung.\n\n");
+        sb.append("=== FORMAT TRẢ VỀ ===\n");
+        sb.append("Chỉ trả về JSON hợp lệ, KHÔNG thêm giải thích.\n");
+        sb.append("{\n");
+        sb.append("  \"content_evaluation\": \"...\",\n");
+        sb.append("  \"fluency_comment\": \"...\",\n");
+        sb.append("  \"pronunciation_comment\": \"...\",\n");
+        sb.append("  \"improvement_tip\": \"...\",\n");
+        sb.append("  \"sample_answer\": \"...\"\n");
+        sb.append("}\n\n");
+        sb.append("Tất cả nội dung (trừ sample_answer) phải viết bằng tiếng Việt.\n");
+        return sb.toString();
+    }
+
+    private static Part2DoubaoResult parsePart2Json(String content) {
+        if (content == null || content.isBlank()) return null;
+        String json = content.trim();
+        var m = JSON_BLOCK.matcher(json);
+        if (m.find()) json = m.group(1).trim();
+        try {
+            JsonNode root = MAPPER.readTree(json);
+            Part2DoubaoResult dto = new Part2DoubaoResult();
+            dto.setContent_score(extractDouble(root, "content_score"));
+            dto.setContent_evaluation(text(root, "content_evaluation"));
+            dto.setFluency_comment(text(root, "fluency_comment"));
+            dto.setPronunciation_comment(text(root, "pronunciation_comment"));
+            dto.setImprovement_tip(text(root, "improvement_tip"));
+            dto.setSample_answer(text(root, "sample_answer"));
+            return dto;
+        } catch (Exception e) {
+            logger.debug("[DoubaoClient] Failed to parse Part2 JSON: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private static Part2DoubaoResult defaultPart2Result() {
+        Part2DoubaoResult dto = new Part2DoubaoResult();
+        dto.setContent_evaluation("Không thể đánh giá nội dung.");
+        dto.setFluency_comment("—");
+        dto.setPronunciation_comment("—");
+        dto.setImprovement_tip("Hãy thử lại khi có kết nối AI.");
+        dto.setSample_answer("请再说一遍。");
+        return dto;
+    }
+
+    /** Used when Doubao returns 429 Too Many Requests. */
+    private static Part2DoubaoResult defaultPart2ResultForRateLimit() {
+        Part2DoubaoResult dto = new Part2DoubaoResult();
+        dto.setContent_evaluation("AI tạm thời quá tải (giới hạn lượt gọi).");
+        dto.setFluency_comment("—");
+        dto.setPronunciation_comment("—");
+        dto.setImprovement_tip("Vui lòng thử lại sau vài phút hoặc giảm tần suất gửi bài.");
+        dto.setSample_answer("请再说一遍。");
+        return dto;
+    }
+
     public static StructuredFeedbackDto defaultStructuredFeedback(double score, boolean rejected) {
         StructuredFeedbackDto dto = new StructuredFeedbackDto();
         dto.setOverallFeedback(defaultFeedback(score, rejected));
@@ -253,31 +423,53 @@ public class DoubaoClient {
     // REST call
     // ─────────────────────────────────────────────────────────────────
 
+    private static final int RETRY_DELAY_MS = 5_000;
+    private static final int MAX_ATTEMPTS = 2;
+
     private String callApi(String userPrompt) {
         String payload = buildPayload(userPrompt);
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         headers.setBearerAuth(props.getApiKey());
-
         HttpEntity<String> entity = new HttpEntity<>(payload, headers);
 
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    props.getApiUrl(), HttpMethod.POST, entity, String.class);
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return parseContent(response.getBody());
+        Exception lastException = null;
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            try {
+                ResponseEntity<String> response = restTemplate.exchange(
+                        props.getApiUrl(), HttpMethod.POST, entity, String.class);
+                if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                    return parseContent(response.getBody());
+                }
+                lastException = new DoubaoApiException("Doubao returned HTTP " + response.getStatusCodeValue());
+            } catch (HttpStatusCodeException e) {
+                lastException = e;
+                if (e.getStatusCode().value() == 429 && attempt < MAX_ATTEMPTS) {
+                    logger.warn("[DoubaoClient] 429 Too Many Requests, retrying in {}s (attempt {}/{})",
+                            RETRY_DELAY_MS / 1000, attempt, MAX_ATTEMPTS);
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new DoubaoApiException("Interrupted while waiting to retry", ie);
+                    }
+                    continue;
+                }
+                throw new DoubaoApiException("HTTP call to Doubao failed: " + e.getMessage(), e);
+            } catch (RestClientException e) {
+                throw new DoubaoApiException("HTTP call to Doubao failed: " + e.getMessage(), e);
+            } catch (DoubaoApiException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new DoubaoApiException("Unexpected error calling Doubao: " + e.getMessage(), e);
             }
-            throw new DoubaoApiException("Doubao returned HTTP " + response.getStatusCodeValue());
-        } catch (RestClientException e) {
-            throw new DoubaoApiException("HTTP call to Doubao failed: " + e.getMessage(), e);
-        } catch (DoubaoApiException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new DoubaoApiException("Unexpected error calling Doubao: " + e.getMessage(), e);
         }
+        if (lastException != null) {
+            throw lastException instanceof DoubaoApiException ? (DoubaoApiException) lastException
+                    : new DoubaoApiException("HTTP call to Doubao failed: " + lastException.getMessage(), lastException);
+        }
+        throw new DoubaoApiException("Doubao request failed after " + MAX_ATTEMPTS + " attempts");
     }
 
     private String buildPayload(String userPrompt) {

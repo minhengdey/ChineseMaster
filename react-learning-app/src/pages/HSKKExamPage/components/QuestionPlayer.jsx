@@ -26,7 +26,7 @@ export default function QuestionPlayer({ audioUrl, text, onEnded, className = ""
    };
 
    return (
-      <div className={`flex items-center gap-3 ${className}`.trim()}>
+      <div className={`flex items-start gap-4 ${className}`.trim()}>
          <audio
             ref={audioRef}
             src={audioUrl || undefined}
@@ -45,17 +45,17 @@ export default function QuestionPlayer({ audioUrl, text, onEnded, className = ""
                type="button"
                onClick={handlePlay}
                disabled={loading}
-               className="flex items-center justify-center w-12 h-12 rounded-full bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors disabled:opacity-50"
+               className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-violet-100 text-violet-600 hover:bg-violet-200 hover:text-violet-700 transition-colors disabled:opacity-50 shadow-sm"
             >
                {loading ? (
-                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                ) : (
-                  <Volume2 className="w-6 h-6" />
+                  <Volume2 className="w-5 h-5" />
                )}
             </button>
          ) : null}
          {text && (
-            <p className="text-slate-700 text-lg flex-1" lang="zh-CN">
+            <p className="text-slate-700 text-lg leading-relaxed flex-1 pt-0.5" lang="zh-CN">
                {text}
             </p>
          )}

@@ -47,6 +47,11 @@ public class IflytekProperties {
     /** WebSocket write timeout in seconds. */
     private int writeTimeoutSeconds = 120;
 
+    /** IAT (Short Form ASR) WebSocket host for HSKK Part 2 (e.g. iat-api-sg.xf-yun.com). */
+    private String iatHost = "iat-api-sg.xf-yun.com";
+    /** IAT WebSocket path (e.g. /v2/iat). */
+    private String iatPath = "/v2/iat";
+
     // ── Getters & setters ──────────────────────────────────────────────
 
     public String getAppId() { return appId; }
@@ -84,4 +89,9 @@ public class IflytekProperties {
 
     public int getWriteTimeoutSeconds() { return writeTimeoutSeconds; }
     public void setWriteTimeoutSeconds(int writeTimeoutSeconds) { this.writeTimeoutSeconds = writeTimeoutSeconds; }
+
+    public String getIatHost() { return iatHost; }
+    public void setIatHost(String iatHost) { this.iatHost = iatHost; }
+    public String getIatPath() { return iatPath; }
+    public void setIatPath(String iatPath) { this.iatPath = iatPath; }
 }

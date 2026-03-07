@@ -52,6 +52,9 @@ iflytek:
    api-key: ${API_KEY}
    api-secret: ${API_SECRET}
    host-url: wss://ise-api-sg.xf-yun.com/v2/ise
+   # IAT (Short Form ASR) WebSocket for HSKK Part 2 — same APP_ID/API_KEY/API_SECRET as ISE
+   iat-host: ${IFLYTEK_IAT_HOST:iat-api-sg.xf-yun.com}
+   iat-path: ${IFLYTEK_IAT_PATH:/v2/iat}
    ent: cn_vip
    category: read_sentence
    # 16kHz, 16bit PCM per ISE docs; omit channel token
