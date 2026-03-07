@@ -63,7 +63,7 @@ const Navbar = ({ user, onLogout }) => {
     ]
     : [
       { label: "Bài Kiểm Tra", path: "/assessments", icon: ClipboardCheck },
-      { label: "Thi nói HSKK", path: "/hskk-exam", icon: Mic },
+      { label: "Luyện HSKK sơ cấp", path: "/hskk-exam", icon: Mic },
       { label: "Bài học", path: "/curriculum", icon: BookOpen },
       { label: "Phát âm", path: "/pronunciation", icon: Volume2 },
       { label: "Flash Card", path: "/flashcards", icon: Layers },

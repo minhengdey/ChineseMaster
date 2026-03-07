@@ -15,8 +15,8 @@ const FEATURES = [
   },
   {
     icon: Mic,
-    title: "Thi nói HSKK",
-    description: "Luyện thi nói HSKK sơ cấp (mô phỏng đề thật)",
+    title: "Luyện HSKK sơ cấp",
+    description: "Luyện thi nói HSKK sơ cấp",
     link: "/hskk-exam",
     gradient: "from-amber-500 to-orange-500",
     bgGradient: "from-amber-50 to-orange-50",

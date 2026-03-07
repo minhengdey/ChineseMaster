@@ -987,6 +987,28 @@ export const hskkAPI = {
       });
       return response.data;
    },
+   /** Part 2: questionText + audio → IAT transcript + Doubao evaluation (no examResultId). */
+   submitPart2Answer: async (questionText, audioFile) => {
+      const formData = new FormData();
+      formData.append("questionText", String(questionText ?? ""));
+      const file = audioFile instanceof File ? audioFile : new File([audioFile], "recording.webm", { type: audioFile.type || "audio/webm" });
+      formData.append("audioFile", file);
+      const response = await apiClient.post("/hskk/part2/submit", formData, {
+         headers: { "Content-Type": "multipart/form-data" },
+      });
+      return response.data;
+   },
+   /** Part 3: questionText + audio → IAT + pronunciation scores + Doubao (transcript, totalScore, pronunciationScore, toneScore, fluencyScore, contentEvaluation, ...). */
+   submitPart3Answer: async (questionText, audioFile) => {
+      const formData = new FormData();
+      formData.append("questionText", String(questionText ?? ""));
+      const file = audioFile instanceof File ? audioFile : new File([audioFile], "recording.webm", { type: audioFile.type || "audio/webm" });
+      formData.append("audioFile", file);
+      const response = await apiClient.post("/hskk/part3/submit", formData, {
+         headers: { "Content-Type": "multipart/form-data" },
+      });
+      return response.data;
+   },
    finishExam: async (examResultId) => {
       const response = await apiClient.post("/hskk/finish-exam", { examResultId });
       return response.data;
