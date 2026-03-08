@@ -223,7 +223,7 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = "xs" }
   if (isAnalyzing) {
     return (
       <button
-        className={`rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium transition-all duration-300 shadow-md ${getSizeClasses()}`}
+        className={`rounded-full bg-gradient-to-r from-pink-500 to-violet-500 text-white font-medium transition-all duration-300 shadow-md ${getSizeClasses()}`}
         disabled
       >
         <span className="loading loading-spinner loading-xs mr-2"></span>
@@ -248,7 +248,7 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = "xs" }
 
   return (
     <button
-      className={`rounded-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 ${getSizeClasses()}`}
+      className={`rounded-full bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white font-medium shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 ${getSizeClasses()}`}
       onClick={startRecording}
       title="Bắt đầu ghi âm để luyện phát âm"
     >

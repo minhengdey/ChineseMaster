@@ -3,6 +3,7 @@
 import { useEffect, useState, memo } from "react"
 import { Link } from "react-router-dom"
 import { userLessonAPI } from "../../../services/api"
+import { Lock, CheckCircle, BookOpen, Circle } from "lucide-react"
 
 const LessonCard = memo(({ lesson, curriculumId, isLocked = false, completed: completedProp, inProgress: inProgressProp }) => {
   const fromParent = completedProp !== undefined && inProgressProp !== undefined
@@ -36,70 +37,56 @@ const LessonCard = memo(({ lesson, curriculumId, isLocked = false, completed: co
     return () => { mounted = false }
   }, [lesson?.id, fromParent, completedProp, inProgressProp])
 
-  const getLessonStatusIcon = () => {
-    if (localIsLocked) return "🔒"
-    if (completed) return "✅"
-    if (inProgress) return "📖"
-    return "📝"
-  }
+  const statusConfig = localIsLocked
+    ? { icon: Lock, label: "Đã khóa", className: "bg-slate-100 text-slate-600 border-slate-200" }
+    : completed
+      ? { icon: CheckCircle, label: "Hoàn thành", className: "bg-emerald-50 text-emerald-700 border-emerald-200" }
+      : inProgress
+        ? { icon: BookOpen, label: "Đang học", className: "bg-amber-50 text-amber-700 border-amber-200" }
+        : { icon: Circle, label: "Chưa bắt đầu", className: "bg-slate-50 text-slate-600 border-slate-200" }
 
-  const getLessonStatusText = () => {
-    if (localIsLocked) return "Đã khóa"
-    if (completed) return "Hoàn thành"
-    if (inProgress) return "Đang học"
-    return "Chưa bắt đầu"
-  }
+  const StatusIcon = statusConfig.icon
 
   return (
     <div
-      className={`card shadow-lg transition-all duration-300 overflow-hidden border-2 ${localIsLocked
-        ? "bg-slate-100 border-slate-300 opacity-60 cursor-not-allowed"
-        : completed
-          ? "border-emerald-300 hover:shadow-xl hover:scale-105 bg-white"
-          : inProgress
-            ? "border-amber-300 hover:shadow-xl hover:scale-105 bg-white"
-            : "border-slate-200 hover:shadow-xl hover:scale-105 bg-white"
-        }`}
+      className={`
+        rounded-2xl border-2 overflow-hidden transition-all duration-300
+        ${localIsLocked
+          ? "bg-slate-50 border-slate-200 opacity-70 cursor-not-allowed"
+          : "bg-white border-slate-200 hover:border-violet-200 hover:shadow-lg hover:-translate-y-0.5"
+        }
+      `}
     >
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{getLessonStatusIcon()}</span>
-            <div className="text-xs font-bold bg-gradient-to-r from-purple-500 to-blue-500 text-white px-3 py-1 rounded-full">
-              Bài {lesson.order}
-            </div>
-          </div>
-          <div
-            className={`text-xs font-semibold px-3 py-1 rounded-full ${completed
-              ? "bg-emerald-100 text-emerald-700"
-              : inProgress
-                ? "bg-amber-100 text-amber-700"
-                : "bg-slate-100 text-slate-700"
-              }`}
-          >
-            {getLessonStatusText()}
-          </div>
+      <div className="p-5 sm:p-6">
+        <div className="flex justify-between items-start gap-3 mb-4">
+          <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-violet-100 text-violet-700 text-sm font-bold">
+            {lesson.order}
+          </span>
+          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg border ${statusConfig.className}`}>
+            <StatusIcon className="w-3.5 h-3.5" aria-hidden />
+            {statusConfig.label}
+          </span>
         </div>
 
-        <h2 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-3">
+        <h2 className="text-lg font-bold text-slate-800 mb-3 line-clamp-2">
           {lesson.title}
         </h2>
 
         {lesson.level && (
-          <div className="inline-block mb-4 px-3 py-1 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 text-xs font-semibold rounded-full border border-purple-200">
+          <span className="inline-block mb-4 px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-lg">
             {lesson.level}
-          </div>
+          </span>
         )}
 
-        <div className="flex justify-end">
+        <div className="flex justify-end mt-4">
           {localIsLocked ? (
-            <button className="px-4 py-2 bg-slate-300 text-slate-600 font-semibold rounded-lg cursor-not-allowed opacity-50">
+            <span className="px-4 py-2.5 rounded-xl bg-slate-200 text-slate-500 text-sm font-semibold cursor-not-allowed">
               Hoàn thành bài trước
-            </button>
+            </span>
           ) : (
             <Link
               to={`/curriculum/${curriculumId}/lesson/${lesson.id}`}
-              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white text-sm font-semibold shadow-lg shadow-pink-500/25 hover:shadow-pink-500/35 hover:-translate-y-0.5 transition-all duration-200"
             >
               {completed ? "Ôn lại" : inProgress ? "Tiếp tục" : "Bắt đầu"}
             </Link>

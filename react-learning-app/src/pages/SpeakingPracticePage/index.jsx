@@ -636,8 +636,8 @@ const SpeakingPracticePage = () => {
         {loading ? (
           <div className="min-h-96 flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
-              <span className="loading loading-spinner loading-lg text-blue-600" />
-              <p className="text-gray-600 font-medium">Đang tải...</p>
+              <div className="loading w-10 h-10 border-2 border-slate-200 border-t-violet-500 rounded-full" />
+              <p className="text-slate-600 font-medium">Đang tải...</p>
             </div>
           </div>
         ) : (

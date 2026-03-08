@@ -1,20 +1,33 @@
 import { Link } from "react-router-dom"
+import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react"
 
 const CardNavigation = ({ curriculumId, lessonId, onPrev, onNext, canPrev, canNext }) => (
-  <div className="flex items-center justify-between gap-4 px-4 pb-6">
-    <div className="flex gap-2">
-      <button className="icon-btn icon-btn-lg" onClick={onPrev} disabled={!canPrev} title="Trước">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform rotate-180" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M12.293 16.293a1 1 0 010-1.414L15.586 11H5a1 1 0 110-2h10.586l-3.293-3.293a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clipRule="evenodd" />
-        </svg>
+  <div className="flex flex-wrap items-center justify-between gap-4 px-4 sm:px-6 pb-5 sm:pb-6 pt-2 border-t border-slate-100 bg-slate-50/80">
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={onPrev}
+        disabled={!canPrev}
+        title="Thẻ trước"
+        className="inline-flex items-center justify-center w-12 h-12 rounded-xl border-2 border-slate-200 text-slate-600 hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-slate-200 disabled:hover:text-slate-600 transition-colors"
+      >
+        <ChevronLeft className="w-6 h-6" aria-hidden />
       </button>
-      <button className="icon-btn icon-btn-lg" onClick={onNext} disabled={!canNext} title="Tiếp">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M12.293 16.293a1 1 0 010-1.414L15.586 11H5a1 1 0 110-2h10.586l-3.293-3.293a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clipRule="evenodd" />
-        </svg>
+      <button
+        type="button"
+        onClick={onNext}
+        disabled={!canNext}
+        title="Thẻ sau"
+        className="inline-flex items-center justify-center w-12 h-12 rounded-xl border-2 border-slate-200 text-slate-600 hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-slate-200 disabled:hover:text-slate-600 transition-colors"
+      >
+        <ChevronRight className="w-6 h-6" aria-hidden />
       </button>
     </div>
-    <Link to={`/curriculum/${curriculumId}/lesson/${lessonId}`} className="btn-secondary rounded-lg px-4 py-2 font-semibold">
+    <Link
+      to={`/curriculum/${curriculumId}/lesson/${lessonId}`}
+      className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 border-2 border-pink-500 text-pink-600 font-semibold hover:bg-pink-50 transition-colors"
+    >
+      <BookOpen className="w-4 h-4" aria-hidden />
       Quay lại bài học
     </Link>
   </div>

@@ -203,8 +203,9 @@ export default function HSKKExamPage() {
    if (loading) {
       return (
          <PageLayout>
-            <div className="flex justify-center items-center min-h-[40vh]">
-               <span className="loading loading-spinner loading-lg text-violet-500" />
+            <div className="flex flex-col justify-center items-center min-h-[40vh] gap-4">
+               <div className="loading w-10 h-10 border-2 border-slate-200 border-t-violet-500 rounded-full" />
+               <p className="text-slate-600 font-medium">Đang tải...</p>
             </div>
          </PageLayout>
       );
@@ -219,21 +220,21 @@ export default function HSKKExamPage() {
                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                   <div className="p-6 md:p-8 space-y-4 text-slate-600">
                      <div className="flex gap-3">
-                        <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-100 text-violet-600 font-bold text-sm flex items-center justify-center">1</span>
+                        <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-pink-100 text-pink-600 font-bold text-sm flex items-center justify-center">1</span>
                         <div>
                            <p className="font-semibold text-slate-800">Phần 1 — Đọc theo câu</p>
                            <p className="text-sm">15 câu · Mỗi câu ~10 giây trả lời</p>
                         </div>
                      </div>
                      <div className="flex gap-3">
-                        <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-100 text-violet-600 font-bold text-sm flex items-center justify-center">2</span>
+                        <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-pink-100 text-pink-600 font-bold text-sm flex items-center justify-center">2</span>
                         <div>
                            <p className="font-semibold text-slate-800">Phần 2 — Trả lời ngắn</p>
                            <p className="text-sm">10 câu · Nghe câu hỏi, trả lời ~10 giây</p>
                         </div>
                      </div>
                      <div className="flex gap-3">
-                        <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-100 text-violet-600 font-bold text-sm flex items-center justify-center">3</span>
+                        <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-pink-100 text-pink-600 font-bold text-sm flex items-center justify-center">3</span>
                         <div>
                            <p className="font-semibold text-slate-800">Phần 3 — Nói tự do</p>
                            <p className="text-sm">2 câu · 7 phút chuẩn bị, 1,5 phút nói/câu</p>
@@ -251,7 +252,7 @@ export default function HSKKExamPage() {
                   <button
                      type="button"
                      onClick={() => startExam(null)}
-                     className="group px-5 py-4 rounded-2xl border-2 border-violet-500 bg-violet-50 text-violet-700 font-medium hover:bg-violet-100 hover:border-violet-600 transition-all text-left shadow-sm"
+                     className="group px-5 py-4 rounded-2xl border-2 border-pink-500 bg-pink-50 text-pink-700 font-medium hover:bg-pink-100 hover:border-pink-600 transition-all text-left shadow-sm"
                   >
                      <span className="block font-semibold text-violet-800 group-hover:text-violet-900">Làm full bài</span>
                      <span className="text-xs text-violet-500">Part 1 → Part 2 → Part 3</span>
@@ -431,7 +432,7 @@ export default function HSKKExamPage() {
                            <button
                               type="button"
                               onClick={goNext}
-                              className="w-full py-3.5 rounded-xl bg-violet-600 text-white font-semibold hover:bg-violet-700 active:scale-[0.99] transition-all shadow-md hover:shadow-lg"
+                              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-semibold hover:from-pink-600 hover:to-violet-600 active:scale-[0.99] transition-all shadow-md hover:shadow-lg"
                            >
                               {currentIndex + 1 < list.length
                                  ? "Câu tiếp theo"

@@ -117,11 +117,13 @@ const PronunciationPage = () => {
 
       {vocabLoading ? (
         <div className="min-h-48 flex items-center justify-center">
-          <span className="loading loading-spinner loading-lg text-purple-500" />
+          <div className="loading w-10 h-10 border-2 border-slate-200 border-t-violet-500 rounded-full" />
         </div>
       ) : vocabList.length === 0 ? (
-        <div className="text-center py-16 rounded-2xl bg-slate-50 border border-slate-100">
-          <div className="text-6xl mb-4">📚</div>
+        <div className="text-center py-16 rounded-2xl bg-slate-50 border border-slate-200">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl">
+            📚
+          </div>
           <p className="text-slate-600 font-medium">
             {isSearchMode && debouncedQuery
               ? `Không tìm thấy từ vựng cho "${debouncedQuery}".`

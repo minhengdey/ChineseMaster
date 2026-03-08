@@ -142,29 +142,31 @@ const ScoreStatsModal = ({ classId, className, onClose }) => {
     }, [classId]);
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-24 flex items-start justify-center z-50 p-6 overflow-y-auto">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-8xl max-h-[96vh] overflow-y-auto mx-4">
-                <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100/40 rounded-xl mx-6 mt-6 px-8 py-6 flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-slate-800">Thống kê điểm lớp {className}</h2>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition"><X size={28} /></button>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 p-4 sm:p-6 overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-6xl max-h-[96vh] overflow-y-auto my-4">
+                <div className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 px-5 sm:px-6 py-4 flex justify-between items-center rounded-t-2xl">
+                    <h2 className="text-lg font-bold text-slate-800">Thống kê điểm — {className}</h2>
+                    <button type="button" onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition" aria-label="Đóng">
+                        <X size={24} />
+                    </button>
                 </div>
 
-                <div className="p-8 space-y-6">
+                <div className="p-5 sm:p-6 space-y-5">
                     {loading && (
-                        <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-                            <p className="mt-3 text-slate-600">Đang tải dữ liệu...</p>
+                        <div className="flex items-center justify-center gap-3 py-10 text-slate-600">
+                            <span className="w-8 h-8 border-2 border-slate-300 border-t-violet-500 rounded-full animate-spin" />
+                            <span className="font-medium">Đang tải dữ liệu...</span>
                         </div>
                     )}
 
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">{error}</div>
+                        <div className="rounded-xl bg-red-50 border border-red-200 text-red-700 px-4 py-3">{error}</div>
                     )}
 
                     {!loading && !error && (
                         <div>
-                            <div className="mb-4 text-slate-600">Tổng học viên: <span className="font-bold text-purple-600">{data.length}</span></div>
-                            <div className="rounded-lg border border-slate-100 bg-white shadow-sm p-4">
+                            <div className="mb-4 text-slate-600">Tổng học viên: <span className="font-bold text-pink-600">{data.length}</span></div>
+                            <div className="rounded-xl border border-slate-200 overflow-hidden">
                                 <ScoreTable data={data} columns={columns} />
                             </div>
                         </div>

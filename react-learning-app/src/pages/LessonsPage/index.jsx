@@ -91,7 +91,7 @@ const LessonsPage = () => {
     return (
       <PageLayout>
         <div className="min-h-48 flex items-center justify-center">
-          <span className="loading loading-spinner loading-lg text-purple-500" />
+          <div className="loading w-10 h-10 border-2 border-slate-200 border-t-violet-500 rounded-full" />
         </div>
       </PageLayout>
     )
@@ -99,29 +99,31 @@ const LessonsPage = () => {
 
   return (
     <PageLayout>
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-8 text-sm slide-in-down">
-          <Link to="/curriculum" className="text-purple-600 hover:text-purple-700 font-medium transition-colors">
+        <nav className="flex items-center gap-2 text-sm slide-in-down" aria-label="Breadcrumb">
+          <Link to="/curriculum" className="text-pink-600 hover:text-pink-700 font-medium transition-colors">
             Giáo trình
           </Link>
-          <ChevronRight size={16} className="text-slate-400" />
-          <span className="text-slate-600">{curriculum?.name}</span>
-        </div>
+          <ChevronRight size={16} className="text-slate-400 flex-shrink-0" aria-hidden />
+          <span className="text-slate-600 truncate">{curriculum?.name}</span>
+        </nav>
 
         {/* Header */}
-        <div className="mb-12 slide-in-up">
-          <h1 className="text-4xl font-bold gradient-text mb-4">{curriculum?.name}</h1>
-          <p className="text-lg text-slate-600 mb-6">{curriculum?.description}</p>
+        <div className="mb-8 slide-in-up">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text mb-2">{curriculum?.name}</h1>
+          {curriculum?.description && (
+            <p className="text-slate-600 mb-5 max-w-2xl">{curriculum.description}</p>
+          )}
           <LessonProgress
-          lessons={lessons}
-          initialCompletedCount={Object.values(lessonCompletionMap).filter(Boolean).length}
-          initialTotal={lessons.length}
-        />
+            lessons={lessons}
+            initialCompletedCount={Object.values(lessonCompletionMap).filter(Boolean).length}
+            initialTotal={lessons.length}
+          />
         </div>
 
         {/* Lessons Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {lessons.map((lesson, index) => {
             const prev = lessons[index - 1]
             let prevCompleted = false
@@ -145,10 +147,12 @@ const LessonsPage = () => {
         </div>
 
         {lessons.length === 0 && (
-          <div className="text-center py-16 rounded-2xl bg-slate-50 border border-slate-100 scale-in">
-            <div className="text-6xl mb-4">📖</div>
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">Chưa có bài học nào</h3>
-            <p className="text-slate-600">Các bài học sẽ sớm được cập nhật cho giáo trình này.</p>
+          <div className="text-center py-16 rounded-2xl bg-slate-50 border border-slate-200 scale-in">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl">
+              📖
+            </div>
+            <h3 className="text-xl font-semibold text-slate-800 mb-2">Chưa có bài học nào</h3>
+            <p className="text-slate-600 max-w-sm mx-auto">Các bài học sẽ sớm được cập nhật cho giáo trình này.</p>
           </div>
         )}
       </div>

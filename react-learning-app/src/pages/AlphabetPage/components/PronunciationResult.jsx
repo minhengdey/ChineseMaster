@@ -346,7 +346,7 @@ const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = ""
                   className={`px-4 py-2 rounded-lg font-semibold transition-all ${isWrong
                     ? "bg-gradient-to-r from-rose-200 to-pink-200 text-rose-800 shadow-md hover:shadow-lg"
                     : "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-gray-200 hover:to-gray-300"
-                    } ${selectedWordIndex === idx ? "ring-2 ring-purple-500 shadow-lg scale-105" : ""}`}
+                    } ${selectedWordIndex === idx ? "ring-2 ring-pink-500 shadow-lg scale-105" : ""}`}
                 >
                   <div className="flex items-center gap-2">
                     <span>{display}</span>
