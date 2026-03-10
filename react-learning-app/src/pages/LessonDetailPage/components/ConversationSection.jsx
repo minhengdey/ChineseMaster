@@ -99,19 +99,22 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
 
   if (!visibleConversations || visibleConversations.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="text-6xl mb-4">💬</div>
-        <h3 className="text-xl font-semibold mb-2">Chưa có hội thoại nào</h3>
-        <p className="text-base-content/70">Nội dung hội thoại sẽ được cập nhật sớm.</p>
+      <div className="text-center py-14 px-4">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl">
+          💬
+        </div>
+        <h3 className="text-xl font-semibold text-slate-800 mb-2">Chưa có hội thoại nào</h3>
+        <p className="text-slate-600">Nội dung hội thoại sẽ được cập nhật sớm.</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-end mb-2">
+      <div className="flex items-center justify-end mb-4">
         <button
-          className="btn btn-ghost btn-sm hover:bg-gradient-to-r hover:from-purple-100 hover:to-blue-100"
+          type="button"
+          className="rounded-xl px-4 py-2.5 text-sm font-semibold text-pink-600 bg-pink-50 border border-pink-200 hover:bg-pink-100 hover:border-pink-300 transition-colors"
           onClick={() => setShowPinyin((s) => !s)}
         >
           {showPinyin ? "Ẩn pinyin" : "Hiện pinyin"}
@@ -120,21 +123,25 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
       {visibleConversations.map((conversation, index) => (
         <div
           key={conversation.id ?? index}
-          className="card bg-gradient-to-br from-white to-purple-50 shadow-lg border border-purple-200"
+          className="rounded-2xl bg-gradient-to-br from-white to-violet-50/80 border border-violet-200/80 shadow-sm overflow-hidden"
         >
-          <div className="card-body">
+          <div className="p-5 sm:p-6 lg:p-8">
             <div
-              className="flex justify-between items-center cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex justify-between items-center gap-4 cursor-pointer hover:opacity-90 transition-opacity -m-1 p-1 rounded-xl"
               onClick={() => toggleSection(index)}
             >
-              <h3 className="card-title text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">{`Bài khóa ${conversation.order}: ${conversation.section}`}</h3>
-              <button className="btn btn-ghost btn-sm" type="button">
+              <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent">
+                Bài khóa {conversation.order}: {conversation.section}
+              </h3>
+              <span className="flex-shrink-0 w-9 h-9 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center text-sm font-bold">
                 {expandedSection === index ? "▼" : "▶"}
-              </button>
+              </span>
             </div>
 
             {(conversation.vnTranslation || conversation.vn) && (
-              <p className="text-base-content/70 italic">{conversation.vnTranslation || conversation.vn}</p>
+              <p className="mt-3 text-slate-600 italic text-sm sm:text-base">
+                {conversation.vnTranslation || conversation.vn}
+              </p>
             )}
 
             {expandedSection === index && (
@@ -144,32 +151,24 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
                     localHighlightedLineIds && localHighlightedLineIds.length
                       ? localHighlightedLineIds
                       : highlightedLineIds || []
-                  // Build a set of normalized ids (strings) and accept matches against either externalId or internal id
                   const highlightedSet = new Set((effectiveHighlighted || []).map(String))
                   const isHighlighted =
                     highlightedSet.has(String(line.externalId)) || highlightedSet.has(String(line.id))
-                  // Debug per-line
-                  if (process.env.NODE_ENV !== "production") {
-                    try {
-                      // console.debug(`[ConversationSection] line ${line.externalId} highlighted?`, isHighlighted)
-                    } catch (e) { }
-                  }
-                  // console.log(line)
 
                   return (
                     <div
                       key={line.externalId ?? line.id}
-                      className={`p-4 rounded-lg transition-all ${isHighlighted
-                        ? "bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-500 shadow-md"
-                        : "bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200"
+                      className={`p-5 sm:p-6 rounded-xl transition-all ${isHighlighted
+                        ? "bg-emerald-50/90 border-2 border-emerald-300 shadow-sm"
+                        : "bg-slate-50 border border-slate-200"
                         }`}
                     >
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                      <div className="flex flex-wrap justify-between items-start gap-3 mb-4">
+                        <span className="font-semibold text-violet-700 text-sm sm:text-base">
                           {line.speaker}
                         </span>
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-shrink-0">
                           {(line.audioUrl || line.audioAsset) && (
                             <AudioPlayer audioUrl={line.audioUrl} audioAsset={line.audioAsset} />
                           )}
@@ -179,7 +178,6 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
                             hanzi={line.zh || line.zhText}
                             lineId={line.externalId}
                             onScore={(result, audioBlob, returnedLineId) =>
-                              // pass returnedLineId (from BE), internal id (line.id), and external id (line.externalId)
                               handlePronunciationScore(result, audioBlob, returnedLineId, line.id, line.externalId)
                             }
                             onStartRecording={() => handleStartRecording(line.externalId)}
@@ -190,16 +188,19 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
                       </div>
 
                       <div className="space-y-2 text-left">
-                        <div className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                        <div className="text-xl sm:text-2xl font-bold text-slate-800">
                           {line.zh || line.zhText}
                         </div>
-                        {showPinyin && <div className="text-lg text-base-content/80">{line.pinyin}</div>}
-                        <div className="text-base-content/70 italic">{line.vn || line.vnTranslation}</div>
+                        {showPinyin && (
+                          <div className="text-base text-slate-600">{line.pinyin}</div>
+                        )}
+                        <div className="text-slate-600 italic text-sm sm:text-base">
+                          {line.vn || line.vnTranslation}
+                        </div>
                       </div>
 
-                      {/* Hiển thị kết quả đánh giá phát âm cho line này */}
                       {showPronunciationResult && String(activeLineId) === String(line.externalId) && (
-                        <div className="mt-4">
+                        <div className="mt-5 pt-4 border-t border-slate-200">
                           <SentencePronunciationResult
                             result={pronunciationResult}
                             recordedAudio={recordedAudio}

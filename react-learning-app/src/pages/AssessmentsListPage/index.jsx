@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { assessmentAPI } from "../../services/api"
-import { Button } from "@/components/ui"
 import PageLayout from "../../components/layout/PageLayout"
 import {
   PageHeader,
@@ -109,8 +108,8 @@ const AssessmentsListPage = () => {
     return (
       <PageLayout>
         <div className="min-h-48 flex flex-col items-center justify-center gap-4">
-          <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-500 rounded-full animate-spin" />
-          <p className="text-slate-600">Đang tải...</p>
+          <div className="w-10 h-10 border-2 border-pink-200 border-t-pink-500 rounded-full animate-spin" />
+          <p className="text-slate-600 font-medium">Đang tải...</p>
         </div>
       </PageLayout>
     )
@@ -120,10 +119,18 @@ const AssessmentsListPage = () => {
     return (
       <PageLayout>
         <div className="min-h-48 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-6xl mb-4">⚠️</div>
-            <h2 className="text-2xl font-bold mb-4 text-slate-900">{error}</h2>
-            <Button onClick={fetchAssessments} className="rounded-xl">Thử lại</Button>
+          <div className="text-center px-4">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-100 flex items-center justify-center text-3xl">
+              ⚠️
+            </div>
+            <h2 className="text-xl font-bold text-slate-800 mb-4">{error}</h2>
+            <button
+              type="button"
+              onClick={fetchAssessments}
+              className="rounded-xl px-6 py-3 font-semibold bg-gradient-to-r from-pink-500 to-violet-500 text-white hover:from-pink-600 hover:to-violet-600 shadow-lg shadow-pink-500/25 transition-colors"
+            >
+              Thử lại
+            </button>
           </div>
         </div>
       </PageLayout>
@@ -149,13 +156,15 @@ const AssessmentsListPage = () => {
       />
 
       {filteredAssessments.length === 0 ? (
-        <div className="text-center py-16 rounded-2xl bg-slate-50 border border-slate-100">
-          <div className="text-6xl mb-4">📝</div>
-          <h3 className="text-xl font-semibold text-slate-700 mb-2">Chưa có bài kiểm tra</h3>
-          <p className="text-slate-500">Các bài kiểm tra sẽ xuất hiện ở đây</p>
+        <div className="text-center py-16 rounded-2xl bg-slate-50 border border-slate-200">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl">
+            📝
+          </div>
+          <h3 className="text-xl font-semibold text-slate-800 mb-2">Chưa có bài kiểm tra</h3>
+          <p className="text-slate-600">Các bài kiểm tra sẽ xuất hiện ở đây</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {filteredAssessments.map((assessment) => (
             <AssessmentCard
               key={assessment.id}

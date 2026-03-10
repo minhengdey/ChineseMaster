@@ -76,9 +76,13 @@ const Navbar = ({ user, onLogout }) => {
         <div className="flex justify-between items-center h-16">
           <Link
             to="/"
-            className="flex items-center gap-2 font-bold text-xl gradient-text hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2.5 font-bold text-xl gradient-text hover:opacity-80 transition-opacity"
           >
-            <span className="text-2xl">🇨🇳</span>
+            <img
+              src="/favicon.png"
+              alt="Chinese Master"
+              className="h-9 w-9 sm:h-10 sm:w-10 object-contain flex-shrink-0"
+            />
             <span>Chinese Master</span>
           </Link>
 

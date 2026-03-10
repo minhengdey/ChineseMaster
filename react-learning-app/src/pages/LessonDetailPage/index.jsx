@@ -159,7 +159,7 @@ const LessonDetailPage = () => {
     return (
       <PageLayout>
         <div className="min-h-48 flex items-center justify-center">
-          <span className="loading loading-spinner loading-lg text-purple-500" />
+          <div className="loading w-10 h-10 border-2 border-slate-200 border-t-violet-500 rounded-full" />
         </div>
       </PageLayout>
     )
@@ -168,9 +168,12 @@ const LessonDetailPage = () => {
   if (!lesson) {
     return (
       <PageLayout>
-        <div className="text-center py-16">
-          <h2 className="text-2xl font-bold mb-4 text-slate-900">Không tìm thấy bài học</h2>
-          <Link to={`/curriculum/${curriculumId}/lessons`} className="btn-primary rounded-xl px-6 py-3">
+        <div className="text-center py-20">
+          <h2 className="text-xl font-bold text-slate-800 mb-4">Không tìm thấy bài học</h2>
+          <Link
+            to={`/curriculum/${curriculumId}/lessons`}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3.5 min-h-[48px] bg-gradient-to-r from-pink-500 to-violet-500 text-white font-semibold shadow-lg shadow-pink-500/25 hover:shadow-pink-500/35 transition-all"
+          >
             Quay lại danh sách bài học
           </Link>
         </div>
@@ -178,64 +181,82 @@ const LessonDetailPage = () => {
     )
   }
 
+  const vocabCount = lesson.vocabularies?.length || 0
+  const convCount = lesson.conversations?.length || 0
+
   return (
     <PageLayout>
-      <div className="space-y-8">
-        <div className="mb-8 slide-in-down">
-          <div className="flex items-center gap-2 text-sm mb-4">
-            <Link to="/curriculum" className="text-purple-600 hover:text-purple-700 font-medium">
-              Giáo trình
-            </Link>
-            <span className="text-slate-400">/</span>
-            <Link
-              to={`/curriculum/${curriculumId}/lessons`}
-              className="text-purple-600 hover:text-purple-700 font-medium"
-            >
-              Bài học
-            </Link>
-            <span className="text-slate-400">/</span>
-            <span className="text-slate-900 font-medium">{lesson.title}</span>
-          </div>
+      <div className="space-y-6 sm:space-y-8">
+        <nav className="flex flex-wrap items-center gap-2 text-sm slide-in-down" aria-label="Breadcrumb">
+          <Link to="/curriculum" className="text-pink-600 hover:text-pink-700 font-medium transition-colors">
+            Giáo trình
+          </Link>
+          <span className="text-slate-400" aria-hidden>/</span>
+          <Link
+            to={`/curriculum/${curriculumId}/lessons`}
+            className="text-pink-600 hover:text-pink-700 font-medium transition-colors"
+          >
+            Bài học
+          </Link>
+          <span className="text-slate-400" aria-hidden>/</span>
+          <span className="text-slate-700 font-medium truncate max-w-[200px] sm:max-w-none">{lesson.title}</span>
+        </nav>
 
-          <div className="bg-gradient-to-r from-purple-500 to-blue-500 p-8 rounded-xl shadow-lg text-white">
-            <h1 className="text-4xl font-bold mb-2">{lesson.title}</h1>
-            {lesson.level && (
-              <div className="inline-block mb-4 px-3 py-1 bg-white/20 text-white text-xs font-semibold rounded-full">
-                {lesson.level}
-              </div>
-            )}
-            <LessonProgress
-              lessonId={lessonId}
-              pronouncedCount={pronouncedCount}
-              lineCount={(lesson.conversations || []).reduce((acc, s) => acc + (s.lines || []).length, 0)}
-              vocabCount={(lesson.vocabularies || []).length}
-            />
-          </div>
+        <div className="rounded-2xl bg-gradient-to-br from-pink-500 via-violet-500 to-purple-500 p-6 sm:p-8 lg:p-10 shadow-xl shadow-pink-500/20 slide-in-up">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">{lesson.title}</h1>
+          {lesson.level && (
+            <span className="inline-block mb-4 px-3 py-1 bg-white/20 text-white text-xs font-semibold rounded-lg">
+              {lesson.level}
+            </span>
+          )}
+          <LessonProgress
+            lessonId={lessonId}
+            pronouncedCount={pronouncedCount}
+            distinctLineCount={distinctLineCount}
+            distinctVocabularyCount={distinctVocabularyCount}
+            lineCount={(lesson.conversations || []).reduce((acc, s) => acc + (s.lines || []).length, 0)}
+            vocabCount={vocabCount}
+          />
         </div>
 
-        <div className="mb-8 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden card-hover">
-          <div className="flex border-b border-slate-200 bg-gradient-to-r from-purple-50 to-blue-50">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="flex gap-2 p-4 sm:p-5 bg-pink-50/50 border-b border-pink-100">
             <button
-              className={`tab-btn flex-1 ${activeTab === "vocabulary" ? "active" : ""}`}
+              type="button"
               onClick={() => setActiveTab("vocabulary")}
+              className={`flex-1 min-h-[44px] py-3 px-4 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === "vocabulary"
+                  ? "bg-white text-pink-600 shadow-sm border border-pink-200"
+                  : "text-slate-600 hover:text-slate-800 hover:bg-pink-100/50 rounded-xl"
+              }`}
             >
-              📚 Từ vựng ({lesson.vocabularies?.length || 0})
+              Từ vựng ({vocabCount})
             </button>
             <button
-              className={`tab-btn flex-1 ${activeTab === "conversation" ? "active" : ""}`}
+              type="button"
               onClick={() => setActiveTab("conversation")}
+              className={`flex-1 min-h-[44px] py-3 px-4 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === "conversation"
+                  ? "bg-white text-pink-600 shadow-sm border border-pink-200"
+                  : "text-slate-600 hover:text-slate-800 hover:bg-pink-100/50 rounded-xl"
+              }`}
             >
-              💬 Hội thoại ({lesson.conversations?.length || 0})
+              Hội thoại ({convCount})
             </button>
             <button
-              className={`tab-btn flex-1 ${activeTab === "leaderboard" ? "active" : ""}`}
+              type="button"
               onClick={() => setActiveTab("leaderboard")}
+              className={`flex-1 min-h-[44px] py-3 px-4 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === "leaderboard"
+                  ? "bg-white text-pink-600 shadow-sm border border-pink-200"
+                  : "text-slate-600 hover:text-slate-800 hover:bg-pink-100/50 rounded-xl"
+              }`}
             >
-              🏆 BXH theo bài
+              BXH theo bài
             </button>
           </div>
 
-          <div className="p-6 min-h-96 fade-in">
+          <div className="p-5 sm:p-6 lg:p-8 min-h-80 fade-in">
             {activeTab === "conversation" && (
               <ErrorBoundary>
                 <ConversationSection
@@ -258,23 +279,25 @@ const LessonDetailPage = () => {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-slate-200">
-          <Link to={`/curriculum/${curriculumId}/lessons`} className="btn-secondary rounded-lg px-6 py-3 font-semibold">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 pt-8 pb-2 border-t border-slate-200">
+          <Link
+            to={`/curriculum/${curriculumId}/lessons`}
+            className="order-2 sm:order-1 inline-flex items-center justify-center gap-2 rounded-2xl min-h-[48px] px-6 py-3.5 border-2 border-pink-500 text-pink-600 font-semibold hover:bg-pink-50 transition-colors"
+          >
             ← Danh sách bài học
           </Link>
-
-          <div className="flex gap-4 flex-wrap justify-center">
+          <div className="order-1 sm:order-2 flex flex-wrap gap-3 justify-center">
             <Link
               to={`/curriculum/${curriculumId}/lesson/${lessonId}/practice`}
-              className="btn-primary rounded-lg px-6 py-3 font-semibold"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl min-h-[48px] px-6 py-3.5 bg-gradient-to-r from-pink-500 to-violet-500 text-white font-semibold shadow-lg shadow-pink-500/25 hover:shadow-pink-500/35 hover:-translate-y-0.5 transition-all"
             >
-              📝 Kiểm tra từ vựng
+              Kiểm tra từ vựng
             </Link>
             <Link
               to={`/curriculum/${curriculumId}/lesson/${lessonId}/speaking`}
-              className="btn-accent rounded-lg px-6 py-3 font-semibold"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl min-h-[48px] px-6 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/35 hover:-translate-y-0.5 transition-all"
             >
-              🎤 Kiểm tra bài khóa
+              Kiểm tra bài khóa
             </Link>
           </div>
         </div>
