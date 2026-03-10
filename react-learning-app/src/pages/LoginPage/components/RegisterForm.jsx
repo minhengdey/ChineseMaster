@@ -43,6 +43,7 @@ const RegisterForm = ({ onRegister }) => {
         password: formData.password,
       })
 
+      // If backend returns user info after registration, save it to store
       if (result && result.user) {
         useUserStore.getState().setUser(result.user)
       }
@@ -51,25 +52,25 @@ const RegisterForm = ({ onRegister }) => {
       setTimeout(() => {
         onRegister()
       }, 1500)
-    } catch (err) {
-      setError(handleApiError(err))
+    } catch (error) {
+      setError(handleApiError(error))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5 animate-fade-in">
       {error && (
-        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-center gap-3">
-          <AlertCircle size={20} className="flex-shrink-0 text-red-500" />
+        <div className="p-4 rounded-lg bg-gradient-to-r from-red-50 to-rose-50 border border-red-300 text-red-700 text-sm font-medium shadow-md flex items-center gap-2">
+          <AlertCircle size={18} className="flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium flex items-center gap-3">
-          <CheckCircle size={20} className="flex-shrink-0 text-emerald-500" />
+        <div className="p-4 rounded-lg bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-300 text-emerald-700 text-sm font-medium shadow-md animate-pulse flex items-center gap-2">
+          <CheckCircle size={18} className="flex-shrink-0" />
           <span>{success}</span>
         </div>
       )}
@@ -82,7 +83,7 @@ const RegisterForm = ({ onRegister }) => {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="input-with-icon w-full rounded-xl"
+            className="input-with-icon w-full"
             placeholder="Nhập họ và tên"
             required
           />
@@ -98,7 +99,7 @@ const RegisterForm = ({ onRegister }) => {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className="input-with-icon w-full rounded-xl"
+            className="input-with-icon w-full"
             placeholder="Nhập email"
             required
           />
@@ -114,7 +115,7 @@ const RegisterForm = ({ onRegister }) => {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            className="input-with-icon w-full rounded-xl"
+            className="input-with-icon w-full"
             placeholder="Nhập mật khẩu"
             required
           />
@@ -130,7 +131,7 @@ const RegisterForm = ({ onRegister }) => {
             name="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleChange}
-            className="input-with-icon w-full rounded-xl"
+            className="input-with-icon w-full"
             placeholder="Nhập lại mật khẩu"
             required
           />
@@ -140,7 +141,7 @@ const RegisterForm = ({ onRegister }) => {
 
       <button
         type="submit"
-        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-pink-500 via-violet-500 to-purple-500 text-white font-semibold shadow-lg shadow-pink-500/25 hover:shadow-pink-500/35 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+        className="w-full py-3 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:via-blue-600 hover:to-cyan-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105"
         disabled={loading}
       >
         {loading ? "Đang đăng ký..." : "Đăng ký"}

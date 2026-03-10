@@ -189,9 +189,8 @@ const AlphabetPage = () => {
   if (loading) {
     return (
       <PageLayout>
-        <div className="flex items-center justify-center min-h-48 gap-3 text-slate-600">
-          <span className="w-10 h-10 border-2 border-pink-200 border-t-pink-500 rounded-full animate-spin" />
-          <span className="font-medium">Đang tải bảng PINYIN...</span>
+        <div className="flex items-center justify-center min-h-48">
+          <span className="loading loading-spinner loading-lg text-purple-500" />
         </div>
       </PageLayout>
     )
@@ -207,24 +206,23 @@ const AlphabetPage = () => {
   return (
     <PageLayout>
       <div className="space-y-6">
-        <div className="mb-6 sm:mb-8 rounded-2xl bg-gradient-to-br from-pink-500 via-violet-500 to-purple-500 p-6 sm:p-8 text-white shadow-xl shadow-pink-500/20 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-            <Type size={28} aria-hidden />
-          </div>
+        <div className="mb-8 bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-500 rounded-3xl p-8 text-white shadow-lg animate-fade-in flex items-center gap-4">
+          <Type size={40} />
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold mb-1">Bảng PINYIN</h1>
-            <p className="text-white/90 text-sm sm:text-base">Bấm vào từng ô để xem biến thể thanh điệu và luyện phát âm</p>
+            <h1 className="text-4xl font-bold mb-2">Bảng chữ cái tiếng Trung</h1>
+            <p className="text-purple-100">Bấm vào từng ô để xem biến thể thanh điệu và luyện phát âm</p>
           </div>
         </div>
 
-        <div className="mb-6 rounded-2xl bg-gradient-to-r from-pink-50 to-violet-50 border border-pink-200 p-4 flex items-center justify-center gap-2 shadow-sm">
-          <AlertCircle size={20} className="text-pink-600 flex-shrink-0" aria-hidden />
-          <p className="text-slate-700 text-sm sm:text-base">
-            <strong className="text-slate-800">Lưu ý:</strong> Những âm không có chữ Hán tương ứng không cần ghi âm đánh giá.
+        <div className="mb-6 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-4 text-center shadow-sm flex items-center justify-center gap-2">
+          <AlertCircle size={20} className="text-blue-600" />
+          <p className="text-slate-700">
+            <strong className="text-slate-900">Lưu ý:</strong> Những âm không có chữ Hán tương ứng không cần ghi âm đánh
+            giá.
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-pink-200">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-center text-sm">
               <thead>
@@ -232,7 +230,7 @@ const AlphabetPage = () => {
                   {headers.map((initial, index) => (
                     <th
                       key={index}
-                      className="bg-gradient-to-b from-pink-400 to-violet-500 text-white font-semibold border border-pink-300 sticky top-0 text-lg leading-tight"
+                      className="bg-gradient-to-b from-purple-400 to-blue-500 text-white font-semibold border border-purple-300 sticky top-0 text-lg leading-tight"
                       style={
                         index === 0
                           ? {
@@ -257,18 +255,18 @@ const AlphabetPage = () => {
               </thead>
               <tbody>
                 {bodyRows.map((row, rowIndex) => (
-                  <tr key={rowIndex} className="hover:bg-pink-50/80 transition-colors">
+                  <tr key={rowIndex} className="hover:bg-purple-50 transition-colors">
                     {row.map((pinyin, cellIndex) => (
                       <td
                         key={cellIndex}
-                        className="border border-pink-100 align-middle"
+                        className="border border-slate-200 align-middle"
                         style={
                           cellIndex === 0
                             ? {
                               position: "sticky",
                               left: 0,
                               zIndex: 10,
-                              background: "linear-gradient(135deg, #e06fa6, #9d78c4)",
+                              background: "linear-gradient(135deg, #7c3aed, #3b82f6)",
                               color: "white",
                               fontWeight: "700",
                               width: "48px",
@@ -286,8 +284,7 @@ const AlphabetPage = () => {
                           ? pinyin
                           : pinyin && (
                             <button
-                              type="button"
-                              className="w-full h-full min-h-[40px] rounded hover:bg-gradient-to-r hover:from-pink-100 hover:to-violet-100 transition-all text-pink-600 font-semibold text-sm p-0 leading-tight hover:shadow-md border-0"
+                              className="w-full h-full hover:bg-gradient-to-r hover:from-purple-100 hover:to-blue-100 transition-all text-purple-600 font-semibold text-sm p-0 leading-tight hover:shadow-md"
                               onClick={() => handleCellClick(pinyin)}
                               title={`Chi tiết: ${pinyin}`}
                             >
@@ -326,56 +323,58 @@ const AlphabetPage = () => {
                 style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.45)", zIndex: 2147483646, pointerEvents: "auto" }}
               />
               <div
-                className="modal-box max-w-lg rounded-2xl border border-pink-200 shadow-xl shadow-pink-500/10"
+                className="modal-box max-w-lg"
                 onClick={(e) => e.stopPropagation()}
                 style={{
                   position: "relative",
                   zIndex: 2147483647,
                   pointerEvents: "auto",
                   backgroundColor: "#ffffff",
-                  padding: "1.25rem",
+                  borderRadius: 12,
+                  padding: "1rem",
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
                 }}
               >
-                <button type="button" className="absolute right-2 top-2 p-2 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-pink-100" onClick={closeModal} aria-label="Đóng">
+                <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onClick={closeModal}>
                   ✕
                 </button>
-                <h3 className="font-bold text-xl mb-4 bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent">
+                <h3 className="font-bold text-xl mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                   Phát âm "{selectedItem.pinyin}"
                 </h3>
 
                 {visibleVariants && visibleVariants.length > 0 ? (
                   <>
-                    <div className="rounded-xl mb-4 bg-pink-50/90 border border-pink-200 p-4 flex items-start gap-2">
-                      <AlertCircle size={20} className="flex-shrink-0 text-pink-600 mt-0.5" aria-hidden />
-                      <span className="text-sm text-slate-700">
+                    <div className="alert alert-info mb-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 flex items-start gap-2">
+                      <AlertCircle size={20} className="flex-shrink-0 text-blue-600 mt-0.5" />
+                      <span className="text-sm">
                         Bấm nút nghe để nghe âm mẫu, sau đó bấm nút ghi âm để luyện tập phát âm
                       </span>
                     </div>
 
                     <div className="mb-4">
-                      <h5 className="font-semibold text-lg mb-3 text-pink-600">Các biến thể thanh điệu</h5>
+                      <h5 className="font-semibold text-lg mb-3 text-purple-600">Các biến thể thanh điệu:</h5>
                       <div className="space-y-3">
                         {visibleVariants.map((variant, index) => (
                           <div
                             key={index}
-                            className="rounded-2xl bg-gradient-to-r from-pink-50 to-violet-50 border border-pink-200 p-4"
+                            className="card bg-gradient-to-r from-purple-50 to-blue-50 shadow-sm border border-purple-200"
                           >
-                            <div className="flex items-center justify-between flex-wrap gap-3">
-                              <div className="flex items-center gap-3">
-                                <span className="text-xl font-bold text-pink-600">{variant.pinyin}</span>
-                                <span className="text-sm text-slate-600">Thanh {index + 1}</span>
-                              </div>
-                              <div className="flex gap-2">
-                                <button
-                                  type="button"
-                                  className="min-h-[36px] px-3 py-1.5 rounded-xl border-2 border-pink-500 text-pink-600 font-medium hover:bg-pink-50 inline-flex items-center gap-1 disabled:opacity-50"
-                                  onClick={() => playAudio(selectedItem.pinyin, index + 1)}
-                                  disabled={isPlaying}
-                                  title="Phát âm mẫu"
-                                >
-                                  <Volume2 size={16} aria-hidden />
-                                  Nghe
-                                </button>
+                            <div className="card-body p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-2xl font-bold text-purple-600">{variant.pinyin}</span>
+                                  <span className="text-sm text-slate-600">Thanh {index + 1}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    className="btn btn-sm btn-outline btn-primary flex items-center gap-1"
+                                    onClick={() => playAudio(selectedItem.pinyin, index + 1)}
+                                    disabled={isPlaying}
+                                    title="Phát âm mẫu"
+                                  >
+                                    <Volume2 size={16} />
+                                    Nghe
+                                  </button>
                                   {variant.hanzi && variant.hanzi !== variant.pinyin && (
                                     <RecordingButton
                                       text={variant.pinyin}
@@ -386,20 +385,21 @@ const AlphabetPage = () => {
                                   )}
                                 </div>
                               </div>
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
                   </>
                 ) : (
-                  <div className="rounded-xl bg-amber-50/90 border border-amber-200 p-4 flex items-start gap-2">
-                    <AlertTriangle size={20} className="flex-shrink-0 text-amber-600 mt-0.5" aria-hidden />
-                    <span className="text-slate-700">Không có từ tiếng Trung tương ứng để luyện tập phát âm</span>
+                  <div className="alert alert-warning bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 flex items-start gap-2">
+                    <AlertTriangle size={20} className="flex-shrink-0 text-amber-600 mt-0.5" />
+                    <span>Không có từ tiếng Trung tương ứng để luyện tập phát âm</span>
                   </div>
                 )}
 
-                <div className="mt-4 flex justify-end">
-                  <button type="button" className="min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-semibold hover:from-pink-600 hover:to-violet-600 shadow-lg shadow-pink-500/25" onClick={closeModal}>
+                <div className="modal-action">
+                  <button className="btn btn-primary" onClick={closeModal}>
                     Đóng
                   </button>
                 </div>
@@ -432,14 +432,16 @@ const AlphabetPage = () => {
                 style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.45)", zIndex: 2147483646, pointerEvents: "auto" }}
               />
               <div
-                className="modal-box rounded-2xl border border-pink-200 shadow-xl shadow-pink-500/10"
+                className="modal-box"
                 onClick={(e) => e.stopPropagation()}
                 style={{
                   position: "relative",
                   zIndex: 2147483647,
                   pointerEvents: "auto",
                   backgroundColor: "#ffffff",
-                  padding: "1.25rem",
+                  borderRadius: 12,
+                  padding: "1rem",
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
                 }}
               >
                 <PronunciationResult

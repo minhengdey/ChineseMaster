@@ -1,58 +1,28 @@
 import { memo } from "react"
 import { Link } from "react-router-dom"
-import { ArrowRight } from "lucide-react"
 
-const FeatureCard = memo(
-  ({ icon: Icon, title, description, link, gradient, bgGradient, iconColor }) => {
-    return (
-      <Link
-        to={link}
-        className="group block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 rounded-2xl"
+const FeatureCard = memo(({ icon: Icon, title, description, link, gradient, bgGradient, iconColor }) => {
+  return (
+    <Link to={link} className="group block h-full">
+      <div
+        className={`card p-6 sm:p-8 h-full card-hover card-interactive bg-gradient-to-br ${bgGradient} border-2 border-transparent hover:border-purple-300 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300`}
       >
         <div
-          className={`
-            h-full p-5 sm:p-6 rounded-2xl
-            bg-white border border-slate-200/80
-            shadow-sm hover:shadow-lg hover:shadow-violet-500/10
-            hover:border-violet-200 hover:-translate-y-1
-            transition-all duration-300 ease-out
-            flex flex-col
-          `}
+          className={`${iconColor} mb-4 transform group-hover:scale-110 transition-transform duration-300`}
         >
-          {/* Icon with soft background */}
-          <div
-            className={`
-              w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4
-              bg-gradient-to-br ${bgGradient} border border-slate-100
-              group-hover:scale-105 transition-transform duration-300
-            `}
-          >
-            <Icon className={`${iconColor} w-6 h-6 sm:w-7 sm:h-7`} aria-hidden />
-          </div>
-
-          <h3 className="text-lg font-bold text-slate-800 mb-1.5 group-hover:text-violet-700 transition-colors">
-            {title}
-          </h3>
-          <p className="text-slate-600 text-sm leading-relaxed flex-1">
-            {description}
-          </p>
-
-          <span
-            className={`
-              mt-4 inline-flex items-center gap-1.5 text-sm font-semibold
-              bg-gradient-to-r ${gradient} bg-clip-text text-transparent
-              opacity-80 group-hover:opacity-100 group-hover:gap-2
-              transition-all duration-300
-            `}
-          >
-            Bắt đầu
-            <ArrowRight className="w-4 h-4" aria-hidden />
-          </span>
+          <Icon size={40} aria-hidden />
         </div>
-      </Link>
-    )
-  }
-)
+        <h3 className="text-xl font-bold text-slate-900 mb-2">{title}</h3>
+        <p className="text-slate-600 text-sm leading-relaxed">{description}</p>
+        <div
+          className={`mt-4 flex items-center bg-gradient-to-r ${gradient} bg-clip-text text-transparent font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity`}
+        >
+          Bắt đầu →
+        </div>
+      </div>
+    </Link>
+  )
+})
 
 FeatureCard.displayName = "FeatureCard"
 

@@ -45,7 +45,7 @@ export default function QuestionPlayer({ audioUrl, text, onEnded, className = ""
                type="button"
                onClick={handlePlay}
                disabled={loading}
-               className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-pink-100 text-pink-600 hover:bg-pink-200 hover:text-pink-700 transition-colors disabled:opacity-50 shadow-sm"
+               className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-violet-100 text-violet-600 hover:bg-violet-200 hover:text-violet-700 transition-colors disabled:opacity-50 shadow-sm"
             >
                {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

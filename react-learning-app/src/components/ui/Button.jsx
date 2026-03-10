@@ -14,7 +14,7 @@ export function Button({
 
   const variants = {
     primary:
-      "bg-gradient-to-r from-pink-500 to-violet-500 text-white hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0",
+      "bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0",
     outline: "border-2 border-slate-300 text-slate-700 hover:bg-slate-50 active:bg-slate-100",
     secondary: "bg-slate-200 text-slate-900 hover:bg-slate-300 active:bg-slate-400",
     danger: "bg-red-600 text-white hover:bg-red-700 active:bg-red-800",

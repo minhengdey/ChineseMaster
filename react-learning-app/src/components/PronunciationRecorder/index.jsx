@@ -7,7 +7,7 @@ import StructuredFeedbackView from "../StructuredFeedbackView";
 const SCORE_TIERS = [
    { min: 90, label: "Xuất sắc", color: "text-emerald-600", ring: "ring-emerald-400" },
    { min: 80, label: "Tốt", color: "text-blue-600",    ring: "ring-blue-400"    },
-   { min: 70, label: "Khá", color: "text-pink-600",  ring: "ring-pink-400"  },
+   { min: 70, label: "Khá", color: "text-violet-600",  ring: "ring-violet-400"  },
    { min: 60, label: "Cố gắng", color: "text-amber-600",   ring: "ring-amber-400"   },
    { min: 0,  label: "Cần luyện thêm", color: "text-red-500", ring: "ring-red-400"     },
 ];
@@ -147,7 +147,7 @@ export default function PronunciationRecorder({
                   type="button"
                   onClick={previewAudio}
                   title="Nghe lại bản ghi âm"
-                  className="p-2 rounded-lg text-slate-500 hover:text-pink-600 hover:bg-pink-50 transition-colors"
+                  className="p-2 rounded-lg text-slate-500 hover:text-violet-600 hover:bg-violet-50 transition-colors"
                >
                   <Volume2 className="w-5 h-5" />
                </button>
@@ -222,7 +222,7 @@ function ScoreBar({ value, color }) {
    const bgMap = {
       "text-emerald-600": "bg-emerald-500",
       "text-blue-600":    "bg-blue-500",
-      "text-pink-600":  "bg-pink-500",
+      "text-violet-600":  "bg-violet-500",
       "text-amber-600":   "bg-amber-500",
       "text-red-500":     "bg-red-500",
    };

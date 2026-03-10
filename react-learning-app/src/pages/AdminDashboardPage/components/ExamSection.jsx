@@ -6,7 +6,7 @@ const EXAM_COLUMNS = [
     key: "rank",
     title: "Hạng",
     headClassName: "w-16 text-center",
-    className: "text-center font-bold text-pink-600",
+    className: "text-center font-bold text-purple-600",
     render: (r) => (
       <div className="flex items-center justify-center">
         {r.rank <= 3 ? (
@@ -50,7 +50,7 @@ const EXAM_COLUMNS = [
   {
     key: "totalScore",
     title: "Điểm tổng",
-    render: (r) => <span className="font-bold text-pink-600 text-base">{r.totalScore != null ? `${r.totalScore}` : "-"}</span>,
+    render: (r) => <span className="font-bold text-purple-600 text-base">{r.totalScore != null ? `${r.totalScore}` : "-"}</span>,
   },
 ]
 
@@ -58,26 +58,26 @@ const ExamSection = ({ exams, loading }) => (
   <SectionCard title="BXH bài kiểm tra">
     <div className="space-y-6">
       {loading && (
-        <div className="flex items-center justify-center p-10 gap-3">
-          <span className="w-8 h-8 border-2 border-slate-300 border-t-violet-500 rounded-full animate-spin" />
-          <span className="text-slate-600 font-medium">Đang tải...</span>
+        <div className="flex items-center justify-center p-12">
+          <div className="w-10 h-10 border-4 border-purple-200 border-t-purple-500 rounded-full animate-spin" />
+          <span className="ml-3 text-slate-600">Đang tải...</span>
         </div>
       )}
       {!loading && exams.length === 0 && (
-        <div className="text-center p-10 rounded-2xl bg-slate-50 border border-slate-200">
-          <div className="text-slate-400 text-4xl mb-3">📝</div>
+        <div className="text-center p-12 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100">
+          <div className="text-purple-300 text-5xl mb-4">📝</div>
           <p className="text-slate-600 font-medium">Chưa có dữ liệu bài kiểm tra</p>
         </div>
       )}
       {!loading && exams.map((exam) => (
-        <div key={exam.testId ?? exam.examId} className="rounded-2xl border border-slate-200 overflow-hidden bg-white">
-          <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/80">
+        <div key={exam.testId ?? exam.examId} className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 px-6 py-4 border-b border-purple-100">
             <div className="flex items-center justify-between">
               <div className="font-semibold text-slate-800 flex items-center gap-2">
                 <span>📝</span>
                 {exam.title ?? exam.examTitle ?? `Bài kiểm tra #${exam.testId ?? exam.examId}`}
               </div>
-              <span className="text-sm text-slate-600 font-medium bg-violet-100 text-violet-700 px-3 py-1 rounded-xl">{exam.rows?.length || 0} học viên</span>
+              <div className="text-sm text-slate-600 font-medium">{exam.rows?.length || 0} học viên</div>
             </div>
           </div>
           <div className="p-4">
