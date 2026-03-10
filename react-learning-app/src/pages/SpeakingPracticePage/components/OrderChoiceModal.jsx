@@ -1,28 +1,23 @@
 const OrderChoiceModal = ({ onCancel, onOrder, onRandom }) => (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-xl border border-slate-200">
-      <h2 className="text-xl font-bold text-slate-800 mb-2">Chọn chế độ luyện</h2>
-      <p className="text-slate-600 mb-6 leading-relaxed">
-        Bạn muốn luyện theo thứ tự bài hay ngẫu nhiên?
-      </p>
-      <div className="flex flex-wrap gap-3 justify-end">
+    <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-200">
+      <h2 className="text-2xl font-bold mb-4 text-gray-900">Chọn chế độ luyện</h2>
+      <p className="text-gray-600 mb-8 leading-relaxed">Bạn muốn luyện theo thứ tự của bài hay ngẫu nhiên?</p>
+      <div className="flex gap-3 justify-end">
         <button
-          type="button"
-          className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors"
+          className="px-6 py-2 rounded-lg font-semibold bg-gray-300 text-gray-800 hover:bg-gray-400 transition-all duration-200"
           onClick={onCancel}
         >
           Hủy
         </button>
         <button
-          type="button"
-          className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-gradient-to-r from-pink-500 to-violet-500 text-white hover:from-pink-600 hover:to-violet-600 shadow-lg shadow-pink-500/25 transition-colors"
+          className="px-6 py-2 rounded-lg font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
           onClick={onOrder}
         >
           Theo thứ tự
         </button>
         <button
-          type="button"
-          className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-gradient-to-r from-violet-500 to-purple-500 text-white hover:from-violet-600 hover:to-purple-600 shadow-lg shadow-pink-500/25 transition-colors"
+          className="px-6 py-2 rounded-lg font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-all duration-200"
           onClick={onRandom}
         >
           Ngẫu nhiên

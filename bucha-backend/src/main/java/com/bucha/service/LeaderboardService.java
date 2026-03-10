@@ -119,8 +119,6 @@ public class LeaderboardService {
             if (r == null || r.length < 4)
                 continue;
             Long userId = (r[0] == null) ? null : ((Number) r[0]).longValue();
-            if (userId == null)
-                continue;
             Double avg = (r[1] == null) ? 0.0 : ((Number) r[1]).doubleValue();
             Integer cntE = (r[2] == null) ? 0 : ((Number) r[2]).intValue();
             Double best = (r[3] == null) ? 0.0 : ((Number) r[3]).doubleValue();

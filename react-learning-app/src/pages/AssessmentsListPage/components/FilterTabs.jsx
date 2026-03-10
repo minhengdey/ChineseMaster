@@ -7,16 +7,16 @@ const FilterTabs = memo(function FilterTabs({ filter, onFilterChange, total, com
     { key: "completed", label: `Đã hoàn thành (${completed})` },
   ]
   return (
-    <div className="mb-6 flex gap-2 p-2 bg-pink-50/70 rounded-xl border border-pink-100">
+    <div className="mb-6 flex gap-2 bg-white rounded-xl p-2 shadow-md">
       {tabs.map(({ key, label }) => (
         <button
           key={key}
           type="button"
           onClick={() => onFilterChange(key)}
-          className={`flex-1 min-h-[44px] py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
+          className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
             filter === key
-              ? "bg-white text-pink-600 shadow-sm border border-pink-200"
-              : "text-slate-600 hover:bg-pink-50 hover:text-slate-800"
+              ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-md"
+              : "text-slate-600 hover:bg-slate-100"
           }`}
         >
           {label}

@@ -61,7 +61,7 @@ const CurriculumPage = () => {
     return (
       <PageLayout>
         <div className="min-h-48 flex items-center justify-center">
-          <div className="loading w-10 h-10 border-2 border-slate-200 border-t-violet-500 rounded-full" />
+          <span className="loading loading-spinner loading-lg text-purple-500" />
         </div>
       </PageLayout>
     )
@@ -69,16 +69,14 @@ const CurriculumPage = () => {
 
   return (
     <PageLayout>
-      <div className="mb-8 sm:mb-10 slide-in-up">
-        <div className="flex items-start gap-4">
-          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/20 flex-shrink-0">
-            <BookOpen size={28} aria-hidden />
+      <div className="mb-10 slide-in-up">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl text-white shadow-lg">
+            <BookOpen size={32} aria-hidden />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text">Bài học</h1>
-            <p className="text-slate-600 mt-1.5 max-w-xl">
-              Chọn giáo trình phù hợp để bắt đầu hành trình học tiếng Trung.
-            </p>
+            <h1 className="text-3xl sm:text-4xl font-bold gradient-text">Bài học</h1>
+            <p className="text-slate-600 mt-1">Chọn bài học phù hợp để bắt đầu hành trình học tiếng Trung của bạn</p>
           </div>
         </div>
       </div>

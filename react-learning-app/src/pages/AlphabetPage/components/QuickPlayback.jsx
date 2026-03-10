@@ -28,7 +28,7 @@ const QuickPlayback = ({ recordedAudio, isVisible }) => {
   return (
     <div className="mt-3 animate-fade-in">
       <button
-        className={`btn bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white btn-sm w-full gap-2 border-0 shadow-md ${isPlaying ? "opacity-50 cursor-not-allowed" : ""}`}
+        className={`btn bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white btn-sm w-full gap-2 border-0 shadow-md ${isPlaying ? "opacity-50 cursor-not-allowed" : ""}`}
         onClick={playRecording}
         disabled={isPlaying}
       >

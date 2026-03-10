@@ -1,8 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui"
-import { Trophy, CheckCircle } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Button, Badge } from "@/components/ui"
 
 const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBack, viewMode = false }) => {
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -13,23 +12,29 @@ const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBac
         const validScores = sections
             .map((section) => sectionResults[section]?.averageScore ?? 0)
             .filter((score) => score !== null && score !== undefined)
+
         if (validScores.length === 0) return 0
         return validScores.reduce((a, b) => a + b, 0) / validScores.length
     }
 
-    const getSectionResult = (sectionName) => sectionResults[sectionName]
+    const getSectionResult = (sectionName) => {
+        return sectionResults[sectionName]
+    }
 
     const handleSubmit = async () => {
         try {
             setIsSubmitting(true)
             setError(null)
+
             const totalScore = calculateTotalScore()
-            await onSubmit({
+            const finalResults = {
                 assessmentId,
                 totalScore,
                 sections: sectionResults,
                 completedAt: new Date().toISOString(),
-            })
+            }
+
+            await onSubmit(finalResults)
         } catch (err) {
             console.error("Error submitting test:", err)
             setError("Không thể nộp bài kiểm tra. Vui lòng thử lại.")
@@ -39,71 +44,116 @@ const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBac
 
     const totalScore = calculateTotalScore()
     const sections = [
-        { key: "thanh-mau", name: "Thanh mẫu", icon: "🎵", accent: "blue" },
-        { key: "van-mau", name: "Vận mẫu", icon: "🎤", accent: "emerald" },
-        { key: "thanh-dieu", name: "Thanh điệu", icon: "🎶", accent: "amber" },
-        { key: "cau", name: "Câu", icon: "💬", accent: "violet" },
+        {
+            key: "thanh-mau",
+            name: "THANH MẪU",
+            icon: "🎵",
+            borderColor: "border-blue-200",
+            textColor: "text-blue-900",
+            bgColor: "bg-blue-600",
+            bgLight: "bg-blue-50",
+        },
+        {
+            key: "van-mau",
+            name: "VẬN MẪU",
+            icon: "🎤",
+            borderColor: "border-green-200",
+            textColor: "text-green-900",
+            bgColor: "bg-green-600",
+            bgLight: "bg-green-50",
+        },
+        {
+            key: "thanh-dieu",
+            name: "THANH ĐIỆU",
+            icon: "🎶",
+            borderColor: "border-amber-200",
+            textColor: "text-amber-900",
+            bgColor: "bg-amber-600",
+            bgLight: "bg-amber-50",
+        },
+        {
+            key: "cau",
+            name: "CÂU",
+            icon: "💬",
+            borderColor: "border-purple-200",
+            textColor: "text-purple-900",
+            bgColor: "bg-purple-600",
+            bgLight: "bg-purple-50",
+        },
     ]
 
     const getScoreColor = (score) => {
-        if (score >= 85) return "text-emerald-600"
-        if (score >= 70) return "text-violet-600"
+        if (score >= 85) return "text-green-600"
+        if (score >= 70) return "text-blue-600"
         if (score >= 50) return "text-amber-600"
         return "text-red-600"
     }
 
-    const getScoreBgClass = (score) => {
-        if (score >= 85) return "bg-emerald-100 text-emerald-800 border-emerald-200"
-        if (score >= 70) return "bg-violet-100 text-violet-800 border-violet-200"
-        if (score >= 50) return "bg-amber-100 text-amber-800 border-amber-200"
-        return "bg-red-100 text-red-800 border-red-200"
+    const getScoreBadgeClass = (score) => {
+        if (score >= 85) return "badge-success"
+        if (score >= 70) return "badge-info"
+        if (score >= 50) return "badge-warning"
+        return "badge-error"
     }
 
     const getScoreEvaluation = (score) => {
-        if (score >= 90) return "Xuất sắc!"
-        if (score >= 80) return "Rất tốt!"
-        if (score >= 70) return "Tốt"
-        if (score >= 60) return "Bình thường"
-        if (score >= 50) return "Cần cải thiện"
-        return "Cần luyện tập thêm"
+        if (score >= 90) return "Xuất sắc! 🌟"
+        if (score >= 80) return "Rất tốt! ⭐"
+        if (score >= 70) return "Tốt 👍"
+        if (score >= 60) return "Bình thường 👌"
+        if (score >= 50) return "Cần cải thiện 📚"
+        return "Cần luyện tập thêm 💪"
     }
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <div className="mb-6 sm:mb-8 rounded-2xl bg-gradient-to-br from-pink-500 via-violet-500 to-purple-500 p-6 sm:p-8 text-white shadow-xl shadow-pink-500/20">
-                <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                        <Trophy className="w-6 h-6" aria-hidden />
+        <div className="max-w-6xl mx-auto">
+            <div className="mb-8 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 opacity-10 text-[200px] leading-none">📊</div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-4 mb-3">
+                        <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                            <span className="text-4xl">📊</span>
+                        </div>
+                        <div>
+                            <h1 className="text-4xl font-bold mb-1">Kết Quả Kiểm Tra</h1>
+                            <p className="text-purple-100">{assessment?.title || "Bài Kiểm Tra"}</p>
+                        </div>
                     </div>
-                    <div className="min-w-0">
-                        <h1 className="text-xl sm:text-2xl font-bold mb-1">Kết quả kiểm tra</h1>
-                        <p className="text-white/90 text-sm sm:text-base">{assessment?.title || "Bài kiểm tra"}</p>
-                        {viewMode && (
-                            <span className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 rounded-lg bg-white/20 border border-white/30 text-sm font-semibold">
-                                <CheckCircle className="w-4 h-4" aria-hidden />
-                                Kết quả đã lưu
-                            </span>
-                        )}
-                    </div>
+                    {viewMode && (
+                        <div className="mt-4 inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/30">
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                    fillRule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                            <span className="text-sm font-semibold">Kết quả đã lưu</span>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div className="rounded-2xl border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-violet-50 p-6 sm:p-8 mb-6 sm:mb-8">
-                <div className="text-center">
-                    <h2 className="text-lg font-bold text-slate-800 mb-4">Điểm tổng</h2>
-                    <div className="inline-block">
-                        <div className="text-5xl sm:text-6xl font-bold bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent">
+            {/* Overall Score Card */}
+            <div className="bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 rounded-2xl shadow-xl p-10 border-2 border-blue-200 mb-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-200 rounded-full opacity-10 -mr-32 -mt-32"></div>
+                <div className="text-center relative z-10">
+                    <h2 className="text-2xl font-bold text-slate-900 mb-6">🏆 Điểm Tổng</h2>
+                    <div className="relative inline-block">
+                        <div className="text-8xl font-bold bg-gradient-to-br from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
                             {totalScore.toFixed(1)}
                         </div>
-                        <p className={`text-lg font-semibold mt-2 ${getScoreColor(totalScore)}`}>
-                            {getScoreEvaluation(totalScore)}
-                        </p>
+                        <div className="absolute -top-2 -right-12 text-4xl">
+                            {totalScore >= 90 ? "🌟" : totalScore >= 80 ? "⭐" : totalScore >= 70 ? "👍" : "📚"}
+                        </div>
                     </div>
+                    <p className={`text-2xl font-bold mb-6 ${getScoreColor(totalScore)}`}>{getScoreEvaluation(totalScore)}</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-6 sm:mb-8">
-                {sections.map(({ key, name, icon }) => {
+            {/* Section Results */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                {sections.map(({ key, name, icon, borderColor, textColor, bgColor, bgLight }) => {
                     const sectionResult = getSectionResult(key)
                     const score = sectionResult?.averageScore ?? 0
                     const itemCount = sectionResult?.items?.length ?? 0
@@ -112,60 +162,67 @@ const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBac
                     return (
                         <div
                             key={key}
-                            className="bg-white rounded-2xl border border-pink-100 p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-pink-200 transition-all"
+                            className={`bg-white rounded-xl shadow-lg p-6 border-2 ${borderColor} hover:shadow-xl transition-all duration-300`}
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-2xl" aria-hidden>{icon}</span>
-                                    <h3 className="text-base font-bold text-slate-800">{name}</h3>
+                                    <span className="text-2xl">{icon}</span>
+                                    <h3 className={`text-lg font-bold ${textColor}`}>{name}</h3>
                                 </div>
-                                <span className={`rounded-xl px-3 py-1.5 text-sm font-bold border ${getScoreBgClass(score)}`}>
-                                    {score.toFixed(1)}
-                                </span>
+                                <Badge variant={getScoreBadgeClass(score)}>{score.toFixed(1)}</Badge>
                             </div>
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-slate-600 font-medium">Tiến độ</span>
-                                    <span className="font-semibold text-slate-800">{completedCount}/{itemCount}</span>
-                                </div>
-                                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full rounded-full bg-gradient-to-r from-pink-500 to-violet-500 transition-all duration-500"
-                                        style={{ width: itemCount > 0 ? `${(completedCount / itemCount) * 100}%` : 0 }}
-                                    />
-                                </div>
-                            </div>
-                            {sectionResult?.items?.length > 0 && (
-                                <div className="mt-4 rounded-xl bg-pink-50/50 border border-pink-100 p-3 max-h-40 overflow-y-auto">
-                                    <p className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Chi tiết điểm</p>
-                                    <div className="space-y-1.5">
-                                        {sectionResult.items.map((item, idx) => (
-                                            <div key={idx} className="flex justify-between items-center text-sm bg-white rounded-lg px-3 py-2 border border-slate-100">
-                                                <span className="text-slate-700 truncate flex-1 mr-2">
-                                                    <span className="font-semibold text-slate-800">{idx + 1}.</span> {item.text}
-                                                </span>
-                                                <span className={`font-bold flex-shrink-0 ${getScoreColor(item.score || 0)}`}>
-                                                    {(item.score ?? 0).toFixed(1)}
-                                                </span>
-                                            </div>
-                                        ))}
+
+                            <div className="space-y-3">
+                                <div>
+                                    <div className="flex justify-between text-sm mb-2">
+                                        <span className="text-slate-600 font-medium">Tiến độ hoàn thành</span>
+                                        <span className="font-bold text-slate-900">
+                                            {completedCount}/{itemCount}
+                                        </span>
+                                    </div>
+                                    <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                                        <div
+                                            className={`${bgColor} h-3 rounded-full transition-all duration-500`}
+                                            style={{
+                                                width: `${itemCount > 0 ? (completedCount / itemCount) * 100 : 0}%`,
+                                            }}
+                                        />
                                     </div>
                                 </div>
-                            )}
+
+                                {sectionResult?.items && sectionResult.items.length > 0 && (
+                                    <div className={`${bgLight} rounded-lg p-4 mt-4 max-h-56 overflow-y-auto border ${borderColor}`}>
+                                        <p className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wide">Chi tiết điểm</p>
+                                        <div className="space-y-2">
+                                            {sectionResult.items.map((item, idx) => (
+                                                <div key={idx} className="flex justify-between items-center text-sm bg-white rounded px-3 py-2">
+                                                    <span className="text-slate-700 flex-1">
+                                                        <span className="font-semibold text-slate-900">{idx + 1}.</span> {item.text}
+                                                    </span>
+                                                    <span className={`font-bold ml-3 ${getScoreColor(item.score || 0)}`}>
+                                                        {item.score?.toFixed(1) || 0}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )
                 })}
             </div>
 
-            <div className="bg-white rounded-2xl border border-pink-100 p-5 sm:p-6 shadow-sm mb-6 sm:mb-8">
-                <h3 className="text-lg font-bold text-slate-800 mb-4">Thống kê từng phần</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            {/* Summary Stats */}
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-slate-200 mb-8">
+                <h3 className="text-xl font-bold text-slate-900 mb-4">📈 Thống Kê</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {sections.map(({ key, name }) => {
                         const result = getSectionResult(key)
                         return (
-                            <div key={key} className="text-center p-4 rounded-xl bg-pink-50/70 border border-pink-100">
-                                <p className="text-xs font-medium text-slate-600 mb-1">{name}</p>
-                                <p className="text-xl font-bold text-slate-800">{(result?.averageScore ?? 0).toFixed(1)}</p>
+                            <div key={key} className="text-center p-4 bg-slate-50 rounded-lg">
+                                <p className="text-sm text-slate-600 mb-2">{name}</p>
+                                <p className="text-2xl font-bold text-slate-900">{result?.averageScore?.toFixed(2) || 0}</p>
                             </div>
                         )
                     })}
@@ -173,35 +230,31 @@ const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBac
             </div>
 
             {error && (
-                <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
-                    {error}
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
+                    <span>{error}</span>
                 </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            {/* Action Buttons */}
+            <div className="flex gap-4 mb-8">
                 {viewMode ? (
-                    <Button
-                        onClick={onBack}
-                        className="rounded-xl min-h-[48px] font-semibold bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white border-0"
-                    >
-                        Quay lại danh sách
-                    </Button>
+                    <>
+                        <Button className="flex-1 py-3 text-lg" onClick={onBack}>
+                            ← Quay lại danh sách
+                        </Button>
+                    </>
                 ) : (
                     <>
-                        <Button
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
-                            className="flex-1 rounded-xl min-h-[48px] font-semibold bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white border-0"
-                        >
-                            {isSubmitting ? "Đang nộp..." : "Nộp kết quả & quay lại"}
+                        <Button className="flex-1 py-3 text-lg" onClick={handleSubmit} disabled={isSubmitting}>
+                            {isSubmitting ? "Đang nộp..." : "✔️ Nộp Kết Quả & Quay Lại"}
                         </Button>
                         <Button
+                            className="flex-1 py-3 text-lg bg-transparent"
+                            variant="outline"
                             onClick={onBack}
                             disabled={isSubmitting}
-                            className="flex-1 rounded-xl min-h-[48px] font-semibold border-2 border-slate-300 text-slate-700 hover:bg-slate-100 bg-transparent"
-                            variant="outline"
                         >
-                            Làm lại
+                            🔄 Làm Lại
                         </Button>
                     </>
                 )}

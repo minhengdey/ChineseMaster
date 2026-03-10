@@ -281,9 +281,8 @@ const ClassManagementPage = () => {
     if (loading && classes.length === 0) {
         return (
             <PageLayout>
-                <div className="flex items-center justify-center min-h-48 gap-3 text-slate-600">
-                    <span className="w-10 h-10 border-2 border-slate-300 border-t-violet-500 rounded-full animate-spin" />
-                    <span className="font-medium">Đang tải...</span>
+                <div className="flex items-center justify-center min-h-48">
+                    <span className="loading loading-spinner loading-lg text-purple-500" />
                 </div>
             </PageLayout>
         );
@@ -293,8 +292,7 @@ const ClassManagementPage = () => {
         <PageLayout>
             <div className="space-y-6">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-1">Quản lý lớp học</h1>
-                    <p className="text-slate-600 text-sm">Tạo và quản lý lớp, thêm học viên, xem thống kê điểm</p>
+                    <h1 className="text-3xl font-bold text-slate-800 mb-2">Quản lý lớp học</h1>
                 </div>
 
                 {success && (
@@ -352,7 +350,7 @@ const ClassManagementPage = () => {
                                 required
                                 minLength={3}
                                 maxLength={100}
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             />
@@ -362,22 +360,22 @@ const ClassManagementPage = () => {
                             <textarea
                                 maxLength={500}
                                 rows={3}
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             />
                         </div>
-                        <div className="flex gap-3 justify-end pt-2">
+                        <div className="flex gap-2 justify-end">
                             <button
                                 type="button"
                                 onClick={() => setIsCreateModalOpen(false)}
-                                className="min-h-[44px] px-5 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50"
+                                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition"
                             >
                                 Hủy
                             </button>
                             <button
                                 type="submit"
-                                className="min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-semibold hover:from-pink-600 hover:to-violet-600 shadow-lg shadow-pink-500/25"
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                             >
                                 Tạo lớp
                             </button>
@@ -397,7 +395,7 @@ const ClassManagementPage = () => {
                                 required
                                 minLength={3}
                                 maxLength={100}
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             />
@@ -407,22 +405,22 @@ const ClassManagementPage = () => {
                             <textarea
                                 maxLength={500}
                                 rows={3}
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             />
                         </div>
-                        <div className="flex gap-3 justify-end pt-2">
+                        <div className="flex gap-2 justify-end">
                             <button
                                 type="button"
                                 onClick={() => setIsEditModalOpen(false)}
-                                className="min-h-[44px] px-5 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50"
+                                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition"
                             >
                                 Hủy
                             </button>
                             <button
                                 type="submit"
-                                className="min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-semibold hover:from-pink-600 hover:to-violet-600 shadow-lg shadow-pink-500/25"
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                             >
                                 Cập nhật
                             </button>
@@ -442,36 +440,38 @@ const ClassManagementPage = () => {
                     wide
                 >
                     {modalSuccess && (
-                        <div className="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 mb-4">
+                        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
                             {modalSuccess}
                         </div>
                     )}
                     <div className="mb-4">
-                        <p className="text-slate-600">Tổng số: <span className="font-bold text-pink-600">{selectedClass.members?.length || 0}</span> học viên</p>
+                        <p className="text-slate-600">Tổng số: <span className="font-bold text-purple-600">{selectedClass.members?.length || 0}</span> học viên</p>
                     </div>
 
                     {selectedClass.members && selectedClass.members.length > 0 ? (
-                        <div className="max-h-96 overflow-y-auto rounded-xl border border-slate-200">
-                            <table className="w-full text-sm">
-                                <thead className="bg-slate-50 sticky top-0">
+                        <div className="max-h-96 overflow-y-auto">
+                            <table className="w-full">
+                                <thead className="bg-purple-100 sticky top-0">
                                     <tr>
-                                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Tên</th>
-                                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Email</th>
-                                        <th className="px-4 py-3 text-center font-semibold text-slate-700">Thao tác</th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Tên</th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Email</th>
+                                        <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white">
                                     {selectedClass.members.map((member) => (
-                                        <tr key={member.userId} className="border-b border-slate-100 hover:bg-violet-50/50">
-                                            <td className="px-4 py-3">{member.name || "N/A"}</td>
-                                            <td className="px-4 py-3 text-slate-600">{member.email}</td>
+                                        <tr key={member.userId} className="border-b border-slate-100 hover:bg-purple-50">
+                                            <td className="px-4 py-3 text-sm">{member.name || "N/A"}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-600">{member.email}</td>
                                             <td className="px-4 py-3 text-center">
                                                 <button
-                                                    type="button"
                                                     onClick={() => handleRemoveMember(member.userId)}
-                                                    className="px-3 py-1.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 text-sm font-medium inline-flex items-center gap-1"
+                                                    className="px-3 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100 transition text-sm"
                                                 >
-                                                    <UserMinus size={16} aria-hidden /> Xóa
+                                                    <UserMinus size={16} className="inline" /> Xóa
                                                 </button>
                                             </td>
                                         </tr>
@@ -480,7 +480,7 @@ const ClassManagementPage = () => {
                             </table>
                         </div>
                     ) : (
-                        <div className="text-center py-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-500">
+                        <div className="text-center py-8 text-slate-500">
                             Lớp học chưa có học viên nào
                         </div>
                     )}
@@ -495,60 +495,60 @@ const ClassManagementPage = () => {
                     wide
                 >
                     <div className="mb-4">
-                        <p className="text-sm text-slate-600">Đã chọn: <span className="font-bold text-pink-600">{selectedMembers.length}</span> học viên</p>
+                        <p className="text-sm text-slate-600">Đã chọn: <span className="font-bold text-blue-600">{selectedMembers.length}</span> học viên</p>
                     </div>
 
                     {getAvailableUsers().length > 0 ? (
-                        <div className="max-h-96 overflow-y-auto mb-4 rounded-xl border border-slate-200">
-                            <table className="w-full text-sm">
+                        <div className="max-h-96 overflow-y-auto mb-4">
+                            <table className="w-full">
                                 <thead className="bg-slate-50 sticky top-0">
                                     <tr>
-                                        <th className="px-4 py-3 text-center font-semibold text-slate-700 w-12">Chọn</th>
-                                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Tên</th>
-                                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Email</th>
+                                        <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">Chọn</th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Tên</th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">Email</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {getAvailableUsers().map((user) => (
                                         <tr
                                             key={user.id}
-                                            className={`border-b border-slate-100 hover:bg-slate-50 cursor-pointer ${selectedMembers.includes(user.id) ? "bg-violet-50/80" : ""}`}
+                                            className={`border-b border-slate-100 hover:bg-slate-50 cursor-pointer ${selectedMembers.includes(user.id) ? "bg-blue-50" : ""
+                                                }`}
                                             onClick={() => toggleMemberSelection(user.id)}
                                         >
                                             <td className="px-4 py-3 text-center">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedMembers.includes(user.id)}
-                                                    onChange={() => {}}
-                                                    className="w-4 h-4 text-pink-600 rounded"
+                                                    onChange={() => { }}
+                                                    className="w-4 h-4 text-blue-600 rounded"
                                                 />
                                             </td>
-                                            <td className="px-4 py-3">{user.name || "N/A"}</td>
-                                            <td className="px-4 py-3 text-slate-600">{user.email}</td>
+                                            <td className="px-4 py-3 text-sm">{user.name || "N/A"}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-600">{user.email}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
                     ) : (
-                        <div className="text-center py-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 mb-4">
+                        <div className="text-center py-8 text-slate-500 mb-4">
                             Không còn người dùng nào để thêm
                         </div>
                     )}
 
-                    <div className="flex gap-3 justify-end pt-2">
+                    <div className="flex gap-2 justify-end">
                         <button
                             type="button"
                             onClick={() => setIsAddMemberModalOpen(false)}
-                            className="min-h-[44px] px-5 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50"
+                            className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition"
                         >
                             Hủy
                         </button>
                         <button
-                            type="button"
                             onClick={handleAddMembers}
                             disabled={selectedMembers.length === 0}
-                            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-semibold hover:from-pink-600 hover:to-violet-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-pink-500/25"
+                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Thêm ({selectedMembers.length})
                         </button>
