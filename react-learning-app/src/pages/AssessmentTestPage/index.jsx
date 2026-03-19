@@ -191,8 +191,8 @@ const AssessmentTestPage = () => {
         return (
             <PageLayout>
                 <div className="flex flex-col items-center justify-center min-h-48 gap-4">
-                    <span className="loading loading-spinner loading-lg text-purple-500" />
-                    <p className="text-slate-600">Đang tải...</p>
+                    <div className="w-10 h-10 border-2 border-pink-200 border-t-pink-500 rounded-full animate-spin" />
+                    <p className="text-slate-600 font-medium">Đang tải...</p>
                 </div>
             </PageLayout>
         )
@@ -201,10 +201,10 @@ const AssessmentTestPage = () => {
     if (error) {
         return (
             <PageLayout>
-                <div className="text-center py-16">
-                    <div className="text-6xl mb-4">⚠️</div>
-                    <h2 className="text-2xl font-bold mb-4 text-slate-900">{error}</h2>
-                    <Button onClick={() => window.location.reload()}>Thử lại</Button>
+                <div className="text-center py-16 px-4">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-100 flex items-center justify-center text-3xl">⚠️</div>
+                    <h2 className="text-xl font-bold text-slate-800 mb-4">{error}</h2>
+                    <Button onClick={() => window.location.reload()} className="rounded-xl px-6 py-3 bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600">Thử lại</Button>
                 </div>
             </PageLayout>
         )
@@ -213,10 +213,10 @@ const AssessmentTestPage = () => {
     if (!assessment || !testData) {
         return (
             <PageLayout>
-                <div className="text-center py-16">
-                    <div className="text-6xl mb-4">📋</div>
-                    <h2 className="text-2xl font-bold mb-4 text-slate-900">Không tìm thấy bài kiểm tra</h2>
-                    <Button onClick={() => navigate("/assessments")}>Quay lại danh sách</Button>
+                <div className="text-center py-16 px-4">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl">📋</div>
+                    <h2 className="text-xl font-bold text-slate-800 mb-4">Không tìm thấy bài kiểm tra</h2>
+                    <Button onClick={() => navigate("/assessments")} className="rounded-xl px-6 py-3 bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600">Quay lại danh sách</Button>
                 </div>
             </PageLayout>
         )
@@ -248,38 +248,33 @@ const AssessmentTestPage = () => {
 
             {/* Exit Warning Modal */}
             {showExitWarning && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-xl border border-slate-200">
                         <div className="text-center mb-6">
-                            <div className="text-6xl mb-4">⚠️</div>
-                            <h3 className="text-2xl font-bold text-slate-900 mb-2">Cảnh báo</h3>
-                            <p className="text-slate-600">
-                                Bạn đang làm bài kiểm tra. Nếu rời khỏi trang này, dữ liệu có thể bị mất.
-                            </p>
-                            <p className="text-slate-600 font-semibold mt-2">
-                                Bạn có chắc chắn muốn thoát?
+                            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-100 flex items-center justify-center text-2xl">⚠️</div>
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">Cảnh báo</h3>
+                            <p className="text-slate-600 text-sm">
+                                Bạn đang làm bài kiểm tra. Nếu rời khỏi trang này, dữ liệu có thể bị mất. Bạn có chắc muốn thoát?
                             </p>
                         </div>
                         <div className="flex gap-3">
                             <Button
-                                className="flex-1 bg-slate-200 text-slate-700 hover:bg-slate-300"
+                                className="flex-1 rounded-xl min-h-[44px] font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 border-0"
                                 onClick={() => {
                                     setShowExitWarning(false)
                                     setPendingNavigation(null)
                                 }}
                             >
-                                ← Ở lại
+                                Ở lại
                             </Button>
                             <Button
-                                className="flex-1 bg-red-500 text-white hover:bg-red-600"
+                                className="flex-1 rounded-xl min-h-[44px] font-semibold bg-red-500 text-white hover:bg-red-600 border-0"
                                 onClick={() => {
                                     setShowExitWarning(false)
-                                    if (pendingNavigation) {
-                                        navigate(pendingNavigation)
-                                    }
+                                    if (pendingNavigation) navigate(pendingNavigation)
                                 }}
                             >
-                                Thoát →
+                                Thoát
                             </Button>
                         </div>
                     </div>

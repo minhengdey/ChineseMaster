@@ -40,7 +40,7 @@ class ErrorBoundary extends React.Component {
                 Tải lại
               </button>
               <button
-                className="btn flex-1 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 border-0 text-white hover:shadow-lg hover:from-purple-600 hover:to-blue-600 transition-all duration-300 font-semibold"
+                className="btn flex-1 rounded-lg bg-gradient-to-r from-pink-500 to-violet-500 border-0 text-white hover:shadow-lg hover:from-pink-600 hover:to-violet-600 transition-all duration-300 font-semibold"
                 onClick={() => (window.location.href = "/")}
               >
                 Về trang chủ

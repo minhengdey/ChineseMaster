@@ -27,8 +27,8 @@ const userTableColumns = (handleEditUser, handleDeleteClick) => [
     className: "text-center",
     render: (r) => (
       <div className="flex items-center justify-center gap-2">
-        <button onClick={() => handleEditUser(r)} className="p-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded transition-colors duration-200" title="Chỉnh sửa">Edit</button>
-        <button onClick={() => handleDeleteClick(r)} className="p-2 bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors duration-200" title="Xóa">Del</button>
+        <button type="button" onClick={() => handleEditUser(r)} className="px-3 py-1.5 rounded-xl bg-violet-100 hover:bg-violet-200 text-violet-700 text-sm font-medium" title="Chỉnh sửa">Sửa</button>
+        <button type="button" onClick={() => handleDeleteClick(r)} className="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium" title="Xóa">Xóa</button>
       </div>
     ),
   },
@@ -110,29 +110,29 @@ const UsersSection = ({ users, onRefresh, loading }) => {
     <SectionCard title="Quản lý User">
       <div className="space-y-6">
         {loading && (
-          <div className="flex items-center justify-center p-12">
-            <div className="w-10 h-10 border-4 border-purple-200 border-t-purple-500 rounded-full animate-spin" />
-            <span className="ml-3 text-slate-600">Đang tải...</span>
+          <div className="flex items-center justify-center p-10 gap-3">
+            <span className="w-8 h-8 border-2 border-slate-300 border-t-violet-500 rounded-full animate-spin" />
+            <span className="text-slate-600 font-medium">Đang tải...</span>
           </div>
         )}
         {!loading && (
           <>
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <button onClick={handleCreateUser} className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center gap-2">
+          <button type="button" onClick={handleCreateUser} className="min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white font-semibold shadow-lg shadow-pink-500/25 inline-flex items-center gap-2">
             Tạo User Mới
           </button>
-          <div className="text-sm bg-gradient-to-r from-purple-50 to-blue-50 px-4 py-2 rounded-lg border border-purple-200">
-            Tổng số: <span className="font-semibold text-purple-700">{users.length}</span> user
+          <div className="text-sm bg-violet-50 text-violet-700 px-4 py-2 rounded-xl border border-violet-200 font-medium">
+            Tổng: <span className="font-bold">{users.length}</span> user
           </div>
         </div>
         {successMessage && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-3">
-            <span>{successMessage}</span>
+          <div className="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3">
+            {successMessage}
           </div>
         )}
         {actionError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-3">
-            <span>{actionError}</span>
+          <div className="rounded-xl bg-red-50 border border-red-200 text-red-700 px-4 py-3">
+            {actionError}
           </div>
         )}
         <UserTable maxHeight="720px" rows={users.map((u, idx) => ({ ...u, idx: idx + 1 }))} columns={userTableColumns(handleEditUser, handleDeleteClick)} />

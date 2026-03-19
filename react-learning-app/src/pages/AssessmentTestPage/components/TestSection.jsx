@@ -501,16 +501,18 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
 
     if (pageLoading) {
         return (
-            <div className="flex items-center justify-center py-12">
-                <span className="loading loading-spinner loading-lg"></span>
+            <div className="flex flex-col items-center justify-center py-16 gap-4">
+                <div className="w-10 h-10 border-2 border-pink-200 border-t-pink-500 rounded-full animate-spin" />
+                <p className="text-slate-600 font-medium">Đang tải...</p>
             </div>
         )
     }
 
     if (items.length === 0) {
         return (
-            <div className="text-center py-12">
-                <p className="text-slate-600 mb-4">Không có mục kiểm tra cho phần này</p>
+            <div className="text-center py-16 px-4">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl">📝</div>
+                <p className="text-slate-600 font-medium">Không có mục kiểm tra cho phần này</p>
             </div>
         )
     }
@@ -538,7 +540,7 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
     const getScoreBadgeColor = (score) => {
         if (score === null || score === undefined) return "bg-slate-200 text-slate-600"
         if (score >= 85) return "bg-green-500 text-white"
-        if (score >= 70) return "bg-blue-500 text-white"
+        if (score >= 70) return "bg-violet-500 text-white"
         if (score >= 50) return "bg-yellow-500 text-white"
         return "bg-red-500 text-white"
     }
@@ -622,61 +624,56 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
     // Section completion now auto-advances, so this screen is removed
 
     return (
-        <div className="max-w-2xl mx-auto">
-            <div className="mb-8 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-3xl p-8 text-white shadow-lg">
-                <h2 className="text-3xl font-bold mb-2">
+        <div className="max-w-2xl mx-auto px-1">
+            <div className="mb-6 sm:mb-8 rounded-2xl bg-gradient-to-br from-pink-500 via-violet-500 to-purple-500 p-6 sm:p-8 text-white shadow-xl shadow-pink-500/20">
+                <h2 className="text-xl sm:text-2xl font-bold mb-1">
                     {getSectionIcon()} {getSectionTitle()}
                 </h2>
-                <p className="text-blue-100">
+                <p className="text-white/90 text-sm">
                     Mục {currentItemIndex + 1} / {items.length}
                 </p>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-8 border border-slate-200">
+            <div className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 lg:p-8 border border-pink-100">
                 {currentItem && (
-                    <div className="mb-8">
-                        <div className="text-center mb-8 p-6 bg-slate-50 rounded-lg border border-slate-200">
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                    <div className="text-4xl font-bold text-slate-900">{currentItem.text}</div>
-                                    <Button
-                                        onClick={playReferenceAudio}
-                                        className="h-8 w-8 p-0 rounded-full bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 shadow-sm flex items-center justify-center"
-                                        variant="outline"
-                                        aria-label="Phát audio mẫu"
-                                        disabled={!currentItem?.audioUrl && !currentItem?.audioPublicId && !currentItem?.id}
-                                        title="Nghe audio mẫu"
-                                    >
-                                        🔊
-                                    </Button>
-                                </div>
-                                {bestScores[currentItemIndex] && bestScores[currentItemIndex].result && (() => {
+                    <div className="space-y-6">
+                        <div className="text-center p-5 sm:p-6 bg-pink-50/50 rounded-xl border border-pink-100">
+                            <div className="flex flex-wrap items-center justify-center gap-3 mb-3">
+                                <div className="text-3xl sm:text-4xl font-bold text-slate-800">{currentItem.text}</div>
+                                <Button
+                                    onClick={playReferenceAudio}
+                                    className="h-10 w-10 p-0 rounded-xl bg-white border-2 border-pink-200 text-slate-700 hover:bg-pink-50 hover:border-pink-300 flex items-center justify-center flex-shrink-0"
+                                    variant="outline"
+                                    aria-label="Phát audio mẫu"
+                                    disabled={!currentItem?.audioUrl && !currentItem?.audioPublicId && !currentItem?.id}
+                                    title="Nghe audio mẫu"
+                                >
+                                    🔊
+                                </Button>
+                                {bestScores[currentItemIndex]?.result && (() => {
                                     const displayScore = getDisplayScore(currentItemIndex)
                                     return displayScore !== null ? (
-                                        <div className="flex flex-col items-end gap-1">
-                                            <span className={`px-3 py-1 rounded-full font-bold text-sm ${getScoreBadgeColor(displayScore)}`}>
-                                                {Math.round(displayScore)}
-                                            </span>
-                                            <span className="text-xs text-slate-600">{getScoreLabel(displayScore)}</span>
-                                        </div>
+                                        <span className={`inline-flex flex-col items-center rounded-xl px-3 py-1.5 font-bold text-sm ${getScoreBadgeColor(displayScore)}`}>
+                                            {Math.round(displayScore)}
+                                            <span className="text-xs opacity-90 font-normal">{getScoreLabel(displayScore)}</span>
+                                        </span>
                                     ) : null
                                 })()}
                             </div>
-                            {currentItem.pinyin && <div className="text-xl text-blue-600 mb-2">{currentItem.pinyin}</div>}
-                            {currentItem.meaning && <div className="text-slate-600">{currentItem.meaning}</div>}
+                            {currentItem.pinyin && <div className="text-lg text-pink-600 mb-1">{currentItem.pinyin}</div>}
+                            {currentItem.meaning && <div className="text-slate-600 text-sm">{currentItem.meaning}</div>}
                         </div>
 
-                        {/* Warning for invalid component pronunciation */}
-                        {bestScores[currentItemIndex] && bestScores[currentItemIndex].result && (() => {
+                        {bestScores[currentItemIndex]?.result && (() => {
                             const warning = getComponentWarning(currentItemIndex)
                             return warning ? (
-                                <div className="mb-6 p-4 bg-amber-50 border border-amber-300 text-amber-800 rounded-lg">
-                                    <div className="flex items-start gap-2">
-                                        <span className="text-lg">⚠️</span>
+                                <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800">
+                                    <div className="flex items-start gap-3">
+                                        <span className="text-xl flex-shrink-0">⚠️</span>
                                         <div>
                                             <p className="text-sm font-semibold mb-1">{warning}</p>
-                                            <p className="text-xs text-amber-700">
-                                                Gợi ý: Hãy phát âm chậm rãi, rõ ràng và kéo dài đủ các âm. Nghe lại audio mẫu để so sánh.
+                                            <p className="text-xs text-amber-700 opacity-90">
+                                                Gợi ý: Phát âm chậm rãi, rõ ràng. Nghe lại audio mẫu để so sánh.
                                             </p>
                                         </div>
                                     </div>
@@ -685,32 +682,27 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                         })()}
 
                         {error && (
-                            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
-                                <span className="text-sm">{error}</span>
+                            <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+                                {error}
                             </div>
                         )}
 
-                        {/* Result Display - using SentencePronunciationResult component */}
-                        {currentAttemptResult && currentAttemptResult.result && (
-                            <div className="mb-8">
-                                <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                    <p className="text-sm text-slate-600 text-center">
-                                        📊 Lần thử: {currentAttemptResult.attemptNumber} / 3
+                        {currentAttemptResult?.result && (
+                            <div className="space-y-4">
+                                <div className="p-3 rounded-xl bg-pink-50 border border-pink-200 text-center">
+                                    <p className="text-sm font-semibold text-pink-700">
+                                        Lần thử: {currentAttemptResult.attemptNumber} / 3
                                     </p>
                                 </div>
 
                                 <SentencePronunciationResult
                                     result={currentAttemptResult.result}
                                     recordedAudio={audioBlob}
-                                    onClose={() => {
-                                        // Keep result visible but allow user to see it's dismissible
-                                        // In test mode, we don't want to hide the result completely
-                                    }}
+                                    onClose={() => {}}
                                     sentenceText={currentItem?.text || ""}
                                 />
 
-                                {/* Action Buttons */}
-                                <div className="flex gap-3 mt-6">
+                                <div className="flex gap-3">
                                     {currentAttemptCount < 2 && (
                                         <Button
                                             onClick={() => {
@@ -720,35 +712,34 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                                                 setError(null)
                                                 setRecordingState("idle")
                                             }}
-                                            className="flex-1 py-3 bg-amber-500 hover:bg-amber-600"
+                                            className="flex-1 rounded-xl min-h-[48px] font-semibold bg-amber-500 hover:bg-amber-600 text-white border-0"
                                         >
-                                            🔄 Thử lại ({3 - currentAttemptCount - 1} lần còn lại)
+                                            Thử lại ({3 - currentAttemptCount - 1} lần)
                                         </Button>
                                     )}
                                     <Button
                                         onClick={moveToNextItem}
-                                        className="flex-1 py-3"
+                                        className="flex-1 rounded-xl min-h-[48px] font-semibold bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white border-0"
                                     >
-                                        {currentAttemptCount === 2 ? "✓ Xác nhận" : "➜ Tiếp theo"}
+                                        {currentAttemptCount === 2 ? "Xác nhận" : "Tiếp theo"}
                                     </Button>
                                 </div>
                             </div>
                         )}
 
-                        {/* Recording Section (hidden when showing results) */}
                         {!currentAttemptResult && (
                             <>
                                 {audioBlob && recordingState !== "analyzing" && (
-                                    <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                        <Button onClick={playRecordedAudio} className="w-full" variant="secondary">
+                                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                                        <Button onClick={playRecordedAudio} className="w-full rounded-xl min-h-[44px]" variant="secondary">
                                             🔊 Nghe lại bản ghi
                                         </Button>
                                     </div>
                                 )}
 
-                                <div className="flex flex-col gap-4 mb-8">
+                                <div className="flex flex-col gap-3">
                                     {recordingState === "idle" && !audioBlob && (
-                                        <Button onClick={startRecording} className="w-full py-4 text-lg" variant="primary">
+                                        <Button onClick={startRecording} className="w-full rounded-xl min-h-[52px] py-3 text-base font-semibold bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600" variant="primary">
                                             🎤 Bắt đầu ghi âm
                                         </Button>
                                     )}
@@ -756,18 +747,21 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                                     {recordingState === "recording" && (
                                         <Button
                                             onClick={stopRecording}
-                                            className="w-full py-4 text-lg animate-pulse bg-red-600 hover:bg-red-700"
-                                            variant="danger"
+                                            className="w-full rounded-xl min-h-[52px] py-3 text-base font-semibold animate-pulse bg-red-600 hover:bg-red-700 text-white border-0"
                                         >
-                                            🔴 Đang thu âm... (Bấm để dừng)
+                                            🔴 Đang thu âm — Bấm để dừng
                                         </Button>
                                     )}
 
                                     {recordingState === "analyzing" && (
-                                        <Button disabled className="w-full py-4 text-lg opacity-50">
-                                            <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin mr-2"></div>
+                                        <button
+                                            type="button"
+                                            disabled
+                                            className="w-full rounded-xl min-h-[52px] py-3 text-base font-semibold bg-slate-200 text-slate-500 flex items-center justify-center gap-2"
+                                        >
+                                            <span className="w-5 h-5 border-2 border-slate-400 border-t-slate-600 rounded-full animate-spin" />
                                             Đang phân tích...
-                                        </Button>
+                                        </button>
                                     )}
 
                                     {audioBlob && recordingState === "idle" && (
@@ -778,17 +772,17 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                                                     setError(null)
                                                     setRecordingState("idle")
                                                 }}
-                                                className="flex-1 py-3 bg-transparent"
+                                                className="flex-1 rounded-xl min-h-[44px] font-semibold border-2 border-slate-300 text-slate-700 hover:bg-slate-100"
                                                 variant="outline"
                                             >
-                                                🔄 Ghi lại
+                                                Ghi lại
                                             </Button>
                                             <Button
                                                 onClick={handleSkipItem}
-                                                className="flex-1 py-3 bg-transparent"
+                                                className="flex-1 rounded-xl min-h-[44px] font-semibold border-2 border-slate-300 text-slate-700 hover:bg-slate-100"
                                                 variant="outline"
                                             >
-                                                ⏭️ Bỏ qua
+                                                Bỏ qua
                                             </Button>
                                         </div>
                                     )}
@@ -796,16 +790,16 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                             </>
                         )}
 
-                        <div className="mt-8 bg-slate-50 rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-semibold text-slate-700">Tiến độ:</span>
-                                <span className="text-sm font-semibold text-slate-700">
+                        <div className="rounded-xl bg-pink-50/50 border border-pink-100 p-4">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm font-semibold text-slate-700">Tiến độ</span>
+                                <span className="text-sm font-bold text-slate-800">
                                     {itemScores.filter((s) => s !== null).length} / {items.length}
                                 </span>
                             </div>
-                            <div className="w-full bg-slate-200 rounded-full h-2">
+                            <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
                                 <div
-                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                    className="h-full rounded-full bg-gradient-to-r from-pink-500 to-violet-500 transition-all duration-300"
                                     style={{
                                         width: `${(itemScores.filter((s) => s !== null).length / items.length) * 100}%`,
                                     }}

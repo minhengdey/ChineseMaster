@@ -335,16 +335,35 @@ public class IseStatsService {
     public Map<String, Object> getLessonLeaderboard(Long lessonId, LocalDate date) {
         List<Map<String, Object>> raw = leaderboardService.getLessonLeaderboard(lessonId, date);
         List<LessonLeaderboardRowDto> rows = raw.stream()
+                .filter(m -> m.get("userId") != null)
                 .map(m -> LessonLeaderboardRowDto.builder()
-                        .userId(((Number) m.get("userId")).longValue())
-                        .name((String) m.get("name"))
+                        .userId(numLong(m.get("userId"), 0L))
+                        .name(m.get("name") != null ? (String) m.get("name") : "")
                         .avatar(m.get("avatar"))
-                        .avgScore(((Number) m.get("avgScore")).doubleValue())
-                        .attempts(((Number) m.get("attempts")).intValue())
-                        .bestScore(((Number) m.get("bestScore")).doubleValue())
+                        .avgScore(numDouble(m.get("avgScore"), 0.0))
+                        .attempts(numInt(m.get("attempts"), 0))
+                        .bestScore(numDouble(m.get("bestScore"), 0.0))
                         .build())
                 .collect(Collectors.toList());
         return Map.of("rows", rows);
+    }
+
+    private static long numLong(Object o, long fallback) {
+        if (o == null) return fallback;
+        if (o instanceof Number) return ((Number) o).longValue();
+        return fallback;
+    }
+
+    private static double numDouble(Object o, double fallback) {
+        if (o == null) return fallback;
+        if (o instanceof Number) return ((Number) o).doubleValue();
+        return fallback;
+    }
+
+    private static int numInt(Object o, int fallback) {
+        if (o == null) return fallback;
+        if (o instanceof Number) return ((Number) o).intValue();
+        return fallback;
     }
 
     private static double round2(double v) {

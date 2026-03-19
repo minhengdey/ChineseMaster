@@ -102,7 +102,7 @@ const DailyLeaderboard = ({ className }) => {
       <div
         className={`card p-4 bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 ${className || ""}`}
       >
-        <div className="font-bold text-lg bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+        <div className="font-bold text-lg bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent">
           🏆 BXH hôm nay
         </div>
         <div className="text-sm text-slate-600 mt-3">Chưa có dữ liệu BXH hôm nay.</div>
@@ -117,10 +117,10 @@ const DailyLeaderboard = ({ className }) => {
       className={`card shadow-xl border border-purple-200 p-6 bg-gradient-to-br from-slate-50 to-slate-100 ${className || ""}`}
     >
       <div className="flex items-center justify-between mb-6">
-        <div className="font-bold text-2xl bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+        <div className="font-bold text-2xl bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent">
           🏆 BXH hôm nay
         </div>
-        <div className="text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-blue-500 px-4 py-2 rounded-full">
+        <div className="text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-violet-500 px-4 py-2 rounded-full">
           👥 {rows.length} người
         </div>
       </div>
@@ -167,7 +167,7 @@ const DailyLeaderboard = ({ className }) => {
       <div className="overflow-x-auto">
         <table className="table w-full">
           <thead>
-            <tr className="bg-gradient-to-r from-purple-500 to-blue-500 text-white">
+            <tr className="bg-gradient-to-r from-pink-500 to-violet-500 text-white">
               <th className="w-12 font-bold">#</th>
               <th className="font-bold">Học viên</th>
               <th className="text-right font-bold">Điểm trong ngày</th>
