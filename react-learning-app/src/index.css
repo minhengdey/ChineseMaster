@@ -1,38 +1,107 @@
 @import "tailwindcss";
 
-/* Modern cohesive design system with purple-to-blue gradient theme */
+/* Theme – thêm hồng, màu sáng khác pastel nhạt hơn */
+@theme {
+  /* Pink – thêm hồng, vẫn pastel */
+  --color-pink-50: #fffafc;
+  --color-pink-100: #fef2f8;
+  --color-pink-200: #fde4f0;
+  --color-pink-300: #fbd0e4;
+  --color-pink-400: #f5b2d2;
+  --color-pink-500: #ec8fbc;
+  --color-pink-600: #e06fa6;
+  --color-pink-700: #c55a8c;
+  --color-pink-800: #a34a73;
+  --color-pink-900: #823d5c;
+  --color-pink-950: #4e2438;
+  /* Violet – pastel nhạt hơn */
+  --color-violet-50: #fdfbff;
+  --color-violet-100: #f8f4fc;
+  --color-violet-200: #efe8f8;
+  --color-violet-300: #e2d4f0;
+  --color-violet-400: #cfb8e4;
+  --color-violet-500: #b696d6;
+  --color-violet-600: #9d78c4;
+  --color-violet-700: #8260a6;
+  --color-violet-800: #6b4f89;
+  --color-violet-900: #57416e;
+  --color-violet-950: #342744;
+  /* Purple – pastel nhạt */
+  --color-purple-50: #fdfbff;
+  --color-purple-100: #f7f3fb;
+  --color-purple-200: #ede5f6;
+  --color-purple-300: #ddcfee;
+  --color-purple-400: #c6b0e2;
+  --color-purple-500: #ab8cd2;
+  --color-purple-600: #916fbe;
+  --color-purple-700: #76599e;
+  --color-purple-800: #614a81;
+  --color-purple-900: #4f3d69;
+  --color-purple-950: #302542;
+  /* Indigo – pastel nhạt */
+  --color-indigo-50: #fbfaff;
+  --color-indigo-100: #f5f2fa;
+  --color-indigo-200: #eae4f4;
+  --color-indigo-300: #d6cceb;
+  --color-indigo-400: #b8a8dc;
+  --color-indigo-500: #9a86c9;
+  --color-indigo-600: #806ab3;
+  --color-indigo-700: #685694;
+  --color-indigo-800: #554778;
+  --color-indigo-900: #463b62;
+  --color-indigo-950: #2a223b;
+  /* Blue – pastel nhạt */
+  --color-blue-50: #fbfaff;
+  --color-blue-100: #f4f2fa;
+  --color-blue-200: #e8e4f4;
+  --color-blue-300: #d3ccea;
+  --color-blue-400: #b4aadc;
+  --color-blue-500: #9588c9;
+  --color-blue-600: #7a6cb0;
+  --color-blue-700: #635792;
+  --color-blue-800: #524877;
+  --color-blue-900: #443c61;
+  --color-blue-950: #28243a;
+  /* Semantic – pastel nhạt hơn */
+  --color-emerald-400: #9eddc4;
+  --color-emerald-500: #7accaa;
+  --color-emerald-600: #5cb392;
+  --color-emerald-700: #4a9476;
+  --color-amber-400: #f0d99e;
+  --color-amber-500: #e5c56e;
+  --color-amber-600: #c9a84a;
+  --color-rose-400: #f5c4ce;
+  --color-rose-500: #eca5b4;
+  --color-rose-600: #dd8698;
+}
+
 :root {
-  /* Primary gradient colors - Purple to Blue */
-  --color-primary: #7c3aed;
-  /* vibrant purple */
-  --color-primary-light: #a78bfa;
-  /* light purple */
-  --color-primary-dark: #6d28d9;
-  /* dark purple */
-  --color-secondary: #3b82f6;
-  /* vibrant blue */
-  --color-secondary-light: #60a5fa;
-  /* light blue */
-  --color-accent: #06b6d4;
-  /* cyan accent */
-  --color-accent-light: #22d3ee;
-  /* light cyan */
+  /* Primary – thêm hồng, pastel */
+  --color-primary: #e06fa6;
+  --color-primary-light: #ec8fbc;
+  --color-primary-dark: #c55a8c;
+  /* Secondary – tím pastel nhạt */
+  --color-secondary: #9d78c4;
+  --color-secondary-light: #cfb8e4;
+  /* Accent – hồng rõ hơn */
+  --color-accent: #f5b2d2;
+  --color-accent-light: #fbd0e4;
 
-  /* Semantic colors */
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-info: #06b6d4;
+  /* Semantic – pastel nhạt */
+  --color-success: #7accaa;
+  --color-warning: #e5c56e;
+  --color-danger: #eca5b4;
+  --color-info: #b696d6;
 
-  /* Neutral colors */
-  --color-background: #f8fafc;
+  /* Nền – thêm chút hồng pastel */
+  --color-background: #fffafc;
   --color-surface: #ffffff;
-  --color-surface-secondary: #f1f5f9;
-  --color-text: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-light: #94a3b8;
-  --color-border: #e2e8f0;
-  --color-border-light: #f1f5f9;
+  --color-surface-secondary: #fef2f8;
+  --color-text: #4e2438;
+  --color-text-secondary: #823d5c;
+  --color-text-light: #c55a8c;
+  --color-border: #fbd0e4;
+  --color-border-light: #fef2f8;
 
   /* Spacing / sizing */
   --radius-sm: 6px;
@@ -130,11 +199,11 @@ body {
 
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+    box-shadow: 0 0 20px rgba(224, 111, 166, 0.2);
   }
 
   50% {
-    box-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+    box-shadow: 0 0 28px rgba(157, 120, 196, 0.28);
   }
 }
 
@@ -172,7 +241,7 @@ body {
 
 .card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(124, 58, 237, 0.15);
+  box-shadow: 0 12px 24px rgba(224, 111, 166, 0.14);
   border-color: var(--color-primary-light);
 }
 
@@ -210,7 +279,7 @@ body {
 }
 
 .gradient-bg-light {
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(224, 111, 166, 0.08) 0%, rgba(157, 120, 196, 0.08) 100%);
 }
 
 .gradient-border {
@@ -232,12 +301,12 @@ body {
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 4px 15px rgba(224, 111, 166, 0.2);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 6px 20px rgba(224, 111, 166, 0.26);
 }
 
 .btn-primary:active {
@@ -275,11 +344,11 @@ body {
 
 .btn-accent:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.3);
+  box-shadow: 0 6px 20px rgba(240, 184, 212, 0.28);
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, var(--color-danger) 0%, #f87171 100%);
+  background: linear-gradient(135deg, var(--color-danger) 0%, #e9a8b8 100%);
   color: white;
   border: none;
   padding: 10px 24px;
@@ -291,7 +360,7 @@ body {
 
 .btn-danger:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 6px 20px rgba(229, 152, 168, 0.28);
 }
 
 /* Loading spinner */
@@ -327,7 +396,7 @@ body {
 }
 
 .badge-primary {
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(59, 130, 246, 0.2));
+  background: linear-gradient(135deg, rgba(224, 111, 166, 0.18), rgba(157, 120, 196, 0.18));
   color: var(--color-primary);
 }
 

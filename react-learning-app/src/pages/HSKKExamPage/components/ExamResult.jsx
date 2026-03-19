@@ -28,7 +28,7 @@ export default function ExamResult({ result, onRetry }) {
                <button
                   type="button"
                   onClick={onRetry}
-                  className="px-6 py-3 rounded-xl bg-violet-600 text-white font-semibold hover:bg-violet-700 transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-semibold hover:from-pink-600 hover:to-violet-600 transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
                >
                   Làm lại bài thi
                </button>

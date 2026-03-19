@@ -458,7 +458,7 @@ const ProfilePage = ({ user: userProp }) => {
     return (
       <PageLayout>
         <div className="min-h-48 flex items-center justify-center">
-          <span className="loading loading-spinner loading-lg text-purple-500" />
+          <div className="loading w-10 h-10 border-2 border-slate-200 border-t-violet-500 rounded-full" />
         </div>
       </PageLayout>
     )
@@ -493,7 +493,8 @@ const ProfilePage = ({ user: userProp }) => {
               statsLoading={statsLoading}
             />
 
-            <div className="mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-800 mb-3">Bảng xếp hạng tuần</h2>
               <WeeklyLeaderboard />
             </div>
           </div>

@@ -11,33 +11,27 @@ const LessonProgress = ({
   if (distinctLineCount != null || distinctVocabularyCount != null) {
     const dl = Number(distinctLineCount || 0)
     const dv = Number(distinctVocabularyCount || 0)
-    // raw number of distinct items pronounced
     const rawNumerator = Math.max(0, dl + dv)
-    // Ensure numerator never exceeds the denominator (total items)
-    // This avoids cases where inconsistent data makes numerator > denominator
     numerator = Math.min(rawNumerator, denominator)
   } else {
     numerator = Math.max(0, Number(pronouncedCount || 0))
   }
   const rawPercent = Math.min(100, Math.round((numerator / denominator) * 100))
-
   const fractionText = `${numerator}/${denominator}`
 
   return (
-    <div className="p-5 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 shadow-lg">
+    <div className="mt-5 p-5 rounded-xl bg-white/15 border border-white/20">
       <div className="flex justify-between items-center mb-3">
-        <span className="text-sm font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-          🎯 Tiến độ bài học
-        </span>
-        <span className="text-sm font-semibold text-blue-700 bg-gradient-to-r from-blue-100 to-cyan-100 px-3 py-1 rounded-full border border-blue-200">
-          {rawPercent}% • {fractionText}
+        <span className="text-sm font-semibold text-white/90">Tiến độ bài học</span>
+        <span className="text-sm font-bold text-white bg-white/20 px-2.5 py-1 rounded-lg">
+          {rawPercent}% · {fractionText}
         </span>
       </div>
-      <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden shadow-inner">
+      <div className="w-full h-2 bg-white/25 rounded-full overflow-hidden">
         <div
-          className="h-3 rounded-full transition-all duration-300 bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600"
+          className="h-full rounded-full bg-white transition-all duration-500 ease-out"
           style={{ width: `${rawPercent}%` }}
-        ></div>
+        />
       </div>
     </div>
   )

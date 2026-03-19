@@ -123,7 +123,7 @@ const FlashCardsLessonPage = () => {
     return (
       <PageLayout>
         <div className="flex items-center justify-center min-h-48">
-          <span className="loading loading-spinner loading-lg text-purple-500" />
+          <div className="loading w-10 h-10 border-2 border-slate-200 border-t-violet-500 rounded-full" />
         </div>
       </PageLayout>
     )
@@ -132,9 +132,12 @@ const FlashCardsLessonPage = () => {
   if (error) {
     return (
       <PageLayout>
-        <div className="text-center py-16">
-          <p className="text-red-500 mb-4">{error}</p>
-          <Link to={`/curriculum/${curriculumId}/lesson/${lessonId}`} className="btn-primary rounded-xl px-6 py-3">
+        <div className="text-center py-16 px-4">
+          <p className="text-red-600 font-medium mb-4">{error}</p>
+          <Link
+            to={`/curriculum/${curriculumId}/lesson/${lessonId}`}
+            className="inline-flex items-center justify-center rounded-xl px-6 py-3 bg-gradient-to-r from-pink-500 to-violet-500 text-white font-semibold hover:from-pink-600 hover:to-violet-600 shadow-lg shadow-pink-500/25 transition-colors"
+          >
             Quay lại
           </Link>
         </div>
@@ -145,9 +148,13 @@ const FlashCardsLessonPage = () => {
   if (!vocabularies || vocabularies.length === 0) {
     return (
       <PageLayout>
-        <div className="text-center py-16">
-          <h2 className="text-2xl font-bold mb-4 text-slate-900">Chưa có từ vựng để luyện tập</h2>
-          <Link to={`/curriculum/${curriculumId}/lesson/${lessonId}`} className="btn-primary rounded-xl px-6 py-3">
+        <div className="text-center py-16 px-4">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl">📚</div>
+          <h2 className="text-xl font-bold text-slate-800 mb-4">Chưa có từ vựng để luyện tập</h2>
+          <Link
+            to={`/curriculum/${curriculumId}/lesson/${lessonId}`}
+            className="inline-flex items-center justify-center rounded-xl px-6 py-3 bg-gradient-to-r from-pink-500 to-violet-500 text-white font-semibold hover:from-pink-600 hover:to-violet-600 shadow-lg shadow-pink-500/25 transition-colors"
+          >
             Quay lại bài học
           </Link>
         </div>
@@ -165,8 +172,8 @@ const FlashCardsLessonPage = () => {
         onTogglePinyin={() => setShowPinyin((s) => !s)}
         onShuffle={shuffle}
       />
-      <div className="max-w-3xl mx-auto">
-        <div className="card shadow-2xl border border-slate-200 overflow-hidden bg-white rounded-xl">
+      <div className="max-w-3xl mx-auto px-1">
+        <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-lg shadow-slate-200/50">
           <FlashCardView
             current={current}
             index={index}
