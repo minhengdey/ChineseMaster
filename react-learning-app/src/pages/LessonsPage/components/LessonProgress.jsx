@@ -50,26 +50,24 @@ const LessonProgress = ({ lessons = [], poll = true, initialCompletedCount, init
   }, [lessons, poll, hasInitial, initialCompletedCount])
 
   return (
-    <div className="rounded-2xl border border-pink-100 bg-gradient-to-br from-pink-50/80 to-violet-50/80 p-5 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h3 className="text-base font-bold text-slate-800">
-          Tiến độ học tập
+    <div className="card p-6 bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 shadow-lg">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+          📊 Tiến độ học tập
         </h3>
-        <span className="text-sm font-semibold text-violet-700 bg-white/80 border border-violet-200 px-3 py-1.5 rounded-lg">
-          {completedLessons}/{totalLessons} bài
+        <span className="text-sm font-semibold text-amber-700 bg-gradient-to-r from-amber-100 to-orange-100 px-3 py-1 rounded-full border border-amber-200">
+          {completedLessons}/{totalLessons} bài học
         </span>
       </div>
 
-      <div className="w-full h-2.5 bg-slate-200/80 rounded-full overflow-hidden">
+      <div className="w-full bg-slate-200 rounded-full h-4 mb-3 overflow-hidden shadow-inner">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-pink-500 to-violet-500 transition-all duration-500 ease-out"
+          className="h-4 rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 shadow-md"
           style={{ width: `${progressPercentage}%` }}
-        />
+        ></div>
       </div>
 
-      <p className="mt-2 text-sm font-medium text-slate-600">
-        {progressPercentage.toFixed(0)}% hoàn thành
-      </p>
+      <div className="text-sm font-semibold text-slate-700">{progressPercentage.toFixed(0)}% hoàn thành</div>
     </div>
   )
 }

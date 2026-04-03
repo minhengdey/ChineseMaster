@@ -285,7 +285,7 @@ const AdminDashboard = () => {
   return (
     <PageLayout>
       {error && (
-        <div className="mb-6 rounded-xl bg-red-50 border border-red-200 text-red-700 px-4 py-3 font-medium">
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
           {error}
         </div>
       )}

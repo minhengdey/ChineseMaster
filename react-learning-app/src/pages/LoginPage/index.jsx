@@ -19,24 +19,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-pink-50/30 to-violet-50/40 flex items-center justify-center px-4 py-8 sm:py-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-6xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
-          <div className="hidden lg:block lg:pr-4 p-8 lg:p-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          <div className="hidden lg:block">
             <HeroSection />
           </div>
 
-          <div className="w-full max-w-md mx-auto lg:max-w-none">
+          <div className="w-full">
             <FormCard>
-              <div className="p-6 sm:p-8 border-b border-slate-100">
-                <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
-              </div>
-              <div className="p-6 sm:p-8 pt-6">
-                {activeTab === "login" ? (
-                  <LoginForm onLogin={onLogin} />
-                ) : (
-                  <RegisterForm onRegister={onLogin} />
-                )}
+              <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
+              <div className="p-8 sm:p-10 fade-in">
+                {activeTab === "login" ? <LoginForm onLogin={onLogin} /> : <RegisterForm onRegister={onLogin} />}
               </div>
             </FormCard>
             <MobileHero />
