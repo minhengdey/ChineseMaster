@@ -123,9 +123,9 @@ public class IseStatsController {
         try {
             return ResponseEntity.ok(iseStatsService.getLessonLeaderboard(lessonId, date));
         } catch (Exception e) {
-            log.warn("failed to compute lesson leaderboard for lessonId={}", lessonId, e);
+            log.debug("failed to compute lesson leaderboard", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "failed to compute lesson leaderboard", "message", e.getMessage() != null ? e.getMessage() : ""));
+                    .body(Map.of("error", "failed to compute lesson leaderboard"));
         }
     }
 }

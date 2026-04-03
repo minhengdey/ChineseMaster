@@ -3,8 +3,8 @@ import { useUserStore } from "../../../store/UserStore"
 import { Users, BookOpen, GraduationCap, BarChart3, FileText } from "lucide-react"
 
 const ADMIN_FEATURES = [
-  { icon: Users, title: "Quản lý Người dùng", description: "Xem và quản lý tất cả người dùng trong hệ thống", link: "/admin?tab=users", gradient: "from-pink-500 to-violet-500", bgGradient: "from-pink-50 to-violet-50", iconColor: "text-pink-600" },
-  { icon: GraduationCap, title: "Quản lý Lớp học", description: "Tạo và quản lý các lớp học, phân bổ học viên", link: "/admin/classes", gradient: "from-violet-500 to-purple-500", bgGradient: "from-violet-50 to-purple-50", iconColor: "text-violet-600" },
+  { icon: Users, title: "Quản lý Người dùng", description: "Xem và quản lý tất cả người dùng trong hệ thống", link: "/admin?tab=users", gradient: "from-blue-500 to-cyan-500", bgGradient: "from-blue-50 to-cyan-50", iconColor: "text-blue-600" },
+  { icon: GraduationCap, title: "Quản lý Lớp học", description: "Tạo và quản lý các lớp học, phân bổ học viên", link: "/admin/classes", gradient: "from-purple-500 to-blue-500", bgGradient: "from-purple-50 to-blue-50", iconColor: "text-purple-600" },
   { icon: BookOpen, title: "Quản lý Bài học", description: "Theo dõi tiến độ học tập theo từng bài", link: "/admin?tab=lesson", gradient: "from-cyan-500 to-teal-500", bgGradient: "from-cyan-50 to-teal-50", iconColor: "text-cyan-600" },
   { icon: FileText, title: "Bài kiểm tra", description: "Xem kết quả và thống kê các bài kiểm tra", link: "/admin?tab=test", gradient: "from-teal-500 to-green-500", bgGradient: "from-teal-50 to-green-50", iconColor: "text-teal-600" },
   { icon: BarChart3, title: "Bảng xếp hạng", description: "Xem BXH theo khoảng thời gian tùy chỉnh", link: "/admin?tab=weekly", gradient: "from-pink-500 to-rose-500", bgGradient: "from-pink-50 to-rose-50", iconColor: "text-pink-600" },
@@ -24,20 +24,20 @@ const AdminHero = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {ADMIN_FEATURES.map((feature, index) => {
           const Icon = feature.icon
           return (
-            <Link key={index} to={feature.link} className="group block h-full">
-              <div className={`h-full rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm hover:shadow-lg hover:border-violet-200 transition-all duration-200 bg-gradient-to-br ${feature.bgGradient}`}>
-                <div className={`w-12 h-12 rounded-xl bg-white/80 flex items-center justify-center mb-4 ${feature.iconColor} group-hover:scale-105 transition-transform`}>
-                  <Icon size={24} aria-hidden />
+            <Link key={index} to={feature.link} className="group">
+              <div className={`card p-8 h-full card-hover card-interactive bg-gradient-to-br ${feature.bgGradient} border-2 border-transparent hover:border-purple-300`}>
+                <div className={`${feature.iconColor} mb-4 transform group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon size={40} />
                 </div>
-                <h3 className="text-lg font-bold text-slate-800 mb-1.5">{feature.title}</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{feature.title}</h3>
                 <p className="text-slate-600 text-sm leading-relaxed">{feature.description}</p>
-                <span className={`mt-3 inline-flex items-center gap-1 font-semibold text-sm bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent opacity-80 group-hover:opacity-100 transition-opacity`}>
+                <div className={`mt-4 flex items-center bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity`}>
                   Truy cập →
-                </span>
+                </div>
               </div>
             </Link>
           )

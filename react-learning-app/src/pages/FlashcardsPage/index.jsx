@@ -71,7 +71,7 @@ const FlashcardsIndex = () => {
     return (
       <PageLayout>
         <div className="min-h-48 flex items-center justify-center">
-          <div className="loading w-10 h-10 border-2 border-slate-200 border-t-violet-500 rounded-full" />
+          <span className="loading loading-spinner loading-lg text-purple-500" />
         </div>
       </PageLayout>
     )
@@ -83,7 +83,7 @@ const FlashcardsIndex = () => {
       <CurriculumSearch value={query} onChange={setQuery} />
 
       {error && (
-        <div className="mb-6 rounded-xl bg-red-50 border border-red-200 text-red-700 p-4 font-medium">
+        <div className="mb-6 rounded-xl bg-red-50 border border-red-200 text-red-700 p-4">
           {error}
         </div>
       )}
@@ -94,7 +94,7 @@ const FlashcardsIndex = () => {
           description="Thử thay đổi từ khóa tìm kiếm hoặc quay lại sau."
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {filtered.map((c) => (
             <CurriculumCard key={c.id} curriculum={c} />
           ))}
@@ -152,7 +152,7 @@ export function FlashcardsCurriculum() {
     return (
       <PageLayout>
         <div className="min-h-48 flex items-center justify-center">
-          <div className="loading w-10 h-10 border-2 border-slate-200 border-t-violet-500 rounded-full" />
+          <span className="loading loading-spinner loading-lg text-purple-500" />
         </div>
       </PageLayout>
     )
@@ -163,7 +163,7 @@ export function FlashcardsCurriculum() {
       <FlashcardsCurriculumHeader />
 
       {error && (
-        <div className="mb-6 rounded-xl bg-red-50 border border-red-200 text-red-700 p-4 font-medium">
+        <div className="mb-6 rounded-xl bg-red-50 border border-red-200 text-red-700 p-4">
           {error}
         </div>
       )}
@@ -175,7 +175,7 @@ export function FlashcardsCurriculum() {
           description="Chọn khóa học khác hoặc quay lại danh sách."
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {lessons.map((l) => (
             <LessonCard key={l.id} lesson={l} curriculumId={curriculumId} />
           ))}

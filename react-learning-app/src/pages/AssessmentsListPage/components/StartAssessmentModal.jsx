@@ -1,62 +1,64 @@
 import { Button } from "@/components/ui"
-import { ClipboardList } from "lucide-react"
 
 const SECTIONS = [
-  { emoji: "🎵", title: "Phần A - Thanh mẫu", desc: "Phát âm các thanh mẫu cơ bản", bg: "bg-pink-50", border: "border-pink-100" },
-  { emoji: "🎤", title: "Phần B - Vận mẫu", desc: "Phát âm vận mẫu trong từ vựng", bg: "bg-emerald-50", border: "border-emerald-100" },
-  { emoji: "🎶", title: "Phần C - Thanh điệu", desc: "Phát âm 4 thanh điệu chuẩn", bg: "bg-violet-50", border: "border-violet-100" },
-  { emoji: "💬", title: "Phần D - Câu", desc: "Phát âm các câu hoàn chỉnh", bg: "bg-pink-50/80", border: "border-pink-200" },
+  { emoji: "🎵", title: "Phần A - THANH MẪU", desc: "Phát âm các thanh mẫu cơ bản", bg: "bg-blue-50", titleCl: "text-blue-900", descCl: "text-blue-700" },
+  { emoji: "🎤", title: "Phần B - VẬN MẪU", desc: "Phát âm vận mẫu trong từ vựng", bg: "bg-green-50", titleCl: "text-green-900", descCl: "text-green-700" },
+  { emoji: "🎶", title: "Phần C - THANH ĐIỆU", desc: "Phát âm 4 thanh điệu chuẩn xác", bg: "bg-purple-50", titleCl: "text-purple-900", descCl: "text-purple-700" },
+  { emoji: "💬", title: "Phần D - CÂU", desc: "Phát âm các câu hoàn chỉnh", bg: "bg-pink-50", titleCl: "text-pink-900", descCl: "text-pink-700" },
 ]
 
 export default function StartAssessmentModal({ assessment, onConfirm, onCancel }) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-2xl w-full shadow-xl border border-pink-200 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="text-center mb-6">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-violet-100 flex items-center justify-center">
-            <ClipboardList className="w-7 h-7 text-pink-600" aria-hidden />
-          </div>
-          <h3 className="text-xl font-bold text-slate-800 mb-2">
-            {assessment?.title || "Bài kiểm tra"}
+          <div className="text-6xl mb-4">📋</div>
+          <h3 className="text-2xl font-bold text-slate-900 mb-2">
+            {assessment?.title || "Bài Kiểm Tra"}
           </h3>
-          <p className="text-slate-600 text-sm">
+          <p className="text-slate-600 mb-6">
             Bài kiểm tra toàn diện kỹ năng phát âm tiếng Trung
           </p>
         </div>
 
         <div className="mb-6 space-y-3">
           {SECTIONS.map((s) => (
-            <div key={s.title} className={`flex items-start gap-3 p-4 rounded-xl border ${s.bg} ${s.border}`}>
-              <span className="text-2xl flex-shrink-0" aria-hidden>{s.emoji}</span>
+            <div key={s.title} className={`flex items-start gap-3 p-4 ${s.bg} rounded-xl`}>
+              <span className="text-2xl">{s.emoji}</span>
               <div>
-                <div className="font-semibold text-slate-800">{s.title}</div>
-                <div className="text-sm text-slate-600 mt-0.5">{s.desc}</div>
+                <div className={`font-semibold ${s.titleCl}`}>{s.title}</div>
+                <div className={`text-sm ${s.descCl}`}>{s.desc}</div>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-6">
-          <p className="font-semibold text-amber-800 mb-2">Lưu ý</p>
-          <ul className="text-sm text-amber-800 space-y-1 list-disc list-inside">
-            <li>Mỗi câu hỏi có tối đa 3 lần thử</li>
-            <li>Không thể thoát giữa chừng</li>
-            <li>Điểm sẽ được lưu tự động</li>
-          </ul>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+          <div className="flex items-start gap-2">
+            <span className="text-xl">⚠️</span>
+            <div className="text-sm text-amber-800">
+              <p className="font-semibold mb-1">Lưu ý:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Mỗi câu hỏi có tối đa 3 lần thử</li>
+                <li>Không thể thoát giữa chừng</li>
+                <li>Điểm sẽ được lưu tự động</li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         <div className="flex gap-3">
           <Button
-            className="flex-1 rounded-xl min-h-[48px] font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 border-0"
+            className="flex-1 rounded-xl bg-slate-200 text-slate-700 hover:bg-slate-300"
             onClick={onCancel}
           >
             Hủy
           </Button>
           <Button
-            className="flex-1 rounded-xl min-h-[48px] font-semibold bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white border-0"
+            className="flex-1 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600"
             onClick={onConfirm}
           >
-            Bắt đầu ngay
+            Bắt đầu ngay →
           </Button>
         </div>
       </div>

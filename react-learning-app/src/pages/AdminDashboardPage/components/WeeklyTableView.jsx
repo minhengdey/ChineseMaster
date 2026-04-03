@@ -5,14 +5,14 @@ const WeeklyTableView = ({ week }) => {
   if (!week) return null
 
   return (
-    <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white">
-      <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/80">
+    <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 px-6 py-4 border-b border-purple-100">
         <div className="flex items-center justify-between">
           <div className="font-semibold text-slate-800 flex items-center gap-2">
             <span>📅</span>
             BXH từ {formatDate(week.weekStart)} đến {formatDate(week.weekEnd)}
           </div>
-          <span className="text-sm font-medium text-violet-700 bg-violet-100 px-3 py-1 rounded-xl">{week.rows?.length || 0} học viên</span>
+          <div className="text-sm text-slate-600 font-medium">{week.rows?.length || 0} học viên</div>
         </div>
       </div>
       <div className="p-4">

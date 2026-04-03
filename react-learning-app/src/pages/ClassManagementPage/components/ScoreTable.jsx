@@ -11,10 +11,10 @@ const ScoreTable = ({ data = [], columns = [] }) => {
         <div className="overflow-auto relative max-h-[70vh]">
             <table className="w-full table-fixed border-separate [border-spacing:0] text-sm">
                 <thead>
-                    <tr className="bg-slate-50 sticky top-0 z-40">
-                        <th className="px-4 py-3 text-left font-semibold text-slate-800 sticky left-0 z-50 bg-slate-50 border-r border-slate-200 w-48 sm:w-60">Họ tên</th>
+                    <tr className="bg-slate-50 sticky top-0 z-40 shadow-sm">
+                        <th className="px-6 py-4 text-left font-semibold text-purple-600 sticky left-0 z-50 bg-gradient-to-r from-purple-50 to-blue-50 w-60">Họ tên</th>
                         {Array.from({ length: maxScores }).map((_, idx) => (
-                            <th key={idx} className="px-3 py-3 text-center font-semibold text-slate-700 border-l border-slate-100 w-24 sm:w-28">
+                            <th key={idx} className="px-4 py-4 text-center font-semibold text-purple-600 border-l border-slate-100 text-base uppercase tracking-wider w-28">
                                 {columns && columns[idx] && columns[idx].label ? columns[idx].label : `Bài ${idx + 1}`}
                             </th>
                         ))}
@@ -22,8 +22,8 @@ const ScoreTable = ({ data = [], columns = [] }) => {
                 </thead>
                 <tbody className="bg-white">
                     {data.map((row) => (
-                        <tr key={row.userId} className="border-b border-slate-100 hover:bg-violet-50/50 transition-colors align-top">
-                            <td className="px-4 py-3 align-top w-48 sm:w-60 font-medium text-slate-800 sticky left-0 z-30 bg-white border-r border-slate-100">{row.name || "N/A"}</td>
+                        <tr key={row.userId} className="border-b border-slate-100 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 transition-all duration-150 align-top">
+                            <td className="px-6 py-4 align-top w-60 font-medium text-slate-900 sticky left-0 z-30 bg-white shadow-sm">{row.name || "N/A"}</td>
                             {Array.from({ length: maxScores }).map((_, idx) => {
                                 const s = row.scores && row.scores[idx];
                                 // Determine display text and secondary meta
@@ -44,7 +44,7 @@ const ScoreTable = ({ data = [], columns = [] }) => {
                                 }
 
                                 return (
-                                    <td key={idx} className="px-2 py-3 text-center align-top w-24 sm:w-28">
+                                    <td key={idx} className="px-3 py-3 text-center align-top w-28">
                                         {main ? (
                                             <div className="flex flex-col items-center">
                                                 <span className="font-medium text-slate-800">{main}</span>

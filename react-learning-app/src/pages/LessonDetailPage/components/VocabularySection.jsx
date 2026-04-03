@@ -165,12 +165,12 @@ const VocabularySection = ({
     const scoreValue = extractScoreForActive(vocabulary)
     const scoreClass = getScoreClass(scoreValue)
 
-    // Simple logic: Practice highlighting or default – tông hồng tím pastel
-    let cardHighlightClass = "border-pink-200 bg-white hover:border-pink-300"
+    // Simple logic: Practice highlighting or default
+    let cardHighlightClass = "border-slate-200 bg-white hover:border-purple-300"
 
     if (isHighlighted) {
-      // Đã luyện – nền pastel xanh nhạt + viền
-      cardHighlightClass = "!border-emerald-400 !bg-gradient-to-br !from-emerald-50 !to-teal-50 !shadow-md"
+      // Practice highlighting - green gradient background + green border color + shadow
+      cardHighlightClass = "!border-green-500 !bg-gradient-to-br !from-green-100 !to-emerald-100 !shadow-md"
     }
 
     // Debug final card class
@@ -183,9 +183,9 @@ const VocabularySection = ({
     return (
       <div
         key={vocabulary.id}
-        className={`rounded-2xl border-2 shadow-md hover:shadow-lg transition-all duration-300 p-4 sm:p-5 bg-white ${cardHighlightClass}`}
+        className={`card shadow-lg hover:shadow-xl transition-all duration-300 border-2 ${cardHighlightClass}`}
       >
-        <div>
+        <div className="card-body p-4">
           <div className="relative mb-3">
             <div className="absolute top-0 right-0 flex gap-2">
               {(vocabulary.audioUrl || vocabulary.audioAsset) && (
@@ -210,20 +210,20 @@ const VocabularySection = ({
                 const practicedButNoScore = isHighlighted && scoreValue == null
                 if (scoreValue != null) {
                   return (
-                    <div className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent leading-tight">
+                    <div className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent leading-tight">
                       {vocabulary.word}
                     </div>
                   )
                 }
                 if (practicedButNoScore) {
                   return (
-                    <div className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent leading-tight">
+                    <div className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent leading-tight">
                       {vocabulary.word}
                     </div>
                   )
                 }
                 return (
-                  <div className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent leading-tight">
+                  <div className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent leading-tight">
                     {vocabulary.word}
                   </div>
                 )
@@ -262,13 +262,13 @@ const VocabularySection = ({
             if (!hasExample) return null
 
             return (
-              <div className="mt-2 pt-2 border-t border-pink-100">
-                <div className="text-sm text-slate-500 mb-1 text-center">Ví dụ</div>
+              <div className="mt-2 pt-2 border-t">
+                <div className="text-sm text-base-content/70 mb-1 text-center">Ví dụ</div>
                 <div className="text-lg font-medium text-center">{exampleText}</div>
                 {localShowPinyin && examplePinyin && (
-                  <div className="text-sm text-slate-500 text-center">{examplePinyin}</div>
+                  <div className="text-sm text-base-content/70 text-center">{examplePinyin}</div>
                 )}
-                {exampleVn && <div className="text-sm text-slate-500 text-center">{exampleVn}</div>}
+                {exampleVn && <div className="text-sm text-base-content/70 text-center">{exampleVn}</div>}
                 {exampleAudio && (
                   <div className="mt-2">
                     <AudioPlayer audioUrl={exampleAudio} size="sm" />
@@ -319,12 +319,12 @@ const VocabularySection = ({
 
   if (!visibleVocabularies || visibleVocabularies.length === 0) {
     return (
-      <div className="text-center py-12 rounded-2xl border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-violet-50">
+      <div className="text-center py-12 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border-2 border-slate-200">
         <div className="text-6xl mb-4">📚</div>
-        <h3 className="text-xl font-semibold bg-gradient-to-r from-pink-600 to-violet-600 bg-clip-text text-transparent mb-2">
+        <h3 className="text-xl font-semibold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-2">
           Chưa có từ vựng nào
         </h3>
-        <p className="text-pink-700/80">Từ vựng sẽ được cập nhật sớm.</p>
+        <p className="text-slate-600">Từ vựng sẽ được cập nhật sớm.</p>
       </div>
     )
   }
@@ -333,8 +333,7 @@ const VocabularySection = ({
     <div>
       <div className="flex items-center justify-end mb-4">
         <button
-          type="button"
-          className="px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 transition-all duration-300 shadow-md hover:shadow-lg"
+          className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all duration-300 shadow-md hover:shadow-lg"
           onClick={() => setLocalShowPinyin((s) => !s)}
         >
           {localShowPinyin ? "👁️ Ẩn pinyin" : "👁️ Hiện pinyin"}
