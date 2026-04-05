@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -39,11 +40,13 @@ public class ExamMigrationService {
         String contentHash = migrateHelper.canonicalizeJson(examMigrationDTO);
         contentHash = migrateHelper.computeSha256Hex(contentHash);
 
-        Exam oldExam = examRepository.findByExternalId(examExternalId)
-                .orElseThrow(() -> new RuntimeException("Exam not found"));
-        if (oldExam != null && oldExam.getContentHash().equals(contentHash)) {
-            log.info("Exam {} with order {} has same content hash", publicId, order);
-            return false;
+        Optional<Exam> existing = examRepository.findByExternalId(examExternalId);
+        if (existing.isPresent()) {
+            String oldHash = existing.get().getContentHash();
+            if (oldHash != null && oldHash.equals(contentHash)) {
+                log.info("Exam {} with order {} has same content hash", publicId, order);
+                return false;
+            }
         }
         examRepository.deleteByExternalId(examExternalId);
         Exam exam = new Exam();

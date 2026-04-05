@@ -1,7 +1,9 @@
 package com.bucha.controller;
 
+import com.bucha.dto.pronunciation.PronunciationGuideDto;
 import com.bucha.dto.pronunciation.PronunciationResponseDto;
 import com.bucha.security.JwtUserPrincipal;
+import com.bucha.service.PronunciationGuideService;
 import com.bucha.service.PronunciationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
  * POST /api/pronunciation/evaluate   (multipart/form-data, authenticated)
  *   audioFile  – user recording
  *   text       – Chinese reference sentence
+ * GET /api/pronunciation?q=…&initial=… (authenticated) — guide from initial_sounds / final_sounds / tones;
+ * optional {@code initial} disambiguates duplicate finals (-i, u).
  * </pre>
  */
 @RestController
@@ -27,10 +31,25 @@ public class PronunciationController {
 
     private static final Logger logger = LoggerFactory.getLogger(PronunciationController.class);
 
-    private final PronunciationService pronunciationService;
+    private final PronunciationService      pronunciationService;
+    private final PronunciationGuideService pronunciationGuideService;
 
-    public PronunciationController(PronunciationService pronunciationService) {
-        this.pronunciationService = pronunciationService;
+    public PronunciationController(PronunciationService pronunciationService,
+                                   PronunciationGuideService pronunciationGuideService) {
+        this.pronunciationService      = pronunciationService;
+        this.pronunciationGuideService = pronunciationGuideService;
+    }
+
+    /**
+     * Lookup pronunciation guide by initial, final, or tone (same {@code q} as legacy API contract).
+     */
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<PronunciationGuideDto> lookupGuide(
+            @RequestParam(value = "q", required = false) String q,
+            @RequestParam(value = "initial", required = false) String initial) {
+        return pronunciationGuideService.lookup(q, initial)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -49,6 +68,7 @@ public class PronunciationController {
      * @param scoreCategory optional — e.g. hskk, thanh-mau
      * @param testId        optional — for assessment persistence
      * @param questionId    optional — for assessment persistence
+     * @param skipDoubaoFeedback optional — if true, no Doubao call (built-in feedback only); used by placement test
      * @return {@link PronunciationResponseDto} with score, feedback, and rawIseData
      */
     @PostMapping(
@@ -66,13 +86,16 @@ public class PronunciationController {
             @RequestParam(value = "includeInDaily", required = false) Boolean includeInDaily,
             @RequestParam(value = "scoreCategory", required = false) String scoreCategory,
             @RequestParam(value = "testId",       required = false) Long testId,
-            @RequestParam(value = "questionId",    required = false) Long questionId) {
+            @RequestParam(value = "questionId",    required = false) Long questionId,
+            @RequestParam(value = "skipDoubaoFeedback", required = false) Boolean skipDoubaoFeedback) {
 
-        logger.info("[PronunciationController] evaluate  text='{}' fileSize={}",
-                text, audioFile != null ? audioFile.getSize() : -1);
+        logger.info("[PronunciationController] evaluate  text='{}' fileSize={} testId={} skipDoubaoParam={}",
+                text, audioFile != null ? audioFile.getSize() : -1, testId, skipDoubaoFeedback);
 
+        // Skip Doubao for: explicit flag, or any evaluate tied to placement test (testId only used by assessment in this app).
+        boolean skipDoubao = Boolean.TRUE.equals(skipDoubaoFeedback) || testId != null;
         PronunciationResponseDto result = pronunciationService.evaluatePronunciation(
-                text, audioFile, principal, lessonId, lineId, vocabularyId, source, includeInDaily, scoreCategory, testId, questionId);
+                text, audioFile, principal, lessonId, lineId, vocabularyId, source, includeInDaily, scoreCategory, testId, questionId, skipDoubao);
         return ResponseEntity.ok(result);
     }
 }

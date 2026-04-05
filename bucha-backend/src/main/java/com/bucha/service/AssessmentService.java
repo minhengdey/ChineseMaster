@@ -169,11 +169,11 @@ public class AssessmentService {
 
         if (recentResult.isPresent()) {
             UserExamResult latest = recentResult.get();
-            // Nếu đã có kết quả trong vòng 5 phút, skip để tránh duplicate
+            // Tránh double-submit mạng; cho phép làm lại bài (start đã xóa ise entries) vẫn ghi đè kết quả.
             if (latest.getCompletedAt().isAfter(java.time.LocalDateTime.now().minusMinutes(5))) {
-                log.info("Skipping duplicate submission for user {} on exam externalId {}, recent result exists at {}",
+                log.info("Replacing recent exam result for user {} exam {} (was {}) with new submission",
                         user.getId(), exam.getExternalId(), latest.getCompletedAt());
-                return;
+                userExamResultRepository.delete(latest);
             }
         }
 

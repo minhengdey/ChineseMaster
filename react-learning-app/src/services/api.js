@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ROUTES } from "../constants/routes";
+import { normalizePronunciationQuery } from "../utils/pronunciationLookup.js";
 // import "window._env_";
 // Base API configuration (runtime override from public/env-config.js)
 // Priority: runtime `window._env_.VITE_API_URL` -> `window._env_.REACT_APP_API_URL` -> import.meta env -> fallback to relative `/api`
@@ -520,6 +521,7 @@ export const iseAPI = {
       sessionDate,
       durationSeconds,
       numSentences,
+      skipDoubaoFeedback,
    }) => {
       try {
          const data = await pronunciationAPI.evaluate({
@@ -531,6 +533,9 @@ export const iseAPI = {
             source,
             includeInDaily,
             scoreCategory: scoreCategory ?? "hskk",
+            testId,
+            questionId,
+            skipDoubaoFeedback,
          });
          const raw = data.rawIseData || {};
          return {
@@ -566,7 +571,7 @@ export const iseAPI = {
    },
 
    // Uses same pronunciation flow (ISE + Doubao) as scoreSentence
-   scoreWord: async ({ text, audioFile, testId, questionId, scoreCategory }) => {
+   scoreWord: async ({ text, audioFile, testId, questionId, scoreCategory, skipDoubaoFeedback }) => {
       try {
          const data = await pronunciationAPI.evaluate({
             text,
@@ -574,6 +579,7 @@ export const iseAPI = {
             testId,
             questionId,
             scoreCategory: scoreCategory ?? "hskk",
+            skipDoubaoFeedback,
          });
          const raw = data.rawIseData || {};
          const sent = raw.sentence || {};
@@ -783,6 +789,7 @@ export const pronunciationAPI = {
       scoreCategory,
       testId,
       questionId,
+      skipDoubaoFeedback,
    }) => {
       const formData = new FormData();
       formData.append("text", text ?? "");
@@ -799,18 +806,24 @@ export const pronunciationAPI = {
       if (scoreCategory != null) formData.append("scoreCategory", String(scoreCategory));
       if (testId != null) formData.append("testId", String(testId));
       if (questionId != null) formData.append("questionId", String(questionId));
+      if (skipDoubaoFeedback) formData.append("skipDoubaoFeedback", "true");
 
-      const response = await apiClient.post("/pronunciation/evaluate", formData);
+      // Query param duplicates the flag so Spring always binds it (some multipart setups omit plain text parts).
+      const response = await apiClient.post("/pronunciation/evaluate", formData, {
+         params: skipDoubaoFeedback ? { skipDoubaoFeedback: true } : undefined,
+      });
       return response.data;
    },
 
    // New unified lookup endpoint. Pass `q` which may be an initial, final or tone.
-   lookup: async (q) => {
+   // `opts.initial`: âm đệm trước vận (vd "z" vs "zh") để phân biệt final_sounds trùng `text` (-i, u…).
+   lookup: async (q, opts = {}) => {
       if (!q) return null;
       try {
-         const response = await apiClient.get("/pronunciation", {
-            params: { q },
-         });
+         const params = { q: normalizePronunciationQuery(q) };
+         const ini = opts.initial != null && String(opts.initial).trim() !== "" ? String(opts.initial).trim() : null;
+         if (ini) params.initial = ini;
+         const response = await apiClient.get("/pronunciation", { params });
          return response.data;
       } catch (err) {
          if (err.response && err.response.status === 404) return null;
@@ -888,14 +901,30 @@ export const migrationAPI = {
    },
 };
 
+// Deduplicate in-flight assessment requests (React StrictMode runs effects twice in dev).
+let _inFlightAssessmentGet = null;
+let _inFlightAssessmentStart = null;
+
 // Assessment Test APIs (New)
 export const assessmentAPI = {
    // Get assessment by ID with test data
    // API: GET /assessments/{assessmentId}
    // Returns: { id, title, description, lessonId, curriculumId, testData: {...} }
-   getAssessmentById: async (assessmentId) => {
-      const response = await apiClient.get(`/assessments/${assessmentId}`);
-      return response.data;
+   getAssessmentById: async (assessmentId, config) => {
+      const id = String(assessmentId);
+      if (_inFlightAssessmentGet && _inFlightAssessmentGet.id === id) {
+         return _inFlightAssessmentGet.promise;
+      }
+      const promise = apiClient
+         .get(`/assessments/${assessmentId}`, config)
+         .then((response) => response.data)
+         .finally(() => {
+            if (_inFlightAssessmentGet?.promise === promise) {
+               _inFlightAssessmentGet = null;
+            }
+         });
+      _inFlightAssessmentGet = { id, promise };
+      return promise;
    },
 
    // Get test data for a lesson divided into 4 sections (deprecated - use getAssessmentById)
@@ -912,9 +941,21 @@ export const assessmentAPI = {
 
    // Start assessment - clear old data
    // API: POST /assessments/{assessmentId}/start
-   startAssessment: async (assessmentId) => {
-      const response = await apiClient.post(`/assessments/${assessmentId}/start`);
-      return response.data;
+   startAssessment: async (assessmentId, config) => {
+      const id = String(assessmentId);
+      if (_inFlightAssessmentStart && _inFlightAssessmentStart.id === id) {
+         return _inFlightAssessmentStart.promise;
+      }
+      const promise = apiClient
+         .post(`/assessments/${assessmentId}/start`, null, config)
+         .then((response) => response.data)
+         .finally(() => {
+            if (_inFlightAssessmentStart?.promise === promise) {
+               _inFlightAssessmentStart = null;
+            }
+         });
+      _inFlightAssessmentStart = { id, promise };
+      return promise;
    },
 
    // Submit assessment test results

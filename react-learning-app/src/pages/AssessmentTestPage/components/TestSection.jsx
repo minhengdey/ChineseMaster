@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react"
 import { createRecorder, computeSha256Hex, playBlobSafely } from "../../../utils/audioUtils"
 import { iseAPI } from "../../../services/api"
-import { assessmentAPI } from "../../../services/api"
 import { Button } from "@/components/ui"
 import SentencePronunciationResult from "../../LessonDetailPage/components/SentencePronunciationResult"
 
@@ -20,6 +19,9 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
     const [audioBlob, setAudioBlob] = useState(null)
     const [error, setError] = useState(null)
     const mediaRecorderRef = useRef(null)
+    /** Always match latest scores/items so section completion never reads stale closure (last question). */
+    const itemScoresRef = useRef([])
+    const itemsRef = useRef([])
 
     // Helpers to normalize scoring from various API shapes
     const toNumber = (v, fallback = 0) => {
@@ -28,6 +30,66 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
     }
 
     const clamp = (n, min = 0, max = 100) => Math.min(Math.max(n, min), max)
+
+    /** DB field for this section; 0 is valid — only null/undefined means missing. */
+    const readDbSectionMetric = (dbScores, sectionKey) => {
+        if (!dbScores) return null
+        const key =
+            sectionKey === "thanh-mau"
+                ? "saved_initial_score"
+                : sectionKey === "van-mau"
+                  ? "saved_final_score"
+                  : sectionKey === "thanh-dieu"
+                    ? "saved_tone_score"
+                    : sectionKey === "cau"
+                      ? "saved_sentence_score"
+                      : null
+        if (!key) return null
+        const v = dbScores[key]
+        if (v === undefined || v === null) return null
+        const n = Number(v)
+        return Number.isFinite(n) ? n : null
+    }
+
+    /** When db_scores omits the section column, derive from ISE word/sentence breakdown for this attempt. */
+    const iseSectionMetricFallback = (normalized, sectionKey) => {
+        if (!normalized) return null
+        const sent = normalized.sentence || {}
+        if (sectionKey === "cau") {
+            const t = toNumber(
+                sent.total_score ?? sent.totalScore ?? normalized.total_score ?? normalized.totalScore,
+                NaN,
+            )
+            return Number.isFinite(t) ? t : null
+        }
+        const words = Array.isArray(normalized.words) ? normalized.words : []
+        if (words.length === 0) return null
+        let sum = 0
+        let n = 0
+        for (const w of words) {
+            const d = w?.details || w || {}
+            let v = NaN
+            if (sectionKey === "thanh-mau") {
+                v = toNumber(d.initial_score ?? d.initialScore ?? d.initial, NaN)
+            } else if (sectionKey === "van-mau") {
+                v = toNumber(d.final_score ?? d.finalScore ?? d.final, NaN)
+            } else if (sectionKey === "thanh-dieu") {
+                v = toNumber(d.tone_score ?? d.toneScore ?? d.tone, NaN)
+            }
+            if (Number.isFinite(v)) {
+                sum += v
+                n += 1
+            }
+        }
+        return n > 0 ? sum / n : null
+    }
+
+    /** One section-specific score for a single attempt (persisted DB best + same-attempt ISE). */
+    const sectionMetricFromNormalized = (normalized, sectionKey) => {
+        const fromDb = readDbSectionMetric(normalized?.db_scores, sectionKey)
+        if (fromDb !== null) return fromDb
+        return iseSectionMetricFallback(normalized, sectionKey)
+    }
 
     const normalizeApiResult = (raw) => {
         if (!raw) return {
@@ -39,6 +101,7 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
             status: null,
             raw_xml: null,
             words: [],
+            phonemes: null,
             is_rejected: false,
             except_info: null,
             warning: null,
@@ -53,6 +116,17 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
 
         const sent = raw?.sentence || {}
         const words = Array.isArray(raw?.words) ? raw.words : (Array.isArray(sent?.words) ? sent.words : [])
+        const firstWord = words.length > 0 ? words[0] : null
+        const phonemesFromWord =
+            firstWord?.phonemes ?? firstWord?.phones ?? firstWord?.phoneme_list ?? firstWord?.details?.phonemes ?? null
+        const phonemes =
+            (Array.isArray(raw?.phonemes) && raw.phonemes.length > 0)
+                ? raw.phonemes
+                : (Array.isArray(sent?.phonemes) && sent.phonemes.length > 0)
+                  ? sent.phonemes
+                  : Array.isArray(phonemesFromWord) && phonemesFromWord.length > 0
+                    ? phonemesFromWord
+                    : null
 
         return {
             total_score: sent?.total_score ?? raw?.total_score ?? raw?.totalScore ?? raw?.overall ?? 0,
@@ -63,6 +137,7 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
             status: sent?.status ?? raw?.status ?? null,
             raw_xml: sent?.raw_xml ?? raw?.raw_xml ?? null,
             words,
+            phonemes,
             is_rejected: sent?.is_rejected ?? raw?.is_rejected ?? false,
             except_info: sent?.except_info ?? raw?.except_info ?? null,
             warning: sent?.warning ?? raw?.warning ?? null,
@@ -76,8 +151,6 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
             feedback: raw?.feedback ?? raw?.overallFeedback ?? null,
         }
     }
-
-    // Backend handles all scoring - frontend only displays scores from db_scores
 
     // Initialize section items based on section type
     useEffect(() => {
@@ -136,9 +209,12 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                 }
 
                 setItems(sectionItems)
+                itemsRef.current = sectionItems
                 // Reset index and related states when section items load to avoid stale indices
                 setCurrentItemIndex(0)
-                setItemScores(new Array(sectionItems.length).fill(null))
+                const emptyScores = new Array(sectionItems.length).fill(null)
+                setItemScores(emptyScores)
+                itemScoresRef.current = emptyScores
                 setItemAttempts(new Array(sectionItems.length).fill(null).map(() => []))
                 setBestScores(new Array(sectionItems.length).fill(null))
                 setPageLoading(false)
@@ -151,6 +227,14 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
 
         loadSectionItems()
     }, [section, testData])
+
+    useEffect(() => {
+        itemScoresRef.current = itemScores
+    }, [itemScores])
+
+    useEffect(() => {
+        itemsRef.current = items
+    }, [items])
 
     // Ensure current index is within bounds; fallback to first item
     const currentItem = items && items.length > 0
@@ -261,6 +345,7 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                     text: textToAnalyze,
                     audioFile: file,
                     includeInDaily: false,
+                    skipDoubaoFeedback: true,
                 }
                 if (assessmentId) payload.testId = String(assessmentId)
                 if (currentItem.externalId) payload.questionId = String(currentItem.externalId)
@@ -281,6 +366,7 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                     sub: "ise",
                     ent: "cn_vip",
                     includeInDaily: false,
+                    skipDoubaoFeedback: true,
                 }
                 if (assessmentId) payload.testId = String(assessmentId)
                 if (currentItem.externalId) payload.questionId = String(currentItem.externalId)
@@ -313,21 +399,17 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                 raw_result: result
             })
 
-            // Backend returns saved scores - use them directly
-            const totalScore = dbScores.saved_total_score ?? 0
-            const sectionScore = (
-                (section === "thanh-mau" && dbScores.saved_initial_score) ||
-                (section === "van-mau" && dbScores.saved_final_score) ||
-                (section === "thanh-dieu" && dbScores.saved_tone_score) ||
-                (section === "cau" && dbScores.saved_sentence_score) ||
-                totalScore
-            )
+            const totalScore = toNumber(dbScores?.saved_total_score ?? normalized?.total_score, 0)
+            const sectionMetric = sectionMetricFromNormalized(normalized, section)
+            // Store/compare using section-specific metric when available; else total (e.g. missing breakdown)
+            const sectionScore = sectionMetric !== null ? sectionMetric : totalScore
 
             console.log("📊 Scores from DB:", {
                 section,
                 itemIndex: currentItemIndex,
                 totalScore,
                 sectionScore,
+                sectionMetric,
                 db_scores: dbScores
             })
 
@@ -341,17 +423,27 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
             })
             setItemAttempts(updatedAttempts)
 
-            // Always update best score with latest result from backend (backend already keeps the best)
+            // Keep the attempt whose section metric is highest (for badge + warnings), not only the latest
             const updatedBestScores = [...bestScores]
-            updatedBestScores[currentItemIndex] = {
-                score: sectionScore,
-                result: normalized,
+            const prev = bestScores[currentItemIndex]
+            const prevMetric =
+                prev?.result != null ? sectionMetricFromNormalized(prev.result, section) : null
+            const prevComparable = prevMetric !== null ? prevMetric : toNumber(prev?.score, -1)
+            const curComparable = sectionMetric !== null ? sectionMetric : sectionScore
+            if (!prev || curComparable >= prevComparable) {
+                updatedBestScores[currentItemIndex] = {
+                    score: sectionScore,
+                    result: normalized,
+                }
+            } else {
+                updatedBestScores[currentItemIndex] = prev
             }
             setBestScores(updatedBestScores)
 
-            // Always update total_score (backend returns the highest score saved in DB)
+            // Persist per-item value aligned with section UI (badge) and final summary — not raw ISE total only.
             const updatedScores = [...itemScores]
-            updatedScores[currentItemIndex] = totalScore
+            updatedScores[currentItemIndex] = sectionScore
+            itemScoresRef.current = updatedScores
             setItemScores(updatedScores)
 
             console.log("🎯 Setting currentAttemptResult:", {
@@ -390,24 +482,26 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
         if (currentItemIndex < items.length - 1) {
             setCurrentItemIndex(currentItemIndex + 1)
         } else {
-            // Section complete - move to next section
-            const scored = itemScores.filter((s) => s !== null && Number.isFinite(Number(s)))
+            // Section complete — read from refs so last-question scores are never missing (async state batching).
+            const scoresSnapshot = itemScoresRef.current
+            const itemsSnapshot = itemsRef.current
+            const scored = scoresSnapshot.filter((s) => s !== null && Number.isFinite(Number(s)))
             const avgScore = scored.length ? (scored.reduce((a, b) => Number(a) + Number(b), 0) / scored.length) : 0
 
             console.log("📈 Section complete:", {
                 section,
-                itemScores,
+                itemScores: scoresSnapshot,
                 scored,
                 avgScore
             })
 
             onComplete(section, {
                 section,
-                scores: itemScores,
+                scores: scoresSnapshot,
                 averageScore: avgScore,
-                items: items.map((item, idx) => ({
+                items: itemsSnapshot.map((item, idx) => ({
                     ...item,
-                    score: itemScores[idx],
+                    score: scoresSnapshot[idx],
                 })),
             })
         }
@@ -417,6 +511,7 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
         // Mark as skipped (score 0) in local state only
         const updatedScores = [...itemScores]
         updatedScores[currentItemIndex] = 0
+        itemScoresRef.current = updatedScores
         setItemScores(updatedScores)
 
         const updatedBestScores = [...bestScores]
@@ -602,20 +697,25 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
         return null
     }
 
-    // Get display score from backend's db_scores
+    /** Badge next to prompt: max section-specific score across up to 3 attempts for this item. */
     const getDisplayScore = (itemIndex) => {
-        const bestScore = bestScores[itemIndex]
-        if (!bestScore?.result?.db_scores) return null
-
-        const dbScores = bestScore.result.db_scores
-
-        // Return section-specific score from DB
-        if (section === "thanh-mau") return clamp(dbScores.saved_initial_score ?? 0)
-        if (section === "van-mau") return clamp(dbScores.saved_final_score ?? 0)
-        if (section === "thanh-dieu") return clamp(dbScores.saved_tone_score ?? 0)
-        if (section === "cau") return clamp(dbScores.saved_sentence_score ?? 0)
-
-        return clamp(dbScores.saved_total_score ?? 0)
+        const attempts = itemAttempts[itemIndex]
+        let best = null
+        if (attempts?.length) {
+            for (const att of attempts) {
+                const m = sectionMetricFromNormalized(att.result, section)
+                if (m !== null && Number.isFinite(m)) {
+                    best = best === null ? m : Math.max(best, m)
+                }
+            }
+        }
+        if (best !== null) return clamp(best)
+        const fallback = bestScores[itemIndex]?.result
+        if (fallback) {
+            const m = sectionMetricFromNormalized(fallback, section)
+            if (m !== null) return clamp(m)
+        }
+        return null
     }
 
 
@@ -650,14 +750,13 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                                         🔊
                                     </Button>
                                 </div>
-                                {bestScores[currentItemIndex] && bestScores[currentItemIndex].result && (() => {
+                                {(() => {
                                     const displayScore = getDisplayScore(currentItemIndex)
                                     return displayScore !== null ? (
                                         <div className="flex flex-col items-end gap-1">
                                             <span className={`px-3 py-1 rounded-full font-bold text-sm ${getScoreBadgeColor(displayScore)}`}>
                                                 {Math.round(displayScore)}
                                             </span>
-                                            <span className="text-xs text-slate-600">{getScoreLabel(displayScore)}</span>
                                         </div>
                                     ) : null
                                 })()}
@@ -707,6 +806,7 @@ const TestSection = ({ section, assessmentId, testData, assessment, onComplete, 
                                         // In test mode, we don't want to hide the result completely
                                     }}
                                     sentenceText={currentItem?.text || ""}
+                                    hideStructuredFeedback
                                 />
 
                                 {/* Action Buttons */}
