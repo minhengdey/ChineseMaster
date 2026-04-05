@@ -54,6 +54,7 @@ public class PronunciationService {
      * @param scoreCategory optional — for persistence
      * @param testId        optional — for assessment persistence
      * @param questionId    optional — for assessment persistence
+     * @param skipDoubaoFeedback when true, skip Doubao API and use built-in feedback only (e.g. placement test)
      * @return evaluation result with score, feedback, rawIseData
      * @throws PronunciationEvaluationException if the recording cannot be evaluated
      * @throws IllegalArgumentException         if inputs are null/empty
@@ -62,7 +63,7 @@ public class PronunciationService {
                                                           JwtUserPrincipal principal,
                                                           Long lessonId, String lineId, String vocabularyId,
                                                           String source, Boolean includeInDaily, String scoreCategory,
-                                                          Long testId, Long questionId) {
+                                                          Long testId, Long questionId, boolean skipDoubaoFeedback) {
         validateInputs(referenceText, audioFile);
 
         Map<String, String> optionalForm = buildOptionalForm(lessonId, lineId, vocabularyId, source, includeInDaily, scoreCategory, testId, questionId);
@@ -84,14 +85,18 @@ public class PronunciationService {
                     "Pronunciation evaluation failed. Please try again.", e);
         }
 
-        // Step 2 ─ Structured AI feedback via Doubao (HSKK judge style)
+        // Step 2 ─ Structured AI feedback via Doubao (HSKK judge style); skipped for assessment test flow
         StructuredFeedbackDto structured;
-        try {
-            structured = doubaoClient.generateStructuredFeedback(evalResult);
-            logger.debug("[PronunciationService] Doubao structured feedback: {}", structured.getOverallFeedback());
-        } catch (Exception e) {
-            logger.warn("[PronunciationService] Doubao call threw unexpectedly: {}", e.getMessage());
+        if (skipDoubaoFeedback) {
             structured = DoubaoClient.defaultStructuredFeedback(evalResult.getTotalScore(), evalResult.isRejected());
+        } else {
+            try {
+                structured = doubaoClient.generateStructuredFeedback(evalResult);
+                logger.debug("[PronunciationService] Doubao structured feedback: {}", structured.getOverallFeedback());
+            } catch (Exception e) {
+                logger.warn("[PronunciationService] Doubao call threw unexpectedly: {}", e.getMessage());
+                structured = DoubaoClient.defaultStructuredFeedback(evalResult.getTotalScore(), evalResult.isRejected());
+            }
         }
         String feedbackText = structured.getOverallFeedback() != null ? structured.getOverallFeedback() : DoubaoClient.defaultFeedback(evalResult.getTotalScore(), evalResult.isRejected());
 

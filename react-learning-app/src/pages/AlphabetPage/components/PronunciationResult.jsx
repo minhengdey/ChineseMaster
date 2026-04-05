@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { pronunciationAPI } from "../../../services/api"
+import { inferInitialHintFromPhonemes, normalizePronunciationQuery } from "../../../utils/pronunciationLookup"
 import { Volume2, Info, AlertCircle, CheckCircle, X } from "lucide-react"
 import StructuredFeedbackView from "../../../components/StructuredFeedbackView"
 
@@ -429,7 +430,16 @@ const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = ""
                 </tr>
               </thead>
               <tbody>
-                {(words[selectedWordIndex].phonemes || []).map((p, i) => (
+                {(() => {
+                  const w = words[selectedWordIndex]
+                  const fromWord = w?.phonemes ?? w?.details?.phonemes ?? w?.details?.phones ?? []
+                  const phonemeRows =
+                    fromWord.length > 0
+                      ? fromWord
+                      : words.length <= 1 && Array.isArray(result?.phonemes)
+                        ? result.phonemes
+                        : []
+                  return phonemeRows.map((p, i) => (
                   <tr key={i}>
                     <td>
                       {(() => {
@@ -448,6 +458,8 @@ const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = ""
                                 try {
                                   let query = null
                                   if (p.phoneme) query = p.phoneme
+                                  if (!query && p.phone) query = p.phone
+                                  if (!query && p.content) query = p.content
                                   if (!query && p.phoneme_display) {
                                     query =
                                       typeof p.phoneme_display === "string"
@@ -460,9 +472,11 @@ const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = ""
                                     const toneMark = String(p.mono_tone).match(/\d+/)?.[0]
                                     if (toneMark) query = toneMark
                                   }
+                                  const initialHint = inferInitialHintFromPhonemes(phonemeRows, i)
+                                  const qNorm = query ? normalizePronunciationQuery(query) : ""
                                   let res = null
-                                  if (query) {
-                                    res = await pronunciationAPI.lookup(query)
+                                  if (qNorm) {
+                                    res = await pronunciationAPI.lookup(qNorm, { initial: initialHint })
                                   }
                                   setGuide(res || null)
                                 } catch (err) {
@@ -493,7 +507,8 @@ const PronunciationResult = ({ result, onClose, recordedAudio, sentenceText = ""
                     <td>{p.score != null ? Math.round(p.score) : (p.pronunciation != null ? Math.round(p.pronunciation) : "-")}</td>
                     <td>{p?.mono_tone && typeof p.mono_tone === "string" ? (p.mono_tone.match(/\d+/) || [])[0] || p.mono_tone : p?.mono_tone || "-"}</td>
                   </tr>
-                ))}
+                ));
+                })()}
               </tbody>
             </table>
           </div>

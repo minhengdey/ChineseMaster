@@ -14,12 +14,15 @@ public interface ToneRepository extends JpaRepository<Tone, Long> {
    @Query("SELECT t FROM Tone t WHERE t.externalId = :externalId")
    Optional<Tone> findByExternalId(@Param("externalId") Long externalId);
 
-   @Query("SELECT t FROM Tone t WHERE t.name = :name")
-   Optional<Tone> findByName(@Param("name") String name);
+   Optional<Tone> findFirstByNameOrderByIdAsc(String name);
 
-   @Query("SELECT t FROM Tone t WHERE t.toneMark = :toneMark")
-   Optional<Tone> findByToneMark(@Param("toneMark") String toneMark);
+   Optional<Tone> findFirstByToneMarkOrderByIdAsc(String toneMark);
 
-   @Query("SELECT t FROM Tone t WHERE t.order = :order")
-   Optional<Tone> findByOrder(@Param("order") Integer order);
+   Optional<Tone> findFirstByOrderOrderByIdAsc(Integer order);
+
+   Optional<Tone> findFirstByNameIgnoreCaseOrderByIdAsc(String name);
+
+   Optional<Tone> findFirstByPitchValueOrderByIdAsc(String pitchValue);
+
+   Optional<Tone> findFirstByPitchValueIgnoreCaseOrderByIdAsc(String pitchValue);
 }

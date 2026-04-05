@@ -10,11 +10,11 @@ const TestResults = ({ sectionResults, assessment, assessmentId, onSubmit, onBac
     const calculateTotalScore = () => {
         const sections = ["thanh-mau", "van-mau", "thanh-dieu", "cau"]
         const validScores = sections
-            .map((section) => sectionResults[section]?.averageScore ?? 0)
-            .filter((score) => score !== null && score !== undefined)
+            .map((key) => sectionResults[key]?.averageScore)
+            .filter((score) => score !== null && score !== undefined && Number.isFinite(Number(score)))
 
         if (validScores.length === 0) return 0
-        return validScores.reduce((a, b) => a + b, 0) / validScores.length
+        return validScores.reduce((a, b) => Number(a) + Number(b), 0) / validScores.length
     }
 
     const getSectionResult = (sectionName) => {

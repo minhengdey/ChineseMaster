@@ -1,12 +1,14 @@
 import React from "react";
 import { pronunciationAPI } from "../../../services/api";
 import StructuredFeedbackView from "../../../components/StructuredFeedbackView";
+import { inferInitialHintFromPhonemes, normalizePronunciationQuery } from "../../../utils/pronunciationLookup";
 
 const SentencePronunciationResult = ({
   result,
   recordedAudio,
   onClose,
   sentenceText = "",
+  hideStructuredFeedback = false,
 }) => {
   if (!result) return null;
 
@@ -147,17 +149,21 @@ const SentencePronunciationResult = ({
             typeof wordIndex === "number" && Array.isArray(result?.words)
               ? result.words[wordIndex]
               : null;
+          const wordsArr = Array.isArray(result?.words) ? result.words : [];
+          const fromWord =
+            details?.phonemes ?? details?.phones ?? details?.phoneme_list ?? null;
+          const useRootPhonemes =
+            (!fromWord || fromWord.length === 0) &&
+            wordsArr.length <= 1 &&
+            Array.isArray(result?.phonemes) &&
+            result.phonemes.length > 0;
           const normalized = {
             word: ch,
             index: wordIndex,
             duration: details?.duration ?? details?.time_len ?? null,
             overall: details?.overall ?? details?.pronunciation ?? null,
             fluency: details?.fluency ?? null,
-            phonemes:
-              details?.phonemes ??
-              details?.phones ??
-              details?.phoneme_list ??
-              null,
+            phonemes: useRootPhonemes ? result.phonemes : fromWord,
             details: details || null,
           };
           const isWrong = wrongIndices.has(i);
@@ -330,7 +336,8 @@ const SentencePronunciationResult = ({
       )}
 
       {/* Structured AI feedback (Điểm tổng, Nhận xét, Lỗi, Gợi ý) when available */}
-      {(result.overallFeedback || result.improvementTip || result.feedback) && (
+      {!hideStructuredFeedback &&
+        (result.overallFeedback || result.improvementTip || result.feedback) && (
         <StructuredFeedbackView
           score={result.total_score ?? result.totalScore ?? result.score}
           overallFeedback={result.overallFeedback ?? result.feedback}
@@ -430,12 +437,13 @@ const SentencePronunciationResult = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {(
-                      selectedWord.phonemes ||
-                      selectedWord.details?.phonemes ||
-                      selectedWord.details?.phones ||
-                      []
-                    ).map((p, idx) => (
+                    {(() => {
+                      const phonemeRows =
+                        selectedWord.phonemes ||
+                        selectedWord.details?.phonemes ||
+                        selectedWord.details?.phones ||
+                        [];
+                      return phonemeRows.map((p, idx) => (
                       <tr key={idx}>
                         <td>
                           <div className="flex items-center gap-2">
@@ -465,6 +473,8 @@ const SentencePronunciationResult = ({
                                 try {
                                   let query = null;
                                   if (p?.phoneme) query = p.phoneme;
+                                  if (!query && p?.phone) query = p.phone;
+                                  if (!query && p?.content) query = p.content;
                                   if (!query && p?.phoneme_display) {
                                     query =
                                       typeof p.phoneme_display ===
@@ -487,8 +497,10 @@ const SentencePronunciationResult = ({
                                     if (toneMark) query = toneMark;
                                   }
 
+                                  const initialHint = inferInitialHintFromPhonemes(phonemeRows, idx);
+                                  const qNorm = query ? normalizePronunciationQuery(query) : "";
                                   let res = null;
-                                  if (query) res = await pronunciationAPI.lookup(query);
+                                  if (qNorm) res = await pronunciationAPI.lookup(qNorm, { initial: initialHint });
                                   setGuide(res || null);
                                 } catch (err) {
                                   // console.error(
@@ -531,7 +543,8 @@ const SentencePronunciationResult = ({
                             : p?.mono_tone || "-"}
                         </td>
                       </tr>
-                    ))}
+                    ));
+                    })()}
                   </tbody>
                 </table>
               </div>
