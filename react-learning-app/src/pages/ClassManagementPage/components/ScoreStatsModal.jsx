@@ -2,8 +2,20 @@ import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import ScoreTable from "./ScoreTable";
 import { classAPI, adminStatsAPI, handleApiError } from "../../../services/api";
+import { getClassScoreSheetOverride } from "../../../utils/adminSheetOverrides";
 
 const _scoreStatsModalInFlight = {};
+
+const toPercentDisplay = (value) => {
+    if (value == null || value === "") return null;
+    if (String(value).trim() === "/") return "/";
+    const n = Number(value);
+    if (!Number.isFinite(n)) return String(value);
+    const percent = n <= 1 ? n * 100 : n;
+    const rounded = Math.round(percent * 100) / 100;
+    const text = Number.isInteger(rounded) ? String(rounded) : rounded.toString();
+    return `${text}%`;
+};
 
 const ScoreStatsModal = ({ classId, className, onClose }) => {
     const [loading, setLoading] = useState(true);
@@ -21,6 +33,17 @@ const ScoreStatsModal = ({ classId, className, onClose }) => {
         setError(null);
 
         const run = async () => {
+            const sheetOverride = getClassScoreSheetOverride(className);
+            if (sheetOverride) {
+                if (mounted) {
+                    setData(sheetOverride.data ?? []);
+                    setColumns(sheetOverride.columns ?? []);
+                    setError(null);
+                    setLoading(false);
+                }
+                return;
+            }
+
             if (_scoreStatsModalInFlight[classId]) {
                 try {
                     const res = await _scoreStatsModalInFlight[classId];
@@ -113,7 +136,7 @@ const ScoreStatsModal = ({ classId, className, onClose }) => {
                             if (!entry) return null;
                             attempts = entry?.attempts ?? entry?.numAttempts ?? null;
                             return {
-                                display: avg != null ? (typeof avg === "number" ? `${avg}${avg > 0 && avg <= 1 ? "" : "%"}` : `${avg}`) : null,
+                                display: toPercentDisplay(avg),
                                 meta: attempts != null ? attempts : null,
                                 raw: entry,
                             };
@@ -139,7 +162,7 @@ const ScoreStatsModal = ({ classId, className, onClose }) => {
         };
         run();
         return () => { mounted = false; };
-    }, [classId]);
+    }, [classId, className]);
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-24 flex items-start justify-center z-50 p-6 overflow-y-auto">
