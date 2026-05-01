@@ -11,8 +11,8 @@ import { normalizePronunciationQuery } from "../utils/pronunciationLookup.js";
 //       (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
 //       ? (window._env_.VITE_API_URL || window._env_.REACT_APP_API_URL)
 //       : import.meta?.env?.VITE_API_BASE_URL || import.meta?.env?.VITE_API_URL || "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
-const API_BASE_URL = "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
-// const API_BASE_URL = "http://localhost:8080/api";
+// const API_BASE_URL = "https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api";
+const API_BASE_URL = "http://localhost:8080/api";
 
 const AUTH_PATHS = {
    LOGIN: "/auth/login",

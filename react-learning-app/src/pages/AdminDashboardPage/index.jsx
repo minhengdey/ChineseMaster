@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom"
 import { adminStatsAPI } from "../../services/api"
 import { useUserStore } from "../../store/UserStore"
 import PageLayout from "../../components/layout/PageLayout"
+import { getExamLeaderboardSheetOverride } from "../../utils/adminSheetOverrides"
 import {
   WeeklySection,
   LessonSection,
@@ -92,6 +93,12 @@ const AdminDashboard = () => {
   // Tab "test": chỉ fetch khi vào tab
   useEffect(() => {
     if (!isAdmin || currentView !== "test") return
+    const sheetExams = getExamLeaderboardSheetOverride()
+    if (Array.isArray(sheetExams) && sheetExams.length > 0) {
+      setExams(sheetExams)
+      setExamsLoading(false)
+      return
+    }
     if (_adminTabCache.exams != null) {
       setExams(_adminTabCache.exams)
       return
