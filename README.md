@@ -586,56 +586,43 @@ ChineseMaster/
 
 ## 🖼️ 8. Giao diện Demo (UI Showcase)
 
-> **Hướng dẫn:** Lưu ảnh chụp màn hình thực tế vào thư mục `docs/screenshots/` và dán đường dẫn tương ứng vào các mục dưới đây.
-
 ### 8.1. Trang chủ & Lộ trình học (Dashboard & Curriculum)
-<!-- Paste ảnh Trang chủ / Dashboard vào đây -->
-```markdown
 ![Trang chủ & Lộ trình](./docs/screenshots/01_dashboard.png)
-```
+
+![Bảng phiên âm Pinyin](./docs/screenshots/pinin.png)
+
+![Danh sách bài học](./docs/screenshots/01_lesson.png)
 
 ---
 
 ### 8.2. Luyện phát âm & Chấm điểm tức thì (iFlytek ISE Pronunciation)
-<!-- Paste ảnh Màn hình luyện phát âm & chấm điểm âm điệu vào đây -->
-```markdown
 ![Luyện phát âm](./docs/screenshots/02_pronunciation.png)
-```
+
+![Nhận xét phát âm](./docs/screenshots/02_exam.png)
 
 ---
 
 ### 8.3. Mô phỏng phòng thi Khẩu ngữ HSKK (HSKK Speaking Exam)
-<!-- Paste ảnh Phòng thi HSKK 3 phần & nhận xét của Doubao AI vào đây -->
-```markdown
-![Phòng thi HSKK](./docs/screenshots/03_hskk_exam.png)
-```
+![Phòng thi HSKK](./docs/screenshots/03_hskk_exam_01.png)
+
+![Chấm điểm & Nhận xét HSKK](./docs/screenshots/03_hskk_exam.png)
 
 ---
 
 ### 8.4. Học từ vựng Flashcards với thuật toán Spaced Repetition (SRS SM-2)
-<!-- Paste ảnh Flashcard ôn tập từ vựng vào đây -->
-```markdown
 ![Flashcards SRS](./docs/screenshots/04_flashcards.png)
-```
 
 ---
 
 ### 8.5. Bài kiểm tra đánh giá năng lực phát âm (Assessment Test)
-<!-- Paste ảnh Bài kiểm tra 4 phần (Thanh mẫu, Vận mẫu, Thanh điệu, Câu) vào đây -->
-```markdown
 ![Bài kiểm tra phát âm](./docs/screenshots/05_assessment_test.png)
-```
+
+![Kết quả bài kiểm tra](./docs/screenshots/image.png)
 
 ---
 
 ### 8.6. Quản lý Lớp học & Bảng xếp hạng (Class Management & Leaderboard)
-<!-- Paste ảnh Quản lý lớp học và Bảng xếp hạng hàng ngày vào đây -->
-```markdown
-![Quản lý lớp học](./docs/screenshots/06_class_management.png)
-```
+
+![Chi tiết lớp học](./docs/screenshots/06_class.png)
 
 ---
-
-<div align="center">
-  <p>Made with ❤️ for Chinese Language Learners</p>
-</div>

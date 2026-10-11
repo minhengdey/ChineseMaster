@@ -1,6 +1,6 @@
 package com.bucha.controller;
 
-import com.bucha.dto.QuizResultDto;
+import com.bucha.dto.assessment.QuizResultDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;

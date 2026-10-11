@@ -3,16 +3,15 @@
 import { useEffect, useState } from "react"
 import { iseStatsAPI } from "../services/api"
 
-// Compute weekly score using provided formula with normalization for completion count
+const _weeklyLeaderboardInFlight = { promise: null }
+
 const computeWeeklyScore = (entry, maxCompletion) => {
-    const avg = Number(entry.avgScore ?? 0) // assumed 0-100
+    const avg = Number(entry.avgScore ?? 0)
     const completionCount = Number(entry.completionCount ?? 0)
-    // normalize completionCount to 0-100 using maxCompletion (avoid div0)
     const completionRate = maxCompletion > 0 ? Math.min(100, (completionCount / maxCompletion) * 100) : 0
     const improvementRate = Number(entry.improvementRate ?? 0)
-
     const weeklyScore = 0.7 * avg + 0.2 * completionRate + 0.1 * improvementRate
-    return Math.round(Math.max(0, Math.min(100, weeklyScore)) * 10) / 10 // one decimal
+    return Math.round(Math.max(0, Math.min(100, weeklyScore)) * 10) / 10
 }
 
 const WeeklyLeaderboard = ({ className }) => {
@@ -22,39 +21,52 @@ const WeeklyLeaderboard = ({ className }) => {
 
     useEffect(() => {
         let mounted = true
-        const load = async () => {
-            setLoading(true)
-            try {
-                const data = await iseStatsAPI.getLeaderboardWeekly()
-                if (!mounted) return
-                const rows = Array.isArray(data?.rows) ? data.rows : []
-
-                const maxCompletion = rows.reduce((m, r) => Math.max(m, Number(r.completionCount || 0)), 0) || 1
-
-                const enriched = rows.map((r) => ({
-                    ...r,
-                    weeklyScore: computeWeeklyScore(r, maxCompletion),
-                }))
-
-                enriched.sort((a, b) => {
-                    if (b.weeklyScore !== a.weeklyScore) return b.weeklyScore - a.weeklyScore
-                    if ((b.improvementRate ?? 0) !== (a.improvementRate ?? 0)) return (b.improvementRate ?? 0) - (a.improvementRate ?? 0)
-                    if ((b.completionCount ?? 0) !== (a.completionCount ?? 0)) return (b.completionCount ?? 0) - (a.completionCount ?? 0)
-                    return (a.timestamp || 0) - (b.timestamp || 0)
-                })
-
-                setRows(enriched)
-            } catch (e) {
-                setError(e?.message || "Không thể tải BXH")
-                setRows([])
-            } finally {
-                setLoading(false)
+        const run = async () => {
+            if (_weeklyLeaderboardInFlight.promise) {
+                try {
+                    const enriched = await _weeklyLeaderboardInFlight.promise
+                    if (mounted) {
+                        setRows(enriched ?? [])
+                        setLoading(false)
+                    }
+                } catch (_) {
+                    if (mounted) setLoading(false)
+                }
+                return
             }
+            setLoading(true)
+            _weeklyLeaderboardInFlight.promise = (async () => {
+                try {
+                    const data = await iseStatsAPI.getLeaderboardWeekly()
+                    const rawRows = Array.isArray(data?.rows) ? data.rows : []
+                    const maxCompletion = rawRows.reduce((m, r) => Math.max(m, Number(r.completionCount || 0)), 0) || 1
+                    const enriched = rawRows.map((r) => ({
+                        ...r,
+                        weeklyScore: computeWeeklyScore(r, maxCompletion),
+                    }))
+                    enriched.sort((a, b) => {
+                        if (b.weeklyScore !== a.weeklyScore) return b.weeklyScore - a.weeklyScore
+                        if ((b.improvementRate ?? 0) !== (a.improvementRate ?? 0)) return (b.improvementRate ?? 0) - (a.improvementRate ?? 0)
+                        if ((b.completionCount ?? 0) !== (a.completionCount ?? 0)) return (b.completionCount ?? 0) - (a.completionCount ?? 0)
+                        return (a.timestamp || 0) - (b.timestamp || 0)
+                    })
+                    if (mounted) setRows(enriched)
+                    return enriched
+                } catch (e) {
+                    if (mounted) {
+                        setError(e?.message || "Không thể tải BXH")
+                        setRows([])
+                    }
+                    throw e
+                } finally {
+                    _weeklyLeaderboardInFlight.promise = null
+                    if (mounted) setLoading(false)
+                }
+            })()
+            await _weeklyLeaderboardInFlight.promise
         }
-        load()
-        return () => {
-            mounted = false
-        }
+        run()
+        return () => { mounted = false }
     }, [])
 
     if (loading) {

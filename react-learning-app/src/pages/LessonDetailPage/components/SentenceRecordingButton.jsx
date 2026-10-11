@@ -5,6 +5,13 @@ import { iseAPI } from "../../../services/api"
 import { createRecorder, computeSha256Hex, playBlobSafely } from "../../../utils/audioUtils"
 
 const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onStartRecording, size = "sm" }) => {
+  // If the reference sentence contains no letters (only digits/punctuation/etc.), do not render the recording UI.
+  const refText = (hanzi || text || "").trim();
+  try {
+    if (refText && !/\p{L}/u.test(refText)) return null;
+  } catch (e) {
+    if (refText && !/[A-Za-z]/.test(refText)) return null;
+  }
   const [isRecording, setIsRecording] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [error, setError] = useState(null)
@@ -92,7 +99,12 @@ const SentenceRecordingButton = ({ text, hanzi, lessonId, lineId, onScore, onSta
 
       const result = await iseAPI.scoreSentence(payload)
 
-      // console.log("Analysis result:", result)
+      // If backend asked for a retry (recording rejected by ISE), show a
+      // friendly prompt instead of treating it as a generic error.
+      if (result && result.require_retry) {
+        setError(result.message || "Ghi âm không đủ rõ. Vui lòng ghi lại và thử lại.")
+        return
+      }
 
       if (result && result.success !== false && onScore) {
         onScore(result, blob, lineId)

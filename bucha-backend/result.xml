@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
   <xml_result>
-      <read_sentence lan="cn" type="study" version="7,0,0,1024">
+      <read_word lan="cn" type="study" version="7,0,0,1024">
           <rec_paper>
-              <read_sentence accuracy_score="0.000000" beg_pos="0" content="发。" emotion_score="0.000000" end_pos="220" except_info="0" fluency_score="90.854149" integrity_score="100.000000" is_rejected="false" phone_score="50.000000" time_len="220" tone_score="100.000000" total_score="44.400944">
-                  <sentence beg_pos="0" content="发" end_pos="220" fluency_score="0.000000" phone_score="50.000000" time_len="220" tone_score="100.000000" total_score="82.531410">
-                      <word beg_pos="0" content="发" end_pos="220" symbol="fa1" time_len="220">
-                          <syll beg_pos="0" content="sil" dp_message="0" end_pos="70" rec_node_type="sil" time_len="70">
-                              <phone beg_pos="0" content="sil" dp_message="0" end_pos="70" rec_node_type="sil" time_len="70"></phone>
+              <read_word beg_pos="0" content="妈。" end_pos="154" except_info="0" fluency_score="0.000000" integrity_score="0.000000" phone_score="50.000000" time_len="154" tone_score="100.000000" total_score="75.000000">
+                  <sentence beg_pos="0" content="妈" end_pos="154" time_len="154">
+                      <word beg_pos="0" content="妈" end_pos="154" symbol="ma1" time_len="154">
+                          <syll beg_pos="0" content="silv" dp_message="0" end_pos="67" rec_node_type="silv" time_len="67">
+                              <phone beg_pos="0" content="silv" dp_message="0" end_pos="67" rec_node_type="silv" time_len="67"></phone>
                           </syll>
-                          <syll beg_pos="70" content="发" dp_message="0" end_pos="124" rec_node_type="paper" symbol="fa1" time_len="54">
-                              <phone beg_pos="70" content="f" dp_message="0" end_pos="78" is_yun="0" perr_level_msg="1" perr_msg="0" rec_node_type="paper" time_len="8"></phone>
-                              <phone beg_pos="78" content="a" dp_message="0" end_pos="124" is_yun="1" mono_tone="TONE1" perr_level_msg="2" perr_msg="1" rec_node_type="paper" time_len="46"></phone>
+                          <syll beg_pos="67" content="妈" dp_message="0" end_pos="114" rec_node_type="paper" symbol="ma1" time_len="47">
+                              <phone beg_pos="66" content="m" dp_message="0" end_pos="81" is_yun="0" perr_level_msg="0" perr_msg="0" rec_node_type="paper" time_len="12"></phone>
+                              <phone beg_pos="81" content="a" dp_message="128" end_pos="117" is_yun="1" mono_tone="TONE1" perr_level_msg="0" perr_msg="1" rec_node_type="paper" time_len="35"></phone>
                           </syll>
-                          <syll beg_pos="124" content="sil" dp_message="0" end_pos="220" rec_node_type="sil" time_len="96">
-                              <phone beg_pos="124" content="sil" end_pos="220" time_len="96"></phone>
+                          <syll beg_pos="114" content="silv" dp_message="0" end_pos="154" rec_node_type="silv" time_len="40">
+                              <phone beg_pos="114" content="silv" end_pos="154" time_len="40"></phone>
                           </syll>
                       </word>
                   </sentence>
-              </read_sentence>
+              </read_word>
           </rec_paper>
-      </read_sentence>
+      </read_word>
   </xml_result>

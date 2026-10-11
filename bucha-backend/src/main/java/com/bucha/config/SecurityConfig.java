@@ -31,14 +31,16 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-            @Value("${app.cors.allowed-origins:https://dingdong.up.railway.app,http://localhost:5501}") String allowedOrigins) throws Exception {
+            @Value("${app.cors.allowed-origins:https://calm-dune-077a49c00.3.azurestaticapps.net,http://localhost:5501,http://localhost:5173}") String allowedOrigins)
+            throws Exception {
 
-        // CORS config
+        // CORS config with credentials support
         http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration cfg = new CorsConfiguration();
             cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
             cfg.setAllowedHeaders(List.of("*"));
-            cfg.setAllowCredentials(true);
+            cfg.setAllowCredentials(true); // Required for cookies
+            cfg.setExposedHeaders(List.of("Set-Cookie")); // Allow frontend to see Set-Cookie header
             cfg.setAllowedOrigins(
                     Arrays.stream(allowedOrigins.split(","))
                             .map(String::trim)
@@ -57,7 +59,6 @@ public class SecurityConfig {
                         .requestMatchers(
                                 new AntPathRequestMatcher("/api/auth/**"),
                                 new AntPathRequestMatcher("/api/audio/**"),
-                                new AntPathRequestMatcher("/**"),
                                 new AntPathRequestMatcher("/v3/api-docs/**"),
                                 new AntPathRequestMatcher("/swagger-ui/**"),
                                 new AntPathRequestMatcher("/swagger-ui.html"),
@@ -66,6 +67,8 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/api/ise/score-json"),
                                 new AntPathRequestMatcher("/api/ise/job/**"))
                         .permitAll()
+                        // Pronunciation evaluate requires authentication
+                        .requestMatchers(new AntPathRequestMatcher("/api/pronunciation/evaluate")).authenticated()
                         .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
                         .anyRequest().permitAll())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

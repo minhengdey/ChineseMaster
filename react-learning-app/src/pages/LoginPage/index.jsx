@@ -4,12 +4,18 @@ import { useState } from "react"
 import HeroSection from "./components/HeroSection"
 import LoginForm from "./components/LoginForm"
 import RegisterForm from "./components/RegisterForm"
+import TabSwitcher from "./components/TabSwitcher"
+import FormCard from "./components/FormCard"
+import MobileHero from "./components/MobileHero"
+import { ROUTES } from "../../constants/routes"
 
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState("login")
 
   const onLogin = () => {
-    window.location.href = "/"
+    setTimeout(() => {
+      window.location.href = ROUTES.HOME
+    }, 100)
   }
 
   return (
@@ -21,33 +27,13 @@ export default function LoginPage() {
           </div>
 
           <div className="w-full">
-            <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden backdrop-blur-sm">
-              <div className="flex border-b border-slate-200 bg-gradient-to-r from-purple-50 to-blue-50">
-                <button
-                  onClick={() => setActiveTab("login")}
-                  className={`tab-btn flex-1 ${activeTab === "login" ? "active" : ""}`}
-                >
-                  Đăng nhập
-                </button>
-                <button
-                  onClick={() => setActiveTab("register")}
-                  className={`tab-btn flex-1 ${activeTab === "register" ? "active" : ""}`}
-                >
-                  Đăng ký
-                </button>
-              </div>
-
-              {/* Form Content */}
+            <FormCard>
+              <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
               <div className="p-8 sm:p-10 fade-in">
                 {activeTab === "login" ? <LoginForm onLogin={onLogin} /> : <RegisterForm onRegister={onLogin} />}
               </div>
-            </div>
-
-            {/* Mobile Hero */}
-            <div className="lg:hidden mt-8 text-center">
-              <h2 className="text-2xl font-bold text-white mb-2">🇨🇳 Chinese Master</h2>
-              <p className="text-slate-300">Ứng dụng học tiếng Trung toàn diện</p>
-            </div>
+            </FormCard>
+            <MobileHero />
           </div>
         </div>
       </div>

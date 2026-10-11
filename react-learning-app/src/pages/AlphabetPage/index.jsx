@@ -5,6 +5,8 @@ import { createPortal } from "react-dom"
 import RecordingButton from "./components/RecordingButton"
 import PronunciationResult from "./components/PronunciationResult"
 import { Volume2, Type, AlertCircle, AlertTriangle } from "lucide-react"
+import { hasLetters } from "../../utils/textUtils"
+import PageLayout from "../../components/layout/PageLayout"
 
 const AlphabetPage = () => {
   const [pinyinTable, setPinyinTable] = useState([])
@@ -71,7 +73,10 @@ const AlphabetPage = () => {
       const filename = `${pinyin}${toneNumber}.mp3`
 
       // Get Cloudinary base URL from env config
-      const cloudinaryBaseUrl = window._env_?.VITE_CLOUDINARY_PINYIN_AUDIO_BASE_URL
+      const cloudinaryBaseUrl =
+        import.meta?.env?.VITE_CLOUDINARY_PINYIN_AUDIO_BASE_URL ||
+        window._env_?.VITE_CLOUDINARY_PINYIN_AUDIO_BASE_URL ||
+        "https://res.cloudinary.com/dtshwjjbc/video/upload/v1760853479/chinese-master/pinyin-audio"
 
       // Construct full audio URL
       // Example: https://res.cloudinary.com/dtshwjjbc/video/upload/v1760853479/chinese-master/pinyin-audio/bi3.mp3
@@ -186,18 +191,24 @@ const AlphabetPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-white">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
+      <PageLayout>
+        <div className="flex items-center justify-center min-h-48">
+          <span className="loading loading-spinner loading-lg text-purple-500" />
+        </div>
+      </PageLayout>
     )
   }
 
   const headers = pinyinTable[0] || []
   const bodyRows = pinyinTable.slice(1) || []
 
+  const visibleVariants = selectedItem
+    ? (selectedItem.variants || []).filter((variant) => hasLetters(variant?.hanzi || variant?.pinyin || ""))
+    : []
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-8">
-      <div className="container mx-auto px-4">
+    <PageLayout>
+      <div className="space-y-6">
         <div className="mb-8 bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-500 rounded-3xl p-8 text-white shadow-lg animate-fade-in flex items-center gap-4">
           <Type size={40} />
           <div>
@@ -334,7 +345,7 @@ const AlphabetPage = () => {
                   Phát âm "{selectedItem.pinyin}"
                 </h3>
 
-                {selectedItem.variants?.length > 0 ? (
+                {visibleVariants && visibleVariants.length > 0 ? (
                   <>
                     <div className="alert alert-info mb-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 flex items-start gap-2">
                       <AlertCircle size={20} className="flex-shrink-0 text-blue-600 mt-0.5" />
@@ -346,7 +357,7 @@ const AlphabetPage = () => {
                     <div className="mb-4">
                       <h5 className="font-semibold text-lg mb-3 text-purple-600">Các biến thể thanh điệu:</h5>
                       <div className="space-y-3">
-                        {selectedItem.variants.map((variant, index) => (
+                        {visibleVariants.map((variant, index) => (
                           <div
                             key={index}
                             className="card bg-gradient-to-r from-purple-50 to-blue-50 shadow-sm border border-purple-200"
@@ -447,7 +458,7 @@ const AlphabetPage = () => {
             document.body
           )}
       </div>
-    </div>
+    </PageLayout>
   )
 }
 

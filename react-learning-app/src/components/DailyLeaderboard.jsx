@@ -3,17 +3,15 @@
 import { useEffect, useState } from "react"
 import { iseStatsAPI } from "../services/api"
 
-// Compute daily score using provided formula with normalization for completion count
-const computeDailyScore = (entry, maxCompletion) => {
-  const avg = Number(entry.avgScore ?? 0) // assumed 0-100
-  const completionCount = Number(entry.completionCount ?? 0)
-  // normalize completionCount to 0-100 using maxCompletion (avoid div0)
-  const completionRate = maxCompletion > 0 ? Math.min(100, (completionCount / maxCompletion) * 100) : 0
-  // improvementRate is expected as a percent number (e.g. +3 or -1)
-  const improvementRate = Number(entry.improvementRate ?? 0)
+const _dailyLeaderboardInFlight = { promise: null }
 
+const computeDailyScore = (entry, maxCompletion) => {
+  const avg = Number(entry.avgScore ?? 0)
+  const completionCount = Number(entry.completionCount ?? 0)
+  const completionRate = maxCompletion > 0 ? Math.min(100, (completionCount / maxCompletion) * 100) : 0
+  const improvementRate = Number(entry.improvementRate ?? 0)
   const dailyScore = 0.7 * avg + 0.2 * completionRate + 0.1 * improvementRate
-  return Math.round(Math.max(0, Math.min(100, dailyScore)) * 10) / 10 // one decimal
+  return Math.round(Math.max(0, Math.min(100, dailyScore)) * 10) / 10
 }
 
 const DailyLeaderboard = ({ className }) => {
@@ -23,46 +21,55 @@ const DailyLeaderboard = ({ className }) => {
 
   useEffect(() => {
     let mounted = true
-    const load = async () => {
-      setLoading(true)
-      try {
-        // NOTE: backend endpoint /ise/stats/leaderboard/daily must exist to return aggregated rows across users.
-        const data = await iseStatsAPI.getLeaderboardDaily()
-        if (!mounted) return
-        const rows = Array.isArray(data?.rows) ? data.rows : []
-
-        // find max completion to normalize
-        const maxCompletion = rows.reduce((m, r) => Math.max(m, Number(r.completionCount || 0)), 0) || 1
-
-        const enriched = rows.map((r) => ({
-          ...r,
-          dailyScore: computeDailyScore(r, maxCompletion),
-        }))
-
-        // sort by dailyScore desc, tie-breaker: improvementRate desc, completionCount desc, timestamp asc
-        enriched.sort((a, b) => {
-          if (b.dailyScore !== a.dailyScore) return b.dailyScore - a.dailyScore
-          if ((b.improvementRate ?? 0) !== (a.improvementRate ?? 0))
-            return (b.improvementRate ?? 0) - (a.improvementRate ?? 0)
-          if ((b.completionCount ?? 0) !== (a.completionCount ?? 0))
-            return (b.completionCount ?? 0) - (a.completionCount ?? 0)
-          // older timestamp (smaller) should come first if other metrics tie
-          return (a.timestamp || 0) - (b.timestamp || 0)
-        })
-
-        setRows(enriched)
-      } catch (e) {
-        console.debug("Failed to load daily leaderboard", e)
-        setError(e?.message || "Không thể tải BXH")
-        setRows([])
-      } finally {
-        setLoading(false)
+    const run = async () => {
+      if (_dailyLeaderboardInFlight.promise) {
+        try {
+          const enriched = await _dailyLeaderboardInFlight.promise
+          if (mounted) {
+            setRows(enriched ?? [])
+            setLoading(false)
+          }
+        } catch (_) {
+          if (mounted) setLoading(false)
+        }
+        return
       }
+      setLoading(true)
+      _dailyLeaderboardInFlight.promise = (async () => {
+        try {
+          const data = await iseStatsAPI.getLeaderboardDaily()
+          const rawRows = Array.isArray(data?.rows) ? data.rows : []
+          const maxCompletion = rawRows.reduce((m, r) => Math.max(m, Number(r.completionCount || 0)), 0) || 1
+          const enriched = rawRows.map((r) => ({
+            ...r,
+            dailyScore: computeDailyScore(r, maxCompletion),
+          }))
+          enriched.sort((a, b) => {
+            if (b.dailyScore !== a.dailyScore) return b.dailyScore - a.dailyScore
+            if ((b.improvementRate ?? 0) !== (a.improvementRate ?? 0))
+              return (b.improvementRate ?? 0) - (a.improvementRate ?? 0)
+            if ((b.completionCount ?? 0) !== (a.completionCount ?? 0))
+              return (b.completionCount ?? 0) - (a.completionCount ?? 0)
+            return (a.timestamp || 0) - (b.timestamp || 0)
+          })
+          if (mounted) setRows(enriched)
+          return enriched
+        } catch (e) {
+          console.debug("Failed to load daily leaderboard", e)
+          if (mounted) {
+            setError(e?.message || "Không thể tải BXH")
+            setRows([])
+          }
+          throw e
+        } finally {
+          _dailyLeaderboardInFlight.promise = null
+          if (mounted) setLoading(false)
+        }
+      })()
+      await _dailyLeaderboardInFlight.promise
     }
-    load()
-    return () => {
-      mounted = false
-    }
+    run()
+    return () => { mounted = false }
   }, [])
 
   if (loading) {

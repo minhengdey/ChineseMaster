@@ -14,6 +14,13 @@ const WordRecordingButton = ({
   onStartRecording,
   size = "xs",
 }) => {
+  // If the word contains no letters (only digits/punctuation/etc.), do not render the recording UI.
+  const wordText = (word || "").trim();
+  try {
+    if (wordText && !/\p{L}/u.test(wordText)) return null;
+  } catch (e) {
+    if (wordText && !/[A-Za-z]/.test(wordText)) return null;
+  }
   const [isRecording, setIsRecording] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [error, setError] = useState(null)
@@ -83,6 +90,12 @@ const WordRecordingButton = ({
       if (vocabExternal != null) payload.vocabularyId = String(vocabExternal)
       if (lessonId != null) payload.lessonId = String(lessonId)
       const result = await iseAPI.scoreWord(payload)
+
+      if (result && result.require_retry) {
+        setError(result.message || "Ghi âm không đủ rõ. Vui lòng ghi lại và thử lại.")
+        return
+      }
+
       const raw = result?.raw_response ?? result
       // Normalize result similar to existing logic in file
       let normalized = raw
@@ -100,6 +113,13 @@ const WordRecordingButton = ({
           is_rejected: sent.is_rejected ?? raw.is_rejected ?? false,
           except_info: sent.except_info ?? raw.except_info ?? null,
           warning: sent.warning ?? raw.warning ?? null,
+          sentence: sent,
+          overallFeedback: raw.overallFeedback ?? null,
+          pronunciationIssue: raw.pronunciationIssue ?? null,
+          toneIssue: raw.toneIssue ?? null,
+          fluencyIssue: raw.fluencyIssue ?? null,
+          improvementTip: raw.improvementTip ?? null,
+          feedback: raw.feedback ?? raw.overallFeedback ?? null,
         }
       }
       onScore && onScore(normalized, blob, vocabExternal ? `word-${vocabExternal}` : undefined)

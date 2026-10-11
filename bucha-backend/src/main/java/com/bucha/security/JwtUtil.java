@@ -16,31 +16,35 @@ public class JwtUtil {
     private final long refreshTokenValidityMs;
 
     public JwtUtil(@Value("${jwt.secret}") String secret,
-            @Value("${jwt.access-validity-ms:900000}") long accessTokenValidityMs,
+            @Value("${jwt.access-validity-ms:86400000}") long accessTokenValidityMs,
             @Value("${jwt.refresh-validity-ms:1209600000}") long refreshTokenValidityMs) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
         this.accessTokenValidityMs = accessTokenValidityMs;
         this.refreshTokenValidityMs = refreshTokenValidityMs;
     }
 
-    public String generateAccessToken(String username, Long userId) {
+    public String generateAccessToken(String username, Long userId, String email, String role) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + accessTokenValidityMs);
         return Jwts.builder()
                 .setSubject(username)
                 .claim("uid", userId)
+                .claim("email", email)
+                .claim("role", role)
                 .setIssuedAt(now)
                 .setExpiration(exp)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String generateRefreshToken(String username, Long userId) {
+    public String generateRefreshToken(String username, Long userId, String email, String role) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + refreshTokenValidityMs);
         return Jwts.builder()
                 .setSubject(username)
                 .claim("uid", userId)
+                .claim("email", email)
+                .claim("role", role)
                 .setIssuedAt(now)
                 .setExpiration(exp)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -55,9 +59,7 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token);
         } catch (ExpiredJwtException ex) {
-            // Nếu token hết hạn, chúng ta sẽ tự tạo lại đối tượng Jws
-            System.out.println("Token expired, but signature is valid. Re-wrapping in a custom Jws object.");
-
+            // Token expired but signature valid: re-wrap in custom Jws for downstream handling
             String[] chunks = token.split("\\.");
             String signature = (chunks.length == 3) ? chunks[2] : "";
 

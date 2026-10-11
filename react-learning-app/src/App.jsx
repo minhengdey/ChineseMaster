@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import {
    BrowserRouter as Router,
    Routes,
@@ -9,43 +9,55 @@ import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import CurriculumPage from "./pages/CurriculumPage";
 import LessonsPage from "./pages/LessonsPage";
-import LessonDetailPage from "./pages/LessonDetailPage";
 import VocabularyPracticePage from "./pages/VocabularyPracticePage";
-import FlashcardsIndex, { FlashcardsCurriculum } from "./pages/FlashcardsPage";
-import FlashCardsLessonPage from "./pages/FlashCardsLessonPage";
-import SpeakingPracticePage from "./pages/SpeakingPracticePage";
 import PronunciationPage from "./pages/PronunciationPage";
-import ProfilePage from "./pages/ProfilePage";
-import AlphabetPage from "./pages/AlphabetPage";
+import AssessmentsListPage from "./pages/AssessmentsListPage";
 import Login from "./pages/LoginPage/index";
-
+import RoleGuard from "./components/RoleGuard";
 import "./App.css";
-import { authAPI } from "./services/api";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { useUserStore } from "./store/UserStore";
+import { ROUTES } from "./constants/routes";
+
+const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
+const ClassManagementPage = lazy(() => import("./pages/ClassManagementPage"));
+const LessonDetailPage = lazy(() => import("./pages/LessonDetailPage"));
+const FlashcardsIndex = lazy(() => import("./pages/FlashcardsPage").then((m) => ({ default: m.default })));
+const FlashcardsCurriculum = lazy(() => import("./pages/FlashcardsPage").then((m) => ({ default: m.FlashcardsCurriculum })));
+const FlashCardsLessonPage = lazy(() => import("./pages/FlashCardsLessonPage"));
+const SpeakingPracticePage = lazy(() => import("./pages/SpeakingPracticePage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const AlphabetPage = lazy(() => import("./pages/AlphabetPage"));
+const AssessmentTestPage = lazy(() => import("./pages/AssessmentTestPage"));
+const HSKKExamPage = lazy(() => import("./pages/HSKKExamPage"));
+
+const PageFallback = () => (
+   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-white">
+      <span className="loading loading-spinner loading-lg text-purple-500" />
+   </div>
+);
 
 function App() {
    const [user, setUser] = useState(null);
    const [isAuthenticated, setIsAuthenticated] = useState(false);
+   const storeUser = useUserStore((state) => state.user);
 
    useEffect(() => {
-      // Check if user is logged in
-      const token = localStorage.getItem("accessToken");
-      const userData = localStorage.getItem("user");
-
-      if (token && userData) {
-         setUser(JSON.parse(userData));
-         setIsAuthenticated(true);
-      }
+      // No localStorage - authentication is handled by httpOnly cookie
+      // ProtectedRoute will verify token and fetch user when needed
    }, []);
 
    return (
       <Router>
          <div className="min-h-screen bg-base-100">
+            <Suspense fallback={<PageFallback />}>
             <Routes>
                <Route
                   element={
                      <ProtectedRoute>
-                        <Navbar />
+                        <RoleGuard allowedRoles={["USER"]} redirectTo="/admin">
+                           <Navbar />
+                        </RoleGuard>
                      </ProtectedRoute>
                   }
                >
@@ -55,9 +67,14 @@ function App() {
                      path="curriculum/:curriculumId/lessons"
                      element={<LessonsPage />}
                   />
+                  <Route path="assessments" element={<AssessmentsListPage />} />
                   <Route
                      path="curriculum/:curriculumId/lesson/:lessonId"
                      element={<LessonDetailPage />}
+                  />
+                  <Route
+                     path="assessment/:assessmentId"
+                     element={<AssessmentTestPage />}
                   />
                   <Route
                      path="curriculum/:curriculumId/lesson/:lessonId/practice"
@@ -68,7 +85,10 @@ function App() {
                      element={<FlashCardsLessonPage />}
                   />
                   <Route path="flashcards" element={<FlashcardsIndex />} />
-                  <Route path="flashcards/:curriculumId" element={<FlashcardsCurriculum />} />
+                  <Route
+                     path="flashcards/:curriculumId"
+                     element={<FlashcardsCurriculum />}
+                  />
                   <Route
                      path="curriculum/:curriculumId/lesson/:lessonId/speaking"
                      element={<SpeakingPracticePage />}
@@ -80,12 +100,11 @@ function App() {
                   />
                   <Route
                      path="lesson/:id"
-                     element={
-                        <Navigate to="/curriculum/1/lesson/:id" replace />
-                     }
+                     element={<Navigate to="/curriculum/1/lesson/:id" replace />}
                   />
                   <Route path="pronunciation" element={<PronunciationPage />} />
                   <Route path="alphabet" element={<AlphabetPage />} />
+                  <Route path="hskk-exam" element={<HSKKExamPage />} />
                   <Route path="profile" element={<ProfilePage user={user} />} />
                   <Route
                      path="/curriculum/:curriculumId/lesson/:lessonId/speaking"
@@ -98,9 +117,23 @@ function App() {
                   />
                </Route>
 
-               <Route path="/login" element={<Login />} />
+               <Route
+                  element={
+                     <ProtectedRoute>
+                        <RoleGuard allowedRoles={["ADMIN"]} redirectTo="/">
+                           <Navbar />
+                        </RoleGuard>
+                     </ProtectedRoute>
+                  }
+               >
+                  <Route path="admin" element={<AdminDashboardPage />} />
+                  <Route path="admin/classes" element={<ClassManagementPage />} />
+               </Route>
+
+               <Route path={ROUTES.LOGIN} element={<Login />} />
                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            </Suspense>
          </div>
       </Router>
    );

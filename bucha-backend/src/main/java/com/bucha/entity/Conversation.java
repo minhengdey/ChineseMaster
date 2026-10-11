@@ -27,7 +27,7 @@ public class Conversation {
    @Column(name = "vn_translation", length = 500)
    private String vnTranslation; // Vietnamese translation of the section
 
-   @Column
+   @Column(name = "audio_public_id")
    private String audioPublicId;
 
    @ManyToOne(fetch = FetchType.LAZY)
