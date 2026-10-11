@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import AudioPlayer from "./AudioPlayer"
 import SentenceRecordingButton from "./SentenceRecordingButton"
 import SentencePronunciationResult from "./SentencePronunciationResult"
-import { iseStatsAPI } from "../../../services/api"
+import { hasLetters } from "../../../utils/textUtils"
 
 const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds = [], refreshPronounced }) => {
   const [expandedSection, setExpandedSection] = useState(null)
@@ -12,51 +12,21 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
   const [showPronunciationResult, setShowPronunciationResult] = useState(false)
   const [recordedAudio, setRecordedAudio] = useState(null)
   const [activeLineId, setActiveLineId] = useState(null)
-  const [localHighlightedLineIds, setLocalHighlightedLineIds] = useState([])
+  const [localHighlightedLineIds, setLocalHighlightedLineIds] = useState(() =>
+    Array.isArray(highlightedLineIds) ? highlightedLineIds.map(String) : [],
+  )
   const [showPinyin, setShowPinyin] = useState(true)
+
+  // Sync from parent (single source: parent fetches pronounced once)
+  useEffect(() => {
+    if (Array.isArray(highlightedLineIds) && highlightedLineIds.length >= 0) {
+      setLocalHighlightedLineIds(highlightedLineIds.map(String))
+    }
+  }, [lessonId, highlightedLineIds])
 
   const toggleSection = (index) => {
     setExpandedSection(expandedSection === index ? null : index)
   }
-
-  // Debug: print highlighted IDs received from backend so we can verify matching
-  if (process.env.NODE_ENV !== "production") {
-    try {
-      // console.debug(
-      //   "[ConversationSection] highlightedLineIds (from API):",
-      //   highlightedLineIds,
-      //   "local:",
-      //   localHighlightedLineIds,
-      // )
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  useEffect(() => {
-    let mounted = true
-    const fetchPronounced = async () => {
-      if (!lessonId) return
-      try {
-        const stats = await iseStatsAPI.getPronouncedForLesson(lessonId)
-        // stats may contain lineIds (array) or entries; prefer aggregated lineIds
-        const ids =
-          stats && Array.isArray(stats.lineIds) && stats.lineIds.length
-            ? stats.lineIds.map(String)
-            : Array.isArray(stats.entries)
-              ? stats.entries.map((e) => String(e.lineId)).filter(Boolean)
-              : []
-        if (mounted) setLocalHighlightedLineIds(ids)
-      } catch (e) {
-        // console.warn("Failed to fetch pronounced stats for lesson", lessonId, e)
-      }
-    }
-
-    fetchPronounced()
-    return () => {
-      mounted = false
-    }
-  }, [lessonId])
 
   const handlePronunciationScore = async (result, audioBlob, returnedLineId, internalLineId, externalLineId) => {
     // returnedLineId may be externalId or internal id depending on recorder logic.
@@ -122,7 +92,12 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
     setActiveLineId(null)
   }
 
-  if (!conversations || conversations.length === 0) {
+  // Filter out conversations and lines that have no letters in their main display text
+  const visibleConversations = (conversations || [])
+    .map((c) => ({ ...c, visibleLines: (c.lines || []).filter((line) => hasLetters(line?.zh || line?.zhText || line?.pinyin || line?.text || "")) }))
+    .filter((c) => Array.isArray(c.visibleLines) && c.visibleLines.length > 0)
+
+  if (!visibleConversations || visibleConversations.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="text-6xl mb-4">💬</div>
@@ -142,7 +117,7 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
           {showPinyin ? "Ẩn pinyin" : "Hiện pinyin"}
         </button>
       </div>
-      {conversations.map((conversation, index) => (
+      {visibleConversations.map((conversation, index) => (
         <div
           key={conversation.id ?? index}
           className="card bg-gradient-to-br from-white to-purple-50 shadow-lg border border-purple-200"
@@ -164,7 +139,7 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
 
             {expandedSection === index && (
               <div className="mt-6 space-y-4">
-                {conversation.lines?.map((line) => {
+                {conversation.visibleLines?.map((line) => {
                   const effectiveHighlighted =
                     localHighlightedLineIds && localHighlightedLineIds.length
                       ? localHighlightedLineIds
@@ -185,8 +160,8 @@ const ConversationSection = ({ conversations = [], lessonId, highlightedLineIds 
                     <div
                       key={line.externalId ?? line.id}
                       className={`p-4 rounded-lg transition-all ${isHighlighted
-                          ? "bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-500 shadow-md"
-                          : "bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200"
+                        ? "bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-500 shadow-md"
+                        : "bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200"
                         }`}
                     >
                       <div className="flex justify-between items-start mb-2">

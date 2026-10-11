@@ -1,23 +1,28 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, memo } from "react"
 import { Link } from "react-router-dom"
 import { userLessonAPI } from "../../../services/api"
 
-const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
-  const [completed, setCompleted] = useState(Boolean(lesson?.completed))
-  const [inProgress, setInProgress] = useState(Boolean(lesson?.inProgress))
+const LessonCard = memo(({ lesson, curriculumId, isLocked = false, completed: completedProp, inProgress: inProgressProp }) => {
+  const fromParent = completedProp !== undefined && inProgressProp !== undefined
+  const [completed, setCompleted] = useState(fromParent ? completedProp : Boolean(lesson?.completed))
+  const [inProgress, setInProgress] = useState(fromParent ? inProgressProp : Boolean(lesson?.inProgress))
+  const localIsLocked = false
 
   useEffect(() => {
+    if (fromParent) {
+      setCompleted(completedProp)
+      setInProgress(inProgressProp)
+      return
+    }
+    if (!lesson?.id) return
     let mounted = true
     const fetchStatus = async () => {
-      if (!lesson?.id) return
       try {
         const data = await userLessonAPI.isCompleted(lesson.id)
         if (!mounted) return
-        const userLines = Number(
-          data?.userDistinctLineCount ?? data?.user_distinct_line_count ?? data?.scoredCount ?? 0,
-        )
+        const userLines = Number(data?.userDistinctLineCount ?? data?.user_distinct_line_count ?? data?.scoredCount ?? 0)
         const userVocabs = Number(data?.userDistinctVocabCount ?? data?.user_distinct_vocab_count ?? 0)
         const totalLines = Number(data?.totalLines ?? data?.total_lines ?? 0)
         const totalVocab = Number(data?.totalVocab ?? data?.total_vocab ?? 0)
@@ -25,25 +30,21 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
         const vocabComplete = totalVocab === 0 || userVocabs >= totalVocab
         setCompleted(linesComplete && vocabComplete)
         setInProgress(!(linesComplete && vocabComplete) && (userLines > 0 || userVocabs > 0))
-      } catch (e) {
-        // console.debug("Failed to fetch lesson completion", e)
-      }
+      } catch (e) {}
     }
     fetchStatus()
-    return () => {
-      mounted = false
-    }
-  }, [lesson?.id])
+    return () => { mounted = false }
+  }, [lesson?.id, fromParent, completedProp, inProgressProp])
 
   const getLessonStatusIcon = () => {
-    if (isLocked) return "🔒"
+    if (localIsLocked) return "🔒"
     if (completed) return "✅"
     if (inProgress) return "📖"
     return "📝"
   }
 
   const getLessonStatusText = () => {
-    if (isLocked) return "Đã khóa"
+    if (localIsLocked) return "Đã khóa"
     if (completed) return "Hoàn thành"
     if (inProgress) return "Đang học"
     return "Chưa bắt đầu"
@@ -51,13 +52,13 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
 
   return (
     <div
-      className={`card shadow-lg transition-all duration-300 overflow-hidden border-2 ${isLocked
-          ? "bg-slate-100 border-slate-300 opacity-60 cursor-not-allowed"
-          : completed
-            ? "border-emerald-300 hover:shadow-xl hover:scale-105 bg-white"
-            : inProgress
-              ? "border-amber-300 hover:shadow-xl hover:scale-105 bg-white"
-              : "border-slate-200 hover:shadow-xl hover:scale-105 bg-white"
+      className={`card shadow-lg transition-all duration-300 overflow-hidden border-2 ${localIsLocked
+        ? "bg-slate-100 border-slate-300 opacity-60 cursor-not-allowed"
+        : completed
+          ? "border-emerald-300 hover:shadow-xl hover:scale-105 bg-white"
+          : inProgress
+            ? "border-amber-300 hover:shadow-xl hover:scale-105 bg-white"
+            : "border-slate-200 hover:shadow-xl hover:scale-105 bg-white"
         }`}
     >
       <div className="p-6">
@@ -70,10 +71,10 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
           </div>
           <div
             className={`text-xs font-semibold px-3 py-1 rounded-full ${completed
-                ? "bg-emerald-100 text-emerald-700"
-                : inProgress
-                  ? "bg-amber-100 text-amber-700"
-                  : "bg-slate-100 text-slate-700"
+              ? "bg-emerald-100 text-emerald-700"
+              : inProgress
+                ? "bg-amber-100 text-amber-700"
+                : "bg-slate-100 text-slate-700"
               }`}
           >
             {getLessonStatusText()}
@@ -91,7 +92,7 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
         )}
 
         <div className="flex justify-end">
-          {isLocked ? (
+          {localIsLocked ? (
             <button className="px-4 py-2 bg-slate-300 text-slate-600 font-semibold rounded-lg cursor-not-allowed opacity-50">
               Hoàn thành bài trước
             </button>
@@ -107,6 +108,8 @@ const LessonCard = ({ lesson, curriculumId, isLocked = false }) => {
       </div>
     </div>
   )
-}
+})
+
+LessonCard.displayName = "LessonCard"
 
 export default LessonCard

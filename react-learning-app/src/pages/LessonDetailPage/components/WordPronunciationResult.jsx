@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { pronunciationAPI } from "../../../services/api";
+import StructuredFeedbackView from "../../../components/StructuredFeedbackView";
+import { inferInitialHintFromPhonemes, normalizePronunciationQuery } from "../../../utils/pronunciationLookup";
 
 const WordPronunciationResult = ({
    result,
@@ -9,6 +11,16 @@ const WordPronunciationResult = ({
    onClose,
 }) => {
    if (!result) return null;
+
+   // If the reference word contains no letters (digits/punctuation only), don't render.
+   if (typeof word === "string") {
+      const w = word.trim();
+      try {
+         if (w && !/\p{L}/u.test(w)) return null;
+      } catch (e) {
+         if (w && !/[A-Za-z]/.test(w)) return null;
+      }
+   }
 
    const [selectedWordIndex, setSelectedWordIndex] = useState(null);
    const [guide, setGuide] = useState(null);
@@ -186,32 +198,48 @@ const WordPronunciationResult = ({
             </div>
          </div>
 
-         {/* Detailed scores grid (star style like speaking practice) */}
-         <div className="grid grid-cols-2 gap-2">
-            <div className="card bg-base-200">
-               <div className="card-body p-2 text-center">
-                  <h6 className="font-medium text-xs mb-1">Hoàn thiện</h6>
-                  <div className="mb-1">
-                     <Stars percent={toPercent(completenessScore)} />
-                  </div>
-                  <div className="text-sm font-medium text-yellow-700">
-                     {toPercent(completenessScore)}%
-                  </div>
-               </div>
-            </div>
+         {/* Nhận xét AI (Điểm tổng, Nhận xét, Lỗi, Gợi ý) */}
+         {(result.overallFeedback || result.improvementTip || result.feedback) && (
+            <StructuredFeedbackView
+               score={result.total_score ?? result.totalScore ?? result.score}
+               overallFeedback={result.overallFeedback ?? result.feedback}
+               pronunciationIssue={result.pronunciationIssue}
+               toneIssue={result.toneIssue}
+               fluencyIssue={result.fluencyIssue}
+               improvementTip={result.improvementTip}
+            />
+         )}
 
-            <div className="card bg-base-200">
-               <div className="card-body p-2 text-center">
-                  <h6 className="font-medium text-xs mb-1">Trôi chảy</h6>
-                  <div className="mb-1">
-                     <Stars percent={toPercent(fluencyScore)} />
+         {/* Detailed scores grid (star style like speaking practice).
+             Hide fluency/completeness for single-character word mode because
+             ISE read_word typically doesn't compute these metrics. */}
+         {isCompoundWord ? (
+            <div className="grid grid-cols-2 gap-2">
+               <div className="card bg-base-200">
+                  <div className="card-body p-2 text-center">
+                     <h6 className="font-medium text-xs mb-1">Hoàn thiện</h6>
+                     <div className="mb-1">
+                        <Stars percent={toPercent(completenessScore)} />
+                     </div>
+                     <div className="text-sm font-medium text-yellow-700">
+                        {toPercent(completenessScore)}%
+                     </div>
                   </div>
-                  <div className="text-sm font-medium text-yellow-700">
-                     {toPercent(fluencyScore)}%
+               </div>
+
+               <div className="card bg-base-200">
+                  <div className="card-body p-2 text-center">
+                     <h6 className="font-medium text-xs mb-1">Trôi chảy</h6>
+                     <div className="mb-1">
+                        <Stars percent={toPercent(fluencyScore)} />
+                     </div>
+                     <div className="text-sm font-medium text-yellow-700">
+                        {toPercent(fluencyScore)}%
+                     </div>
                   </div>
                </div>
             </div>
-         </div>
+         ) : null}
 
          {/* Per-word inline clickable line (single-line text). Click a word to view its detailed info below. */}
          {words && words.length > 0 && (
@@ -222,6 +250,7 @@ const WordPronunciationResult = ({
                      const wordKey = w.word ?? w.text ?? `\u200b${idx}`;
                      const isWrong = wrongWords.has(wordKey) || wrongWords.has(w.word) || wrongWords.has(w.text);
                      const display = w.word || w.text || `Âm ${idx + 1}`;
+                     const wScore = Number(w?.overall ?? w?.pronunciation ?? w?.score ?? w?.pronunciationScore ?? 0)
                      return (
                         <span key={idx} className="inline-block mr-2">
                            <button
@@ -229,7 +258,12 @@ const WordPronunciationResult = ({
                               className={`inline-block px-2 py-1 rounded ${isWrong ? "text-red-600 bg-red-100 font-semibold" : "hover:bg-base-100"} ${selectedWordIndex === idx ? "ring-2 ring-primary" : ""}`}
                               title={isWrong ? "Đánh dấu sai" : `Chi tiết: ${display}`}
                            >
-                              {display}
+                              <div className="flex items-center gap-2">
+                                 <span>{display}</span>
+                                 {(!isCompoundWord) && (
+                                    <span className="ml-2 inline-flex items-center"><Stars percent={Math.round(wScore)} /></span>
+                                 )}
+                              </div>
                            </button>
                         </span>
                      );
@@ -255,8 +289,8 @@ const WordPronunciationResult = ({
                         Đóng
                      </button>
                   </div>
-                  {/* Selected word overall score (stars + percent) */}
-                  {(() => {
+                  {/* Selected word overall score (stars + percent) - show only for compound words */}
+                  {isCompoundWord && (() => {
                      const selected = words[selectedWordIndex];
                      const wordOverall = Math.max(
                         0,
@@ -265,8 +299,7 @@ const WordPronunciationResult = ({
                            Math.round(
                               selected?.overall ??
                               selected?.total_score ??
-                              selected?.totalScore ??
-                              0
+                              selected?.totalScore ?? 0
                            )
                         )
                      );
@@ -282,8 +315,8 @@ const WordPronunciationResult = ({
                               <div
                                  className={`text-xs ${getScoreColor(
                                     wordOverall
-                                 )}`}
-                              ></div>
+                                 )}`}>
+                              </div>
                               <div className="mb-1">
                                  <Stars percent={wordOverall} />
                               </div>
@@ -326,8 +359,17 @@ const WordPronunciationResult = ({
                            </tr>
                         </thead>
                         <tbody>
-                           {(words[selectedWordIndex].phonemes || []).map(
-                              (p, i) => (
+                           {(() => {
+                              const w = words[selectedWordIndex];
+                              const fromWord =
+                                 w?.phonemes ?? w?.details?.phonemes ?? w?.details?.phones ?? [];
+                              const phonemeRows =
+                                 fromWord.length > 0
+                                    ? fromWord
+                                    : words.length <= 1 && Array.isArray(result?.phonemes)
+                                      ? result.phonemes
+                                      : [];
+                              return phonemeRows.map((p, i) => (
                                  <tr key={i}>
                                     <td>
                                        {(() => {
@@ -353,6 +395,8 @@ const WordPronunciationResult = ({
                                                          let query = null;
                                                          // Prefer explicit initial if provided
                                                          if (p.phoneme) query = p.phoneme;
+                                                         if (!query && p.phone) query = p.phone;
+                                                         if (!query && p.content) query = p.content;
                                                          // Otherwise use phoneme_display (string or joined array)
                                                          if (!query && p.phoneme_display) {
                                                             query =
@@ -376,11 +420,13 @@ const WordPronunciationResult = ({
                                                             if (toneMark) query = toneMark;
                                                          }
 
+                                                         const initialHint = inferInitialHintFromPhonemes(phonemeRows, i);
+                                                         const qNorm = query ? normalizePronunciationQuery(query) : "";
                                                          let res = null;
-                                                         if (query) {
-                                                            res = await pronunciationAPI.lookup(
-                                                               query
-                                                            );
+                                                         if (qNorm) {
+                                                            res = await pronunciationAPI.lookup(qNorm, {
+                                                               initial: initialHint,
+                                                            });
                                                          }
                                                          setGuide(res || null);
                                                       } catch (err) {
@@ -423,8 +469,8 @@ const WordPronunciationResult = ({
                                           : "-"}
                                     </td>
                                  </tr>
-                              )
-                           )}
+                              ));
+                           })()}
                         </tbody>
                      </table>
                   </div>

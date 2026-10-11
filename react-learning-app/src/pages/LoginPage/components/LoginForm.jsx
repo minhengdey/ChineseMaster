@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { authAPI, handleApiError } from "../../../services/api"
+import { useUserStore } from "../../../store/UserStore"
 import { Mail, Lock, AlertCircle } from "lucide-react"
 
 const LoginForm = ({ onLogin }) => {
@@ -29,11 +30,14 @@ const LoginForm = ({ onLogin }) => {
 
     try {
       const result = await authAPI.login(formData)
-      if (result.token) {
+      if (result && result.user) {
+        useUserStore.getState().setUser(result.user)
         onLogin()
+      } else {
+        setError("Đăng nhập thất bại")
       }
-    } catch (error) {
-      setError(handleApiError(error))
+    } catch (err) {
+      setError(handleApiError(err))
     } finally {
       setLoading(false)
     }

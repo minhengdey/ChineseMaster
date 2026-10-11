@@ -3,7 +3,7 @@ package com.bucha.config;
 import com.bucha.entity.Curriculum;
 import com.bucha.service.LessonMigrationService;
 import com.bucha.service.CloudinaryService;
-import com.bucha.dto.CurriculumMetadataDto;
+import com.bucha.dto.content.CurriculumMetadataDto;
 import com.bucha.dto.content.ConversationDto;
 import com.bucha.dto.migration.ConversationMigrationDTO;
 import com.bucha.dto.migration.LessonMigrationDTO;
@@ -94,22 +94,6 @@ public class DataInitializer implements CommandLineRunner {
       }
    }
 
-   private String computeSha256Hex(String input) {
-      try {
-         java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
-         byte[] hash = digest.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-         StringBuilder hexString = new StringBuilder(2 * hash.length);
-         for (byte b : hash) {
-            String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1)
-               hexString.append('0');
-            hexString.append(hex);
-         }
-         return hexString.toString();
-      } catch (java.security.NoSuchAlgorithmException e) {
-         throw new RuntimeException(e);
-      }
-   }
 
    // --- helper: stable id from hashing a seed string (path/content)
    private Long computeStableId(String seed) {

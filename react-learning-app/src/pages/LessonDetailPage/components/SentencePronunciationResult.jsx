@@ -1,17 +1,47 @@
 import React from "react";
 import { pronunciationAPI } from "../../../services/api";
+import StructuredFeedbackView from "../../../components/StructuredFeedbackView";
+import { inferInitialHintFromPhonemes, normalizePronunciationQuery } from "../../../utils/pronunciationLookup";
 
 const SentencePronunciationResult = ({
   result,
   recordedAudio,
   onClose,
   sentenceText = "",
+  hideStructuredFeedback = false,
 }) => {
   if (!result) return null;
+
+  // If the reference sentence contains no letters (only digits/punctuation/etc.), do not render.
+  const refSentence = (sentenceText || "").trim();
+  try {
+    // Use Unicode letter property; if no letter present, skip rendering.
+    if (refSentence && !/\p{L}/u.test(refSentence)) return null;
+  } catch (e) {
+    // In environments without Unicode property support, fallback to ASCII letter check
+    if (refSentence && !/[A-Za-z]/.test(refSentence)) return null;
+  }
 
   const [selectedWord, setSelectedWord] = React.useState(null);
   const [guide, setGuide] = React.useState(null);
   const toPercent = (v) => (v == null ? 0 : Math.round(v));
+
+  // Detect word-mode (single character) so UI can hide fluency/completeness boxes
+  const isWordMode = (() => {
+    try {
+      const st = (sentenceText || "").trim()
+      if (st && st.length === 1) return true
+    } catch (e) { }
+    try {
+      const wordsArray = Array.isArray(result?.words) ? result.words : []
+      if (wordsArray.length === 1) {
+        const w = wordsArray[0]
+        const txt = (w?.word || w?.text || "").toString().trim()
+        if (txt && txt.length === 1) return true
+      }
+    } catch (e) { }
+    return false
+  })()
 
   const playRecordedAudio = () => {
     if (recordedAudio) {
@@ -41,6 +71,14 @@ const SentencePronunciationResult = ({
   // Parse scores from actual ISE sentence API format.
   // The ISE API sometimes nests metrics under `result.sentence`.
   const sent = result?.sentence || result || {};
+
+  console.log("🔥 SentencePronunciationResult received:", {
+    result_total_score: result?.total_score,
+    result_db_scores: result?.db_scores,
+    sent_total_score: sent?.total_score,
+    full_result: result
+  });
+
   const totalScore =
     sent?.total_score ??
     sent?.totalScore ??
@@ -50,6 +88,8 @@ const SentencePronunciationResult = ({
     0;
   const fluencyScore = sent?.fluency ?? result?.fluency ?? 0;
   const completenessScore = sent?.completeness ?? result?.completeness ?? 0;
+
+  console.log("📍 Final totalScore calculated:", totalScore);
   const wrongWords =
     sent?.wrong_words ??
     result?.wrong_words ??
@@ -64,7 +104,7 @@ const SentencePronunciationResult = ({
     const sentence = sentenceText || "";
     if (!sentence) return null;
     const chars = Array.from(sentence);
-    const isPunct = (ch) => /[\s,，。.?!、!！?？;；:：]/.test(ch);
+    const isPunct = (ch) => /[\s,，。.?!、!！?？;；:：/]/.test(ch);
     const mapping = [];
     let wi = 0;
     for (let ci = 0; ci < chars.length; ci++) {
@@ -109,17 +149,21 @@ const SentencePronunciationResult = ({
             typeof wordIndex === "number" && Array.isArray(result?.words)
               ? result.words[wordIndex]
               : null;
+          const wordsArr = Array.isArray(result?.words) ? result.words : [];
+          const fromWord =
+            details?.phonemes ?? details?.phones ?? details?.phoneme_list ?? null;
+          const useRootPhonemes =
+            (!fromWord || fromWord.length === 0) &&
+            wordsArr.length <= 1 &&
+            Array.isArray(result?.phonemes) &&
+            result.phonemes.length > 0;
           const normalized = {
             word: ch,
             index: wordIndex,
             duration: details?.duration ?? details?.time_len ?? null,
             overall: details?.overall ?? details?.pronunciation ?? null,
             fluency: details?.fluency ?? null,
-            phonemes:
-              details?.phonemes ??
-              details?.phones ??
-              details?.phoneme_list ??
-              null,
+            phonemes: useRootPhonemes ? result.phonemes : fromWord,
             details: details || null,
           };
           const isWrong = wrongIndices.has(i);
@@ -206,50 +250,103 @@ const SentencePronunciationResult = ({
       </div>
 
       {/* Overall Score */}
-      <div className="card bg-gray-50 shadow-sm border border-gray-200">
-        <div className="card-body p-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h5 className="text-sm font-semibold">Điểm tổng</h5>
-              <p className="text-xs text-base-content/60">Phát âm câu</p>
-            </div>
-            <div className="text-right">
-              <div className="flex flex-col items-end">
-                <div className={`font-bold ${getScoreColor(totalScore)}`}>
-                  <Stars percent={totalScore} size={20} />
-                  <div className={`text-sm mt-1 ${getScoreColor(totalScore)}`}>{toPercent(totalScore)}%</div>
+      {/* Overall Score - hide when in word-mode (single char) */}
+      {(isWordMode ? (
+        (() => {
+          const first = (Array.isArray(result?.words) && result.words.length > 0) ? result.words[0] : null
+          const label = first ? (first.word || first.text || String(sentenceText || "").trim().slice(0, 1)) : (String(sentenceText || "").trim().slice(0, 1) || "Từ")
+          const wScore = first ? Math.max(0, Math.min(100, Math.round(first?.overall ?? first?.pronunciation ?? first?.score ?? first?.pronunciationScore ?? 0))) : 0
+          console.log("🔴 WORD MODE - Displaying wScore from result.words[0]:", {
+            wScore,
+            first_overall: first?.overall,
+            first_pronunciation: first?.pronunciation,
+            first_score: first?.score,
+            totalScore_should_be: totalScore
+          });
+          return (
+            <div className="card bg-gray-50 shadow-sm border border-gray-200">
+              <div className="card-body p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h5 className="text-sm font-semibold">Điểm tổng</h5>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex flex-col items-end">
+                      <div className={`font-bold ${getScoreColor(wScore)}`}>
+                        <Stars percent={toPercent(wScore)} size={20} />
+                        <div className={`text-sm mt-1 ${getScoreColor(wScore)}`}>{toPercent(wScore)}%</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className={`text-xs ${getScoreColor(totalScore)}`}>
-                  {getScoreMessage(totalScore)}
+              </div>
+            </div>
+          )
+        })()
+      ) : (
+        <div className="card bg-gray-50 shadow-sm border border-gray-200">
+          <div className="card-body p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h5 className="text-sm font-semibold">Điểm tổng</h5>
+                <p className="text-xs text-base-content/60">Phát âm câu</p>
+              </div>
+              <div className="text-right">
+                <div className="flex flex-col items-end">
+                  <div className={`font-bold ${getScoreColor(totalScore)}`}>
+                    <Stars percent={totalScore} size={20} />
+                    <div className={`text-sm mt-1 ${getScoreColor(totalScore)}`}>
+                      {console.log("🎯 RENDERING Điểm tổng:", toPercent(totalScore), "from totalScore:", totalScore)}
+                      {toPercent(totalScore)}%
+                    </div>
+                  </div>
+                  <div className={`text-xs ${getScoreColor(totalScore)}`}>
+                    {getScoreMessage(totalScore)}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      ))}
 
       {/* Detailed scores grid */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="card bg-gray-50 border border-gray-200">
-          <div className="card-body p-2 text-center">
-            <h6 className="font-medium text-xs mb-1">Trôi chảy</h6>
-            <div className={`text-lg font-bold ${getScoreColor(fluencyScore)}`}>
-              <Stars percent={fluencyScore} size={16} />
-              <div className={`text-sm mt-1 ${getScoreColor(fluencyScore)}`}>{toPercent(fluencyScore)}%</div>
+      {!isWordMode && (
+        <div className="grid grid-cols-2 gap-2">
+          <div className="card bg-gray-50 border border-gray-200">
+            <div className="card-body p-2 text-center">
+              <h6 className="font-medium text-xs mb-1">Trôi chảy</h6>
+              <div className={`text-lg font-bold ${getScoreColor(fluencyScore)}`}>
+                <Stars percent={fluencyScore} size={16} />
+                <div className={`text-sm mt-1 ${getScoreColor(fluencyScore)}`}>{toPercent(fluencyScore)}%</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="card bg-gray-50 border border-gray-200">
-          <div className="card-body p-2 text-center">
-            <h6 className="font-medium text-xs mb-1">Hoàn thiện</h6>
-            <div className={`text-lg font-bold ${getScoreColor(completenessScore)}`}>
-              <Stars percent={completenessScore} size={16} />
-              <div className={`text-sm mt-1 ${getScoreColor(completenessScore)}`}>{toPercent(completenessScore)}%</div>
+          <div className="card bg-gray-50 border border-gray-200">
+            <div className="card-body p-2 text-center">
+              <h6 className="font-medium text-xs mb-1">Hoàn thiện</h6>
+              <div className={`text-lg font-bold ${getScoreColor(completenessScore)}`}>
+                <Stars percent={completenessScore} size={16} />
+                <div className={`text-sm mt-1 ${getScoreColor(completenessScore)}`}>{toPercent(completenessScore)}%</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Structured AI feedback (Điểm tổng, Nhận xét, Lỗi, Gợi ý) when available */}
+      {!hideStructuredFeedback &&
+        (result.overallFeedback || result.improvementTip || result.feedback) && (
+        <StructuredFeedbackView
+          score={result.total_score ?? result.totalScore ?? result.score}
+          overallFeedback={result.overallFeedback ?? result.feedback}
+          pronunciationIssue={result.pronunciationIssue}
+          toneIssue={result.toneIssue}
+          fluencyIssue={result.fluencyIssue}
+          improvementTip={result.improvementTip}
+        />
+      )}
 
       {/* Annotated sentence: show whole sentence; click a character to view word details */}
       <div className="card bg-gray-50 border border-gray-200">
@@ -276,10 +373,10 @@ const SentencePronunciationResult = ({
             </div>
           </div>
 
-          {selectedWord.overall != null ||
+          {!isWordMode && (selectedWord.overall != null ||
             (selectedWord.details &&
               (selectedWord.details.overall != null ||
-                selectedWord.details.pronunciation != null)) ? (
+                selectedWord.details.pronunciation != null))) ? (
             <div className="mb-2">
               <div className="text-sm text-gray-600 mb-1">Điểm từ</div>
               <div className="flex items-center gap-2">
@@ -287,8 +384,7 @@ const SentencePronunciationResult = ({
                   const selectedScore = Number(
                     selectedWord.overall ??
                     selectedWord.details?.overall ??
-                    selectedWord.details?.pronunciation ??
-                    0
+                    selectedWord.details?.pronunciation ?? 0
                   );
                   return (
                     <div className={`text-sm font-medium ${getScoreColor(selectedScore)}`}>
@@ -341,12 +437,13 @@ const SentencePronunciationResult = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {(
-                      selectedWord.phonemes ||
-                      selectedWord.details?.phonemes ||
-                      selectedWord.details?.phones ||
-                      []
-                    ).map((p, idx) => (
+                    {(() => {
+                      const phonemeRows =
+                        selectedWord.phonemes ||
+                        selectedWord.details?.phonemes ||
+                        selectedWord.details?.phones ||
+                        [];
+                      return phonemeRows.map((p, idx) => (
                       <tr key={idx}>
                         <td>
                           <div className="flex items-center gap-2">
@@ -376,6 +473,8 @@ const SentencePronunciationResult = ({
                                 try {
                                   let query = null;
                                   if (p?.phoneme) query = p.phoneme;
+                                  if (!query && p?.phone) query = p.phone;
+                                  if (!query && p?.content) query = p.content;
                                   if (!query && p?.phoneme_display) {
                                     query =
                                       typeof p.phoneme_display ===
@@ -398,8 +497,10 @@ const SentencePronunciationResult = ({
                                     if (toneMark) query = toneMark;
                                   }
 
+                                  const initialHint = inferInitialHintFromPhonemes(phonemeRows, idx);
+                                  const qNorm = query ? normalizePronunciationQuery(query) : "";
                                   let res = null;
-                                  if (query) res = await pronunciationAPI.lookup(query);
+                                  if (qNorm) res = await pronunciationAPI.lookup(qNorm, { initial: initialHint });
                                   setGuide(res || null);
                                 } catch (err) {
                                   // console.error(
@@ -442,7 +543,8 @@ const SentencePronunciationResult = ({
                             : p?.mono_tone || "-"}
                         </td>
                       </tr>
-                    ))}
+                    ));
+                    })()}
                   </tbody>
                 </table>
               </div>

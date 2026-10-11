@@ -3,51 +3,86 @@
 import { useState, useEffect } from "react"
 import { contentAPI, handleApiError } from "../../services/api"
 import CurriculumList from "./components/CurriculumList"
+import PageLayout from "../../components/layout/PageLayout"
 import { BookOpen } from "lucide-react"
+
+const _curriculumPageInFlight = { promise: null }
 
 const CurriculumPage = () => {
   const [curriculums, setCurriculums] = useState([])
+  const [lessonCountByCurriculum, setLessonCountByCurriculum] = useState({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchCurriculums()
-  }, [])
-
-  const fetchCurriculums = async () => {
-    try {
-      const data = await contentAPI.getCurriculums()
-      setCurriculums(data)
-    } catch (error) {
-      console.error("Error fetching curriculums:", handleApiError(error))
-    } finally {
-      setLoading(false)
+    let mounted = true
+    const run = async () => {
+      if (_curriculumPageInFlight.promise) {
+        try {
+          const result = await _curriculumPageInFlight.promise
+          if (mounted && result) {
+            setCurriculums(result.curriculums ?? [])
+            setLessonCountByCurriculum(result.counts ?? {})
+            setLoading(false)
+          }
+        } catch (_) {
+          if (mounted) setLoading(false)
+        }
+        return
+      }
+      _curriculumPageInFlight.promise = (async () => {
+        try {
+          const data = await contentAPI.getCurriculumsSummary()
+          const list = data ?? []
+          const counts = Array.isArray(data) && data.length > 0
+            ? Object.fromEntries(
+                data.filter((c) => c.id != null).map((c) => [c.id, c.lessonCount ?? 0])
+              )
+            : {}
+          if (mounted) {
+            setCurriculums(list)
+            setLessonCountByCurriculum(counts)
+          }
+          return { curriculums: list, counts }
+        } catch (error) {
+          if (mounted) console.error("Error fetching curriculums:", handleApiError(error))
+          throw error
+        } finally {
+          _curriculumPageInFlight.promise = null
+          if (mounted) setLoading(false)
+        }
+      })()
+      await _curriculumPageInFlight.promise
     }
-  }
+    run()
+    return () => { mounted = false }
+  }, [])
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-50">
-        <div className="loading"></div>
-      </div>
+      <PageLayout>
+        <div className="min-h-48 flex items-center justify-center">
+          <span className="loading loading-spinner loading-lg text-purple-500" />
+        </div>
+      </PageLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-12 slide-in-up">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg">
-              <BookOpen size={32} className="text-white" />
-            </div>
-            <h1 className="text-4xl font-bold gradient-text">Bài học</h1>
+    <PageLayout>
+      <div className="mb-10 slide-in-up">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl text-white shadow-lg">
+            <BookOpen size={32} aria-hidden />
           </div>
-          <p className="text-lg text-slate-600">Chọn bài học phù hợp để bắt đầu hành trình học tiếng Trung của bạn</p>
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold gradient-text">Bài học</h1>
+            <p className="text-slate-600 mt-1">Chọn bài học phù hợp để bắt đầu hành trình học tiếng Trung của bạn</p>
+          </div>
         </div>
-
-        <CurriculumList curriculums={curriculums} />
       </div>
-    </div>
+
+      <CurriculumList curriculums={curriculums} lessonCountByCurriculum={lessonCountByCurriculum} />
+    </PageLayout>
   )
 }
 

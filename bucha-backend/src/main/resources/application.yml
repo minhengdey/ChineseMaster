@@ -1,4 +1,8 @@
 spring:
+   profiles:
+      active: dev
+   # Optional: set servlet.multipart.location (e.g. D:/temp) if system temp disk is full
+   # Example: SPRING_SERVLET_MULTIPART_LOCATION=D:/temp
    datasource:
       driver-class-name: com.mysql.cj.jdbc.Driver
       url: ${DB_URL}
@@ -10,6 +14,7 @@ spring:
       properties:
          hibernate:
             format_sql: true
+            dialect: org.hibernate.dialect.MySQL8Dialect
    h2:
       console:
          enabled: true
@@ -19,6 +24,11 @@ jwt:
    access-validity-ms: 900000
    refresh-validity-ms: 1209600000
 
+cookie:
+   secure: ${COOKIE_SECURE:false}
+   domain: ${COOKIE_DOMAIN:localhost}
+   same-site: ${COOKIE_SAME_SITE:Lax}
+
 app:
    cors:
       allowed-origins: ${ALLOW_ORIGINS}
@@ -26,6 +36,10 @@ app:
       initializer:
          enabled: ${DATA_INITIALIZER_ENABLED}
          source: CLOUDINARY
+      admin:
+         email: ${ADMIN_EMAIL:admin@chinesemaster.com}
+         password: ${ADMIN_PASSWORD:ChangeMe123!}
+         name: ${ADMIN_NAME:Administrator}
 logging:
    level:
       root: ERROR
@@ -38,6 +52,9 @@ iflytek:
    api-key: ${API_KEY}
    api-secret: ${API_SECRET}
    host-url: wss://ise-api-sg.xf-yun.com/v2/ise
+   # IAT (Short Form ASR) WebSocket for HSKK Part 2 — same APP_ID/API_KEY/API_SECRET as ISE
+   iat-host: ${IFLYTEK_IAT_HOST:iat-api-sg.xf-yun.com}
+   iat-path: ${IFLYTEK_IAT_PATH:/v2/iat}
    ent: cn_vip
    category: read_sentence
    # 16kHz, 16bit PCM per ISE docs; omit channel token
@@ -64,3 +81,13 @@ cloudinary:
    api-key: ${CLOUD_API_KEY}
    api-secret: ${CLOUD_API_SECRET}
    upload-folder: chinese-master
+
+# Internal ISE score endpoint (used by SpeechEvaluationService for backend-to-backend call)
+ise:
+   score-url: ${ISE_SCORE_URL:https://chinese-master-be-f5emhxc7c5dwd7d2.southeastasia-01.azurewebsites.net/api/ise/score}
+
+# Doubao AI for HSKK short feedback (optional; leave empty to use default text feedback)
+doubao:
+   api-url: ${DOUBAO_API_URL:https://api.doubao-ai.com/v1/chat/completions}
+   api-key: ${DOUBAO_API_KEY:}
+   model: ${DOUBAO_MODEL:doubao-pro-32k}

@@ -1,8 +1,9 @@
 "use client"
 import { Link, useLocation } from "react-router-dom"
 import { useUserStore } from "../store/UserStore"
-import { authAPI, userAPI } from "../services/api"
-import { Menu, X, LogOut, User, BookOpen, Volume2, Layers, Type } from "lucide-react"
+import { authAPI } from "../services/api"
+import { ROUTES } from "../constants/routes"
+import { Menu, X, LogOut, User, BookOpen, Volume2, Layers, Type, ClipboardCheck, Mic } from "lucide-react"
 import { useState, useEffect } from "react"
 
 const Navbar = ({ user, onLogout }) => {
@@ -13,52 +14,61 @@ const Navbar = ({ user, onLogout }) => {
   const storeUser = useUserStore((state) => state.user)
   const setUser = useUserStore((state) => state.setUser)
 
+  // Sync prop user into store once. Profile is fetched only by ProtectedRoute; Navbar only reads store.
   useEffect(() => {
-    if (storeUser) return
+    if (user && !storeUser) setUser(user)
+  }, [user, storeUser, setUser])
 
-    // try to read cached user from localStorage first
-    try {
-      const raw = localStorage.getItem("user")
-      if (raw) {
-        setUser(JSON.parse(raw))
-        return
-      }
-    } catch (e) {
-      // ignore and fallthrough
+  const normalizePath = (p) => p.split("?")[0]
+
+  const getAdminTabFromPath = () => {
+    if (!location.pathname.startsWith("/admin")) return null
+    const params = new URLSearchParams(location.search)
+    const tab = params.get("tab")
+    return tab || "weekly"
+  }
+
+  const activeAdminTab = getAdminTabFromPath()
+
+  const isActive = (path, tabKey) => {
+    const base = normalizePath(path)
+    if (base === "/admin") {
+      // Admin nav: highlight by tab key
+      const targetTab = tabKey || new URLSearchParams(path.split("?")[1] || "").get("tab") || "weekly"
+      return location.pathname === "/admin" && activeAdminTab === targetTab
     }
-
-    // fallback: try fetching profile from backend (if token present)
-    ; (async () => {
-      try {
-        const profile = await userAPI.getProfile()
-        if (profile) {
-          setUser(profile)
-          try {
-            localStorage.setItem("user", JSON.stringify(profile))
-          } catch (e) { }
-        }
-      } catch (e) {
-        // not authenticated or fetch failed - leave store null
-      }
-    })()
-  }, [storeUser, setUser])
-
-  const isActive = (path) => {
-    return location.pathname === path || location.pathname.startsWith(path)
+    // For exact match routes like /admin/classes
+    if (base === location.pathname) {
+      return true
+    }
+    return location.pathname.startsWith(base + "/")
   }
 
-  const handleLogout = () => {
-    authAPI.logout()
+  const handleLogout = async () => {
     useUserStore.getState().setUser(null)
-    window.location.href = "/login"
+    await authAPI.logout()
+    window.location.href = ROUTES.LOGIN
   }
 
-  const navItems = [
-    { label: "Bài học", path: "/curriculum", icon: BookOpen },
-    { label: "Phát âm", path: "/pronunciation", icon: Volume2 },
-    { label: "Flash Card", path: "/flashcards", icon: Layers },
-    { label: "Bảng PINYIN", path: "/alphabet", icon: Type },
-  ]
+  const resolvedUser = storeUser || user
+  const isAdmin = (resolvedUser?.role || "").toUpperCase() === "ADMIN"
+
+  const navItems = isAdmin
+    ? [
+      { label: "BXH", path: "/admin?tab=weekly", tab: "weekly", icon: ClipboardCheck },
+      { label: "BXH theo bài", path: "/admin?tab=lesson", tab: "lesson", icon: BookOpen },
+      { label: "BXH bài kiểm tra", path: "/admin?tab=test", tab: "test", icon: ClipboardCheck },
+      { label: "Quản lý User", path: "/admin?tab=users", tab: "users", icon: User },
+      { label: "Quản lý Lớp", path: "/admin/classes", icon: BookOpen },
+    ]
+    : [
+      { label: "Bài Kiểm Tra", path: "/assessments", icon: ClipboardCheck },
+      { label: "Luyện HSKK sơ cấp", path: "/hskk-exam", icon: Mic },
+      { label: "Bài học", path: "/curriculum", icon: BookOpen },
+      { label: "Phát âm", path: "/pronunciation", icon: Volume2 },
+      { label: "Flash Card", path: "/flashcards", icon: Layers },
+      { label: "Bảng PINYIN", path: "/alphabet", icon: Type },
+    ]
 
   return (
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm slide-in-down">
@@ -79,7 +89,7 @@ const Navbar = ({ user, onLogout }) => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`px-4 py-2 rounded-lg transition-all font-medium text-sm flex items-center gap-2 ${isActive(item.path)
+                  className={`px-4 py-2 rounded-lg transition-all font-medium text-sm flex items-center gap-2 ${isActive(item.path, item.tab)
                     ? "bg-gradient-to-r from-purple-100 to-blue-100 text-purple-900 shadow-sm"
                     : "text-slate-700 hover:bg-slate-100"
                     }`}
@@ -136,7 +146,7 @@ const Navbar = ({ user, onLogout }) => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium ${isActive(item.path)
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium ${isActive(item.path, item.tab)
                     ? "bg-gradient-to-r from-purple-100 to-blue-100 text-purple-900"
                     : "text-slate-700 hover:bg-slate-100"
                     }`}

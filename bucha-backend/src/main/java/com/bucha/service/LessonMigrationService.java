@@ -1,12 +1,13 @@
 package com.bucha.service;
 
-import com.bucha.dto.CurriculumMetadataDto;
+import com.bucha.dto.content.CurriculumMetadataDto;
 import com.bucha.dto.migration.ConversationMigrationDTO;
 import com.bucha.dto.migration.LessonMigrationDTO;
 import com.bucha.dto.migration.LineMigrationDTO;
 import com.bucha.dto.migration.VocabularyMigrationDTO;
 import com.bucha.entity.*;
 import com.bucha.repository.*;
+import com.bucha.utils.MigrateHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,9 @@ public class LessonMigrationService {
    // Local file parsing removed; use migrateLessonFromDto instead.
 
    // Public for cloud migration
+
+
+
    @Transactional
    public Lesson migrateLesson(LessonMigrationDTO lessonDto, Curriculum curriculum, String audioRootPublicId) {
       if (lessonDto == null)

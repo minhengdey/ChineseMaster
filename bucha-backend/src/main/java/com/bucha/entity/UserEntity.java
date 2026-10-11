@@ -28,6 +28,9 @@ public class UserEntity {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private String role = "USER";
+
     private String name;
 
     private int xp = 0;
@@ -53,5 +56,9 @@ public class UserEntity {
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<UserLesson> userLessons = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<IseDailyEntry> iseDailyEntries = new ArrayList<>();
 
 }

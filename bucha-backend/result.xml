@@ -2,18 +2,30 @@
   <xml_result>
       <read_sentence lan="cn" type="study" version="7,0,0,1024">
           <rec_paper>
-              <read_sentence accuracy_score="0.000000" beg_pos="0" content="发。" emotion_score="0.000000" end_pos="220" except_info="0" fluency_score="90.854149" integrity_score="100.000000" is_rejected="false" phone_score="50.000000" time_len="220" tone_score="100.000000" total_score="44.400944">
-                  <sentence beg_pos="0" content="发" end_pos="220" fluency_score="0.000000" phone_score="50.000000" time_len="220" tone_score="100.000000" total_score="82.531410">
-                      <word beg_pos="0" content="发" end_pos="220" symbol="fa1" time_len="220">
-                          <syll beg_pos="0" content="sil" dp_message="0" end_pos="70" rec_node_type="sil" time_len="70">
-                              <phone beg_pos="0" content="sil" dp_message="0" end_pos="70" rec_node_type="sil" time_len="70"></phone>
+              <read_sentence accuracy_score="0.000000" beg_pos="0" content="不客气。" emotion_score="0.000000" end_pos="160" except_info="0" fluency_score="73.268707" integrity_score="66.666672" is_rejected="false" phone_score="50.000000" time_len="160" tone_score="66.666664" total_score="55.406509">
+                  <sentence beg_pos="0" content="不客气" end_pos="160" fluency_score="0.000000" phone_score="50.000000" time_len="160" tone_score="66.666664" total_score="56.466431">
+                      <word beg_pos="0" content="不" end_pos="3" symbol="bu2" time_len="3">
+                          <syll beg_pos="0" content="sil" dp_message="0" end_pos="3" rec_node_type="sil" time_len="3">
+                              <phone beg_pos="0" content="sil" dp_message="0" end_pos="3" rec_node_type="sil" time_len="3"></phone>
                           </syll>
-                          <syll beg_pos="70" content="发" dp_message="0" end_pos="124" rec_node_type="paper" symbol="fa1" time_len="54">
-                              <phone beg_pos="70" content="f" dp_message="0" end_pos="78" is_yun="0" perr_level_msg="1" perr_msg="0" rec_node_type="paper" time_len="8"></phone>
-                              <phone beg_pos="78" content="a" dp_message="0" end_pos="124" is_yun="1" mono_tone="TONE1" perr_level_msg="2" perr_msg="1" rec_node_type="paper" time_len="46"></phone>
+                          <syll beg_pos="3" content="不" dp_message="16" end_pos="3" rec_node_type="paper" symbol="bu2" time_len="0">
+                              <phone content="b" dp_message="16" is_yun="0" perr_msg="16" rec_node_type="paper"></phone>
+                              <phone content="u" dp_message="16" is_yun="1" mono_tone="TONE2" perr_msg="16" rec_node_type="paper"></phone>
                           </syll>
-                          <syll beg_pos="124" content="sil" dp_message="0" end_pos="220" rec_node_type="sil" time_len="96">
-                              <phone beg_pos="124" content="sil" end_pos="220" time_len="96"></phone>
+                      </word>
+                      <word beg_pos="3" content="客" end_pos="54" symbol="ke4" time_len="51">
+                          <syll beg_pos="3" content="客" dp_message="0" end_pos="54" rec_node_type="paper" symbol="ke4" time_len="51">
+                              <phone beg_pos="3" content="k" dp_message="0" end_pos="32" is_yun="0" perr_level_msg="1" perr_msg="0" rec_node_type="paper" time_len="29"></phone>
+                              <phone beg_pos="32" content="e" dp_message="0" end_pos="54" is_yun="1" mono_tone="TONE4" perr_level_msg="1" perr_msg="0" rec_node_type="paper" time_len="22"></phone>
+                          </syll>
+                      </word>
+                      <word beg_pos="54" content="气" end_pos="160" symbol="qi9" time_len="106">
+                          <syll beg_pos="54" content="气" dp_message="0" end_pos="106" rec_node_type="paper" symbol="qi0" time_len="52">
+                              <phone beg_pos="54" content="q" dp_message="0" end_pos="72" is_yun="0" perr_level_msg="3" perr_msg="1" rec_node_type="paper" time_len="18"></phone>
+                              <phone beg_pos="72" content="i" dp_message="0" end_pos="106" is_yun="1" mono_tone="TONE0" perr_level_msg="1" perr_msg="0" rec_node_type="paper" time_len="34"></phone>
+                          </syll>
+                          <syll beg_pos="106" content="sil" dp_message="0" end_pos="160" rec_node_type="sil" time_len="54">
+                              <phone beg_pos="106" content="sil" end_pos="160" time_len="54"></phone>
                           </syll>
                       </word>
                   </sentence>

@@ -15,6 +15,7 @@ public class Tone {
    private Long id;
 
    private String name;
+   @Column(name = "pitch_value")
    private String pitchValue;
 
    @Column(length = 2000)

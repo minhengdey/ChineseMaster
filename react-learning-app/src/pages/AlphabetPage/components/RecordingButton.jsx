@@ -6,6 +6,13 @@ import { createRecorder, computeSha256Hex, playBlobSafely } from "../../../utils
 import { Mic, RotateCcw } from "lucide-react"
 
 const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = "xs" }) => {
+  // If the reference character/text contains no letters (digits/punctuation only), do not render the recording UI.
+  const ref = (hanzi || text || "").trim();
+  try {
+    if (ref && !/\p{L}/u.test(ref)) return null;
+  } catch (e) {
+    if (ref && !/[A-Za-z]/.test(ref)) return null;
+  }
   const [isRecording, setIsRecording] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [error, setError] = useState(null)
@@ -80,6 +87,12 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = "xs" }
       }
 
       const result = await iseAPI.scoreWord(payload)
+
+      if (result && result.require_retry) {
+        setError(result.message || "Ghi âm không đủ rõ. Vui lòng ghi lại và thử lại.")
+        return
+      }
+
       const raw = result?.raw_response ?? result
 
       // Normalize result similar to existing logic in file
@@ -133,17 +146,22 @@ const RecordingButton = ({ text, hanzi, onScore, onStartRecording, size = "xs" }
           warning: sent.warning ?? raw.warning ?? null,
         }
 
-        // Mirror important fields at top-level as well so caller code that checks either
-        // `result.sentence` or `result` finds consistent data.
+        // Mirror important fields at top-level; preserve structured AI feedback for display
         normalized = {
           sentence: sentenceObj,
           words: wordsArr,
           phonemes: phonemesArr,
-          total_score: sentenceObj.total_score,
-          fluency: sentenceObj.fluency,
-          completeness: sentenceObj.completeness,
-          pronunciation: sentenceObj.pronunciation,
-          tone: sentenceObj.tone,
+          total_score: sentenceObj.total_score ?? raw.total_score ?? raw.totalScore,
+          fluency: sentenceObj.fluency ?? raw.fluency,
+          completeness: sentenceObj.completeness ?? raw.completeness,
+          pronunciation: sentenceObj.pronunciation ?? raw.pronunciation,
+          tone: sentenceObj.tone ?? raw.tone,
+          overallFeedback: raw.overallFeedback,
+          pronunciationIssue: raw.pronunciationIssue,
+          toneIssue: raw.toneIssue,
+          fluencyIssue: raw.fluencyIssue,
+          improvementTip: raw.improvementTip,
+          feedback: raw.feedback ?? raw.overallFeedback,
         }
       }
 

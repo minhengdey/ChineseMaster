@@ -1,13 +1,17 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { useParams, Link } from "react-router-dom"
-import { contentAPI, handleApiError, iseStatsAPI } from "../../services/api"
+import { contentAPI, iseStatsAPI } from "../../services/api"
 import ConversationSection from "./components/ConversationSection"
 import ErrorBoundary from "../../components/ErrorBoundary"
 import VocabularySection from "./components/VocabularySection"
 import LessonProgress from "./components/LessonProgress"
 import LessonLeaderboard from "../../components/LessonLeaderboard"
+import PageLayout from "../../components/layout/PageLayout"
+
+// In-flight dedupe: only one request per lessonId; second run (Strict Mode) awaits the same promise.
+const _lessonPageInFlight = {}
 
 const LessonDetailPage = () => {
   const { curriculumId, lessonId } = useParams()
@@ -21,49 +25,92 @@ const LessonDetailPage = () => {
   const [distinctVocabularyCount, setDistinctVocabularyCount] = useState(0)
   const [pronouncedCount, setPronouncedCount] = useState(0)
 
+  const applyLessonState = useCallback((cached) => {
+    if (!cached) return
+    setLesson(cached.lesson)
+    setHighlightedLineIds(cached.highlightedLineIds ?? [])
+    setHighlightedVocabularyIds(cached.highlightedVocabularyIds ?? [])
+    setDistinctAttempts(cached.distinctAttempts ?? 0)
+    setDistinctLineCount(cached.distinctLineCount ?? 0)
+    setDistinctVocabularyCount(cached.distinctVocabularyCount ?? 0)
+    setPronouncedCount(cached.pronouncedCount ?? 0)
+  }, [])
+
   useEffect(() => {
     if (!lessonId) {
       setLoading(false)
       return
     }
-    fetchLesson()
-  }, [lessonId])
-
-  const fetchLesson = async () => {
-    try {
-      const data = await contentAPI.getLessonDetail(lessonId)
-
-      const normalized = {
-        ...data,
-        vocabularies: (data.vocabularies || []).map((v) => ({
-          ...v,
-          exampleText: v.example ? v.example.zh || null : null,
-          examplePinyin: v.example ? v.example.pinyin || null : null,
-          exampleVn: v.example ? v.example.vn || null : null,
-          exampleAudioUrl: v.example ? v.example.audioUrl || null : null,
-        })),
+    let mounted = true
+    const run = async () => {
+      if (_lessonPageInFlight[lessonId]) {
+        try {
+          const cached = await _lessonPageInFlight[lessonId]
+          if (mounted) {
+            applyLessonState(cached)
+            setLoading(false)
+          }
+        } catch (_) {
+          if (mounted) setLoading(false)
+        }
+        return
       }
-
-      setLesson(normalized)
-      try {
-        const stats = await iseStatsAPI.getPronouncedForLesson(lessonId)
-        setDistinctAttempts(stats?.distinctAttempts || 0)
-        setDistinctLineCount(stats?.distinctLineCount || 0)
-        setDistinctVocabularyCount(stats?.distinctVocabularyCount || 0)
-        setPronouncedCount(
-          stats?.pronouncedCount || (stats?.distinctLineCount || 0) + (stats?.distinctVocabularyCount || 0),
-        )
-        setHighlightedLineIds((stats?.lineIds || []).map(String))
-        setHighlightedVocabularyIds((stats?.vocabularyIds || []).map(String))
-      } catch (e) {
-        // console.warn("Failed to fetch pronounced stats:", e)
-      }
-    } catch (error) {
-      // console.error("Error fetching lesson:", handleApiError(error))
-    } finally {
-      setLoading(false)
+      setLoading(true)
+      const promise = (async () => {
+        try {
+          const data = await contentAPI.getLessonDetail(lessonId)
+          const normalized = {
+            ...data,
+            vocabularies: (data.vocabularies || []).map((v) => ({
+              ...v,
+              exampleText: v.example ? v.example.zh || null : null,
+              examplePinyin: v.example ? v.example.pinyin || null : null,
+              exampleVn: v.example ? v.example.vn || null : null,
+              exampleAudioUrl: v.example ? v.example.audioUrl || null : null,
+            })),
+          }
+          let lineIds = []
+          let vocabIds = []
+          let attempts = 0
+          let lineCount = 0
+          let vocabCount = 0
+          try {
+            const stats = await iseStatsAPI.getPronouncedForLesson(lessonId)
+            attempts = stats?.distinctAttempts || 0
+            lineCount = stats?.distinctLineCount || 0
+            vocabCount = stats?.distinctVocabularyCount || 0
+            lineIds = (stats?.lineIds || []).map(String)
+            vocabIds = (stats?.vocabularyIds || []).map(String)
+          } catch (e) {
+            // ignore
+          }
+          const result = {
+            lesson: normalized,
+            highlightedLineIds: lineIds,
+            highlightedVocabularyIds: vocabIds,
+            distinctAttempts: attempts,
+            distinctLineCount: lineCount,
+            distinctVocabularyCount: vocabCount,
+            pronouncedCount: attempts || lineCount + vocabCount,
+          }
+          if (mounted) applyLessonState(result)
+          return result
+        } catch (error) {
+          if (mounted) setLesson(null)
+          throw error
+        } finally {
+          delete _lessonPageInFlight[lessonId]
+          if (mounted) setLoading(false)
+        }
+      })()
+      _lessonPageInFlight[lessonId] = promise
+      await promise
     }
-  }
+    run()
+    return () => {
+      mounted = false
+    }
+  }, [lessonId, applyLessonState])
 
   const refreshPronounced = async () => {
     if (!lessonId) return
@@ -106,35 +153,34 @@ const LessonDetailPage = () => {
     }
   }
 
-  React.useEffect(() => {
-    if (!lessonId) return
-    refreshPronounced()
-  }, [lessonId])
+  // Pronounced stats are loaded with the lesson in the initial effect (or from cache).
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-white">
-        <div className="loading"></div>
-      </div>
+      <PageLayout>
+        <div className="min-h-48 flex items-center justify-center">
+          <span className="loading loading-spinner loading-lg text-purple-500" />
+        </div>
+      </PageLayout>
     )
   }
 
   if (!lesson) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-white">
-        <div className="text-center">
+      <PageLayout>
+        <div className="text-center py-16">
           <h2 className="text-2xl font-bold mb-4 text-slate-900">Không tìm thấy bài học</h2>
-          <Link to={`/curriculum/${curriculumId}/lessons`} className="btn-primary">
+          <Link to={`/curriculum/${curriculumId}/lessons`} className="btn-primary rounded-xl px-6 py-3">
             Quay lại danh sách bài học
           </Link>
         </div>
-      </div>
+      </PageLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-8">
-      <div className="container-max px-4">
+    <PageLayout>
+      <div className="space-y-8">
         <div className="mb-8 slide-in-down">
           <div className="flex items-center gap-2 text-sm mb-4">
             <Link to="/curriculum" className="text-purple-600 hover:text-purple-700 font-medium">
@@ -233,7 +279,7 @@ const LessonDetailPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </PageLayout>
   )
 }
 

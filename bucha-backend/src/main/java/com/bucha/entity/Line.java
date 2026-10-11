@@ -43,7 +43,7 @@ public class Line {
    @Column(name = "vn_translation", nullable = false, length = 1000)
    private String vnTranslation; // Vietnamese translation
 
-   @Column()
+   @Column(name = "audio_public_id")
    private String audioPublicId;
 
 }
